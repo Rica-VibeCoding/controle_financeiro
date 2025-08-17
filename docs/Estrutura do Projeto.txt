@@ -1,0 +1,754 @@
+# Estrutura do Projeto - Sistema de Controle Financeiro
+
+## 📁 Estrutura de Pastas Completa
+
+```
+controle-financeiro/
+├── 📄 package.json
+├── 📄 next.config.js
+├── 📄 tailwind.config.js
+├── 📄 tsconfig.json
+├── 📄 .env.local
+├── 📄 .gitignore
+├── 📄 README.md
+│
+├── 📁 public/
+│   ├── 📄 favicon.ico
+│   ├── 📁 icones/
+│   │   ├── 📄 logo.svg
+│   │   ├── 📄 receita.svg
+│   │   ├── 📄 despesa.svg
+│   │   └── 📄 transferencia.svg
+│   └── 📁 imagens/
+│       └── 📄 placeholder.jpg
+│
+├── 📁 src/
+│   ├── 📁 app/
+│   │   ├── 📄 layout.tsx
+│   │   ├── 📄 page.tsx (Dashboard)
+│   │   ├── 📄 globals.css
+│   │   ├── 📄 loading.tsx
+│   │   ├── 📄 error.tsx
+│   │   │
+│   │   ├── 📁 dashboard/
+│   │   │   └── 📄 page.tsx
+│   │   │
+│   │   ├── 📁 transacoes/
+│   │   │   ├── 📄 page.tsx
+│   │   │   ├── 📄 loading.tsx
+│   │   │   ├── 📁 nova/
+│   │   │   │   └── 📄 page.tsx
+│   │   │   ├── 📁 editar/
+│   │   │   │   └── 📁 [id]/
+│   │   │   │       └── 📄 page.tsx
+│   │   │   └── 📁 parcelada/
+│   │   │       └── 📄 page.tsx
+│   │   │
+│   │   ├── 📁 relatorios/
+│   │   │   ├── 📄 page.tsx
+│   │   │   ├── 📁 metas/
+│   │   │   │   ├── 📄 page.tsx
+│   │   │   │   ├── 📁 nova/
+│   │   │   │   │   └── 📄 page.tsx
+│   │   │   │   └── 📁 editar/
+│   │   │   │       └── 📁 [id]/
+│   │   │   │           └── 📄 page.tsx
+│   │   │   └── 📁 graficos/
+│   │   │       └── 📄 page.tsx
+│   │   │
+│   │   ├── 📁 contas/
+│   │   │   ├── 📄 page.tsx
+│   │   │   ├── 📁 nova/
+│   │   │   │   └── 📄 page.tsx
+│   │   │   └── 📁 editar/
+│   │   │       └── 📁 [id]/
+│   │   │           └── 📄 page.tsx
+│   │   │
+│   │   ├── 📁 categorias/
+│   │   │   ├── 📄 page.tsx
+│   │   │   ├── 📁 nova/
+│   │   │   │   └── 📄 page.tsx
+│   │   │   └── 📁 editar/
+│   │   │       └── 📁 [id]/
+│   │   │           └── 📄 page.tsx
+│   │   │
+│   │   └── 📁 configuracoes/
+│   │       └── 📄 page.tsx
+│   │
+│   ├── 📁 componentes/
+│   │   ├── 📁 layout/
+│   │   │   ├── 📄 cabecalho.tsx
+│   │   │   ├── 📄 menu-lateral.tsx
+│   │   │   ├── 📄 rodape.tsx
+│   │   │   └── 📄 navegacao-mobile.tsx
+│   │   │
+│   │   ├── 📁 dashboard/
+│   │   │   ├── 📄 cartao-resumo.tsx
+│   │   │   ├── 📄 grafico-categorias.tsx
+│   │   │   ├── 📄 ultimas-transacoes.tsx
+│   │   │   └── 📄 resumo-mensal.tsx
+│   │   │
+│   │   ├── 📁 transacoes/
+│   │   │   ├── 📄 lista-transacoes.tsx
+│   │   │   ├── 📄 formulario-transacao.tsx
+│   │   │   ├── 📄 formulario-receita.tsx
+│   │   │   ├── 📄 formulario-despesa.tsx
+│   │   │   ├── 📄 formulario-transferencia.tsx
+│   │   │   ├── 📄 formulario-parcelada.tsx
+│   │   │   ├── 📄 item-transacao.tsx
+│   │   │   ├── 📄 filtros-transacao.tsx
+│   │   │   ├── 📄 modal-confirmar-exclusao.tsx
+│   │   │   └── 📄 upload-anexo.tsx
+│   │   │
+│   │   ├── 📁 metas/
+│   │   │   ├── 📄 grafico-barras-metas.tsx
+│   │   │   ├── 📄 lista-metas.tsx
+│   │   │   ├── 📄 cartao-meta.tsx
+│   │   │   ├── 📄 formulario-meta.tsx
+│   │   │   ├── 📄 progresso-meta.tsx
+│   │   │   └── 📄 alerta-meta.tsx
+│   │   │
+│   │   ├── 📁 graficos/
+│   │   │   ├── 📄 grafico-pizza.tsx
+│   │   │   ├── 📄 grafico-barras.tsx
+│   │   │   ├── 📄 grafico-linha.tsx
+│   │   │   └── 📄 grafico-evolucao.tsx
+│   │   │
+│   │   ├── 📁 formularios/
+│   │   │   ├── 📄 campo-texto.tsx
+│   │   │   ├── 📄 campo-numero.tsx
+│   │   │   ├── 📄 campo-data.tsx
+│   │   │   ├── 📄 campo-select.tsx
+│   │   │   ├── 📄 campo-checkbox.tsx
+│   │   │   ├── 📄 campo-textarea.tsx
+│   │   │   └── 📄 campo-upload.tsx
+│   │   │
+│   │   ├── 📁 ui/
+│   │   │   ├── 📄 botao.tsx
+│   │   │   ├── 📄 modal.tsx
+│   │   │   ├── 📄 card.tsx
+│   │   │   ├── 📄 badge.tsx
+│   │   │   ├── 📄 loading.tsx
+│   │   │   ├── 📄 alerta.tsx
+│   │   │   ├── 📄 tooltip.tsx
+│   │   │   └── 📄 separador.tsx
+│   │   │
+│   │   └── 📁 comum/
+│   │       ├── 📄 formatador-moeda.tsx
+│   │       ├── 📄 formatador-data.tsx
+│   │       ├── 📄 icone-categoria.tsx
+│   │       ├── 📄 seletor-icone.tsx
+│   │       └── 📄 paginacao.tsx
+│   │
+│   ├── 📁 servicos/
+│   │   ├── 📁 supabase/
+│   │   │   ├── 📄 cliente.ts
+│   │   │   ├── 📄 transacoes.ts
+│   │   │   ├── 📄 categorias.ts
+│   │   │   ├── 📄 contas.ts
+│   │   │   ├── 📄 metas.ts
+│   │   │   ├── 📄 subcategorias.ts
+│   │   │   ├── 📄 formas-pagamento.ts
+│   │   │   ├── 📄 centros-custo.ts
+│   │   │   └── 📄 anexos.ts
+│   │   │
+│   │   ├── 📁 relatorios/
+│   │   │   ├── 📄 calculos-saldo.ts
+│   │   │   ├── 📄 calculos-meta.ts
+│   │   │   ├── 📄 dados-grafico.ts
+│   │   │   └── 📄 exportacao.ts
+│   │   │
+│   │   └── 📁 recorrencia/
+│   │       ├── 📄 gerador-transacoes.ts
+│   │       ├── 📄 calculador-datas.ts
+│   │       └── 📄 processador-recorrencia.ts
+│   │
+│   ├── 📁 hooks/
+│   │   ├── 📄 usar-transacoes.ts
+│   │   ├── 📄 usar-categorias.ts
+│   │   ├── 📄 usar-contas.ts
+│   │   ├── 📄 usar-metas.ts
+│   │   ├── 📄 usar-saldos.ts
+│   │   ├── 📄 usar-filtros.ts
+│   │   ├── 📄 usar-paginacao.ts
+│   │   ├── 📄 usar-formulario.ts
+│   │   └── 📄 usar-upload.ts
+│   │
+│   ├── 📁 tipos/
+│   │   ├── 📄 transacao.ts
+│   │   ├── 📄 categoria.ts
+│   │   ├── 📄 conta.ts
+│   │   ├── 📄 meta.ts
+│   │   ├── 📄 subcategoria.ts
+│   │   ├── 📄 forma-pagamento.ts
+│   │   ├── 📄 centro-custo.ts
+│   │   ├── 📄 filtros.ts
+│   │   ├── 📄 grafico.ts
+│   │   └── 📄 comum.ts
+│   │
+│   ├── 📁 utilitarios/
+│   │   ├── 📄 formatacao.ts
+│   │   ├── 📄 validacao.ts
+│   │   ├── 📄 datas.ts
+│   │   ├── 📄 calculos.ts
+│   │   ├── 📄 cores.ts
+│   │   ├── 📄 icones.ts
+│   │   └── 📄 constantes.ts
+│   │
+│   ├── 📁 contextos/ (Context API)
+│   │   ├── 📄 transacoes-contexto.tsx
+│   │   ├── 📄 categorias-contexto.tsx
+│   │   ├── 📄 contas-contexto.tsx
+│   │   ├── 📄 metas-contexto.tsx
+│   │   └── 📄 app-contexto.tsx
+│   │
+│   └── 📁 middleware.ts
+│
+└── 📁 docs/
+    ├── 📄 schema.sql
+    ├── 📄 API Documentation.txt
+    ├── 📄 Estrutura do Projeto.txt
+    ├── 📄 PRD.txt
+    ├── 📄 README.txt
+    ├── 📄 Checklist de Implementação.txt
+    └── 📁 wireframes/
+        ├── 📄 dashboard.png
+        ├── 📄 transacoes.png
+        └── 📄 relatorios.png
+```
+
+---
+
+## 🔧 Configurações Principais
+
+### package.json
+```json
+{
+  "name": "controle-financeiro",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "@supabase/supabase-js": "^2.45.0",
+    "recharts": "^2.8.0",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.263.1",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-toast": "^1.1.5",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5"
+  }
+}
+```
+
+### .env.local
+```env
+# Supabase - Projeto: nzgifjdewdfibcopolof
+NEXT_PUBLIC_SUPABASE_URL=https://nzgifjdewdfibcopolof.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56Z2lmamRld2RmaWJjb3BvbG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0NjA4NDAsImV4cCI6MjA2MzAzNjg0MH0.O7MKZNx_Cd-Z12iq8h0pq6Sq0bmJazcxDHvlVb4VJQc
+
+# Chave secreta service_role (usar apenas no servidor/desenvolvimento)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56Z2lmamRld2RmaWJjb3BvbG9mIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzQ2MDg0MCwiZXhwIjoyMDYzMDM2ODQwfQ.6D9JGbSXzQZtFSu96hA_4cTtde8C3G-WwPG3C4Ta5n0
+
+# Ambiente
+NODE_ENV=development
+
+# URLs
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_STORAGE_URL=https://nzgifjdewdfibcopolof.supabase.co/storage/v1/object/public
+
+# Configurações da aplicação
+NEXT_PUBLIC_APP_NAME="Controle Financeiro"
+NEXT_PUBLIC_MAX_FILE_SIZE=5242880
+```
+
+### next.config.js
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+  images: {
+    domains: [
+      'nzgifjdewdfibcopolof.supabase.co', // Supabase Storage
+    ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/dashboard',
+        permanent: false,
+      },
+    ]
+  },
+}
+
+module.exports = nextConfig
+```
+
+### tailwind.config.js
+```javascript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        receita: {
+          50: '#f0fdf4',
+          500: '#22c55e',
+          600: '#16a34a',
+        },
+        despesa: {
+          50: '#fef2f2',
+          500: '#ef4444',
+          600: '#dc2626',
+        },
+        transferencia: {
+          50: '#eff6ff',
+          500: '#3b82f6',
+          600: '#2563eb',
+        },
+      },
+    },
+  },
+  plugins: [],
+}
+```
+
+---
+
+## 📱 Estrutura Modular Explicada
+
+### 1. Organização por Funcionalidade
+
+#### 📁 `/app` - Páginas (App Router)
+Estrutura baseada em rotas do Next.js 13+ com nomes em português:
+```
+/dashboard → Página inicial
+/transacoes → Lista de transações
+/transacoes/nova → Cadastrar nova
+/relatorios → Página de relatórios e metas
+/contas → Gestão de contas
+/categorias → Gestão de categorias
+```
+
+#### 📁 `/componentes` - Componentes Reutilizáveis
+Organizado por contexto de uso:
+- **layout/**: Componentes estruturais (cabeçalho, menu)
+- **dashboard/**: Específicos da tela principal
+- **transacoes/**: Formulários e listas de transações
+- **metas/**: Gráficos e controles de metas
+- **ui/**: Componentes base (botões, modais)
+
+#### 📁 `/servicos` - Lógica de Negócio
+Separação clara de responsabilidades:
+- **supabase/**: Comunicação com banco
+- **relatorios/**: Cálculos e processamento
+- **recorrencia/**: Lógica de transações recorrentes
+
+### 2. Convenções de Nomenclatura
+
+#### Arquivos TypeScript
+```typescript
+// ✅ Correto - Kebab case em português
+formulario-transacao.tsx
+lista-transacoes.tsx
+calculos-saldo.ts
+usar-transacoes.ts
+
+// ❌ Evitar - Inglês
+transaction-form.tsx
+useTransactions.ts
+```
+
+#### Componentes
+```typescript
+// ✅ Correto - PascalCase em português
+export default function FormularioTransacao() {}
+export function ListaTransacoes() {}
+
+// ❌ Evitar - Inglês
+export default function TransactionForm() {}
+```
+
+#### Variáveis e Funções
+```typescript
+// ✅ Correto - camelCase em português
+const dadosTransacao = {};
+const calcularSaldoTotal = () => {};
+
+// ❌ Evitar - Inglês
+const transactionData = {};
+const calculateTotalBalance = () => {};
+```
+
+### 3. Estrutura de Tipos TypeScript
+
+#### `/tipos/transacao.ts`
+```typescript
+export interface Transacao {
+  id: string;
+  data: string;
+  descricao: string;
+  valor: number; // DECIMAL(10,2) - valores em reais
+  tipo: 'receita' | 'despesa' | 'transferencia';
+  categoria_id?: string;
+  conta_id: string;
+  conta_destino_id?: string;
+  grupo_parcelamento?: number; // BIGINT para suportar Date.now()
+  status: 'pendente' | 'pago' | 'cancelado';
+  recorrente: boolean;
+  // ... outros campos
+}
+
+export interface NovaTransacao extends Omit<Transacao, 'id'> {}
+
+export interface FiltrosTransacao {
+  dataInicio?: string;
+  dataFim?: string;
+  categoriaId?: string;
+  contaId?: string;
+  tipo?: Transacao['tipo'];
+  status?: Transacao['status'];
+}
+```
+
+### 4. Context API e Hooks Customizados
+
+#### `/contextos/transacoes-contexto.tsx`
+```typescript
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { obterTransacoes } from '@/servicos/supabase/transacoes';
+
+interface TransacoesContextoType {
+  transacoes: Transacao[];
+  carregando: boolean;
+  erro: string | null;
+  recarregar: () => Promise<void>;
+}
+
+const TransacoesContexto = createContext<TransacoesContextoType | undefined>(undefined);
+
+export function TransacoesProvider({ children }: { children: ReactNode }) {
+  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const recarregarTransacoes = async () => {
+    try {
+      setCarregando(true);
+      const dados = await obterTransacoes();
+      setTransacoes(dados);
+    } catch (error) {
+      setErro('Erro ao carregar transações');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    recarregarTransacoes();
+  }, []);
+
+  return (
+    <TransacoesContexto.Provider value={{
+      transacoes,
+      carregando,
+      erro,
+      recarregar: recarregarTransacoes
+    }}>
+      {children}
+    </TransacoesContexto.Provider>
+  );
+}
+
+export function useTransacoesContexto() {
+  const contexto = useContext(TransacoesContexto);
+  if (contexto === undefined) {
+    throw new Error('useTransacoesContexto deve ser usado dentro de TransacoesProvider');
+  }
+  return contexto;
+}
+```
+
+#### `/hooks/usar-transacoes.ts` (Hook simples para componentes locais)
+```typescript
+import { useState, useEffect } from 'react';
+import { obterTransacoes } from '@/servicos/supabase/transacoes';
+
+export function usarTransacoes() {
+  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const recarregarTransacoes = async () => {
+    try {
+      setCarregando(true);
+      const dados = await obterTransacoes();
+      setTransacoes(dados);
+    } catch (error) {
+      setErro('Erro ao carregar transações');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    recarregarTransacoes();
+  }, []);
+
+  return {
+    transacoes,
+    carregando,
+    erro,
+    recarregar: recarregarTransacoes
+  };
+}
+```
+
+### 5. Serviços Supabase
+
+### `/servicos/supabase/cliente.ts`
+```typescript
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Cliente principal para uso no frontend
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Cliente administrativo (apenas para operações server-side)
+export const supabaseAdmin = createClient(
+  supabaseUrl,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
+// Configuração do Storage para anexos
+export const STORAGE_BUCKET = 'anexos-transacoes'
+export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+export const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png', 
+  'image/webp',
+  'application/pdf'
+]
+```
+```typescript
+import { supabase } from './cliente';
+import type { Transacao, NovaTransacao } from '@/tipos/transacao';
+
+export async function obterTransacoes(): Promise<Transacao[]> {
+  const { data, error } = await supabase
+    .from('fp_transacoes')
+    .select(`
+      *,
+      categorias:fp_categorias(nome, cor),
+      contas:fp_contas(nome)
+    `)
+    .order('data', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function criarTransacao(transacao: NovaTransacao): Promise<Transacao> {
+  const { data, error } = await supabase
+    .from('fp_transacoes')
+    .insert([transacao])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function atualizarTransacao(
+  id: string, 
+  atualizacoes: Partial<Transacao>
+): Promise<void> {
+  const { error } = await supabase
+    .from('fp_transacoes')
+    .update(atualizacoes)
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function excluirTransacao(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('fp_transacoes')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}
+```
+
+---
+
+## 🎨 Padrões de Componentes
+
+### Componente de Lista
+```typescript
+// /componentes/transacoes/lista-transacoes.tsx
+interface ListaTransacoesProps {
+  transacoes: Transacao[];
+  aoEditarTransacao: (id: string) => void;
+  aoExcluirTransacao: (id: string) => void;
+}
+
+export function ListaTransacoes({ 
+  transacoes, 
+  aoEditarTransacao, 
+  aoExcluirTransacao 
+}: ListaTransacoesProps) {
+  return (
+    <div className="space-y-2">
+      {transacoes.map((transacao) => (
+        <ItemTransacao
+          key={transacao.id}
+          transacao={transacao}
+          aoEditar={() => aoEditarTransacao(transacao.id)}
+          aoExcluir={() => aoExcluirTransacao(transacao.id)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### Componente de Formulário
+```typescript
+// /componentes/transacoes/formulario-receita.tsx
+interface FormularioReceitaProps {
+  aoSalvar: (dados: NovaTransacao) => void;
+  aoCancelar: () => void;
+  carregando?: boolean;
+}
+
+export function FormularioReceita({ 
+  aoSalvar, 
+  aoCancelar, 
+  carregando = false 
+}: FormularioReceitaProps) {
+  const [dados, setDados] = useState<Partial<NovaTransacao>>({
+    tipo: 'receita',
+    status: 'pago'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validarDados(dados)) {
+      aoSalvar(dados as NovaTransacao);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Campos do formulário */}
+    </form>
+  );
+}
+```
+
+---
+
+## 🚀 Comandos de Desenvolvimento
+
+### Setup Inicial
+```bash
+# Criar projeto
+npx create-next-app@latest controle-financeiro --typescript --tailwind --app
+
+# Instalar dependências principais
+cd controle-financeiro
+npm install @supabase/supabase-js recharts date-fns lucide-react
+
+# Configurar shadcn/ui
+npx shadcn-ui@latest init
+
+# Instalar componentes shadcn/ui necessários
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add card
+npx shadcn-ui@latest add dialog
+npx shadcn-ui@latest add form
+npx shadcn-ui@latest add input
+npx shadcn-ui@latest add select
+npx shadcn-ui@latest add toast
+npx shadcn-ui@latest add badge
+npx shadcn-ui@latest add table
+
+# Configurar variáveis de ambiente
+cp .env.example .env.local
+# Editar .env.local com suas credenciais Supabase
+```
+
+### Desenvolvimento
+```bash
+# Iniciar servidor de desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Iniciar servidor produção
+npm run start
+
+# Linting
+npm run lint
+```
+
+### Scripts Úteis
+```bash
+# Gerar tipos TypeScript do Supabase
+npx supabase gen types typescript --project-id seu-projeto > src/tipos/supabase.ts
+
+# Executar migrações
+npx supabase db push
+
+# Reset do banco local
+npx supabase db reset
+```
+
+
+---
+
+**Estrutura criada com foco em:**
+- ✅ **Nomes em PT-BR** para facilitar compreensão
+- ✅ **Modularidade** com separação clara de responsabilidades
+- ✅ **Escalabilidade** preparada para crescimento
+- ✅ **Manutenibilidade** com padrões consistentes
+- ✅ **TypeScript** para segurança de tipos

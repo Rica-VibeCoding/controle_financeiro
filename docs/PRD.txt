@@ -1,0 +1,498 @@
+# PRD - Sistema de Controle Financeiro Pessoal
+
+## 📋 Informações do Produto
+
+**Nome:** Sistema de Controle Financeiro Pessoal  
+**Versão:** 1.0 (MVP)  
+**Data:** Agosto 2025  
+**Autor:** Sistema Interno  
+**Tipo:** Aplicação Web Pessoal  
+
+---
+
+## 🎯 Visão Geral
+
+### Objetivo Principal
+Desenvolver uma aplicação web para controle financeiro pessoal que permita registro, categorização e análise de transações financeiras com foco em simplicidade e eficiência.
+
+### Problema a Resolver
+- Falta de controle detalhado sobre gastos pessoais
+- Dificuldade em categorizar e analisar padrões de consumo
+- Necessidade de acompanhar metas financeiras
+- Controle de transferências entre contas
+- Gestão de transações parceladas e recorrentes
+
+### Público-Alvo
+- **Primário:** Usuário individual (uso pessoal)
+- **Secundário:** Potencial expansão para uso empresarial
+
+---
+
+## 🏗️ Arquitetura Técnica
+
+### Stack Tecnológica
+- **Frontend:** Next.js + TypeScript + Tailwind CSS
+- **Backend:** Supabase (PostgreSQL + Auth + Storage)
+- **Deploy:** Vercel (frontend)
+- **Bibliotecas:** shadcn/ui, Context API, Recharts, date-fns
+
+### Estrutura de Dados
+- **Prefixo:** `fp_` (finanças pessoais)
+- **7 Tabelas principais:** categorias, subcategorias, contas, formas_pagamento, centros_custo, transacoes, metas
+- **Relacionamentos:** Normalizados com chaves estrangeiras
+- **Performance:** Índices estratégicos + triggers automáticos
+
+---
+
+## 🚀 Funcionalidades Principais
+
+### 1. Gestão de Transações
+
+#### 1.1 Tipos de Transação
+- **Receita:** Entradas financeiras (salário, freelance, vendas)
+- **Despesa:** Saídas financeiras (alimentação, transporte, moradia)
+- **Transferência:** Movimentação entre contas próprias
+- **Parcelada:** Despesas divididas em várias parcelas
+
+#### 1.2 Campos da Transação
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| Data | Date | ✅ | Data da transação |
+| Descrição | Text | ✅ | Descrição detalhada |
+| Valor | Decimal | ✅ | Valor em R$ (DECIMAL 10,2) |
+| Tipo | Enum | ✅ | receita, despesa, transferencia |
+| Conta | UUID | ✅ | Conta de origem |
+| Categoria | UUID | ❌ | Categoria principal |
+| Subcategoria | UUID | ❌ | Subcategoria detalhada |
+| Forma Pagamento | UUID | ❌ | Como foi pago |
+| Centro Custo | UUID | ❌ | Projeto/área responsável |
+| Status | Enum | ✅ | pendente, pago, cancelado |
+| Anexo | URL | ❌ | Comprovante/nota fiscal |
+| Observações | Text | ❌ | Comentários adicionais |
+
+#### 1.3 Regras de Negócio - Transações
+- Valor sempre positivo (R$ 0,01 a R$ 99.999.999,99) - DECIMAL(10,2)
+- Data pode ser futura (transações agendadas)
+- Transferências não afetam patrimônio total
+- Parcelas são agrupadas por `grupo_parcelamento` (BIGINT)
+- Status padrão: "pendente"
+- Recorrências geram automaticamente próximas transações
+
+### 2. Sistema de Parcelamento
+
+#### 2.1 Funcionalidades
+- **Parcelas:** Dividir despesa em N parcelas iguais
+- **Agrupamento:** Vincular todas as parcelas pelo `grupo_parcelamento`
+- **Controle:** `parcela_atual` de `total_parcelas`
+- **Geração:** Criar todas as parcelas automaticamente
+
+#### 2.2 Exemplo de Uso
+```
+Compra: Geladeira R$ 1.200,00 em 12x
+- Parcela 1/12: R$ 100,00 - Data: 15/08/2025
+- Parcela 2/12: R$ 100,00 - Data: 15/09/2025
+- ... até ...
+- Parcela 12/12: R$ 100,00 - Data: 15/07/2026
+```
+
+### 3. Sistema de Recorrência
+
+#### 3.1 Frequências Suportadas
+- **Diário:** Todo dia
+- **Semanal:** Uma vez por semana
+- **Mensal:** Uma vez por mês (mesmo dia)
+- **Anual:** Uma vez por ano
+
+#### 3.2 Comportamento
+- Transações recorrentes nascem com `status='pendente'`
+- Usuário marca como `status='pago'` quando efetuar
+- Sistema gera automaticamente próxima ocorrência
+- Campo `proxima_recorrencia` controla quando gerar
+
+#### 3.3 Exemplos
+- **Salário:** R$ 5.000,00 todo dia 5 (mensal)
+- **Conta de luz:** R$ 150,00 todo dia 10 (mensal)
+- **Academia:** R$ 80,00 todo dia 15 (mensal)
+
+### 4. Sistema de Transferências
+
+#### 4.1 Comportamento
+- **Tipo:** `transferencia`
+- **Contas:** `conta_id` (origem) + `conta_destino_id` (destino)
+- **Patrimônio:** Não altera total (redistribuição)
+- **Exemplo:** R$ 500 do Nubank → Itaú
+
+#### 4.2 Impacto nos Saldos
+```
+Antes: Nubank R$ 1.000 | Itaú R$ 500 | Total: R$ 1.500
+Transferência: R$ 300 Nubank → Itaú
+Depois: Nubank R$ 700 | Itaú R$ 800 | Total: R$ 1.500
+```
+
+### 5. Sistema de Metas
+
+#### 5.1 Tipos de Meta
+- **Por Categoria:** "Gastar máximo R$ 500 em Alimentação este mês"
+- **Total:** "Gastar máximo R$ 3.000 no mês"
+
+#### 5.2 Campos da Meta
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| Nome | Text | ✅ | Nome descritivo |
+| Valor Limite | Decimal | ✅ | Valor máximo |
+| Período Início | Date | ✅ | Data início |
+| Período Fim | Date | ✅ | Data fim |
+| Categoria | UUID | ❌ | Categoria específica (null = total) |
+| Tipo | Enum | ✅ | categoria, total |
+
+#### 5.3 Alertas e Acompanhamento
+- **50% do limite:** Aviso amarelo
+- **80% do limite:** Aviso laranja  
+- **100% do limite:** Aviso vermelho
+- **Cálculo:** Soma transações do período vs limite
+
+---
+
+## 🎨 Interface do Usuário
+
+### 1. Tela Principal (Dashboard)
+
+#### 1.1 Layout
+```
+[Header: Logo + Menu + Ações]
+[Resumo: Saldo Total + Receitas + Despesas do Mês]
+[Gráficos: Gastos por Categoria + Evolução Mensal]
+[Últimas Transações: Lista das 10 mais recentes]
+[Link: "Ver Relatórios e Metas" → Página dedicada]
+```
+
+#### 1.2 Cartões de Resumo
+- **Saldo Total:** Soma de todas as contas
+- **Receitas do Mês:** Total de entradas
+- **Despesas do Mês:** Total de saídas
+- **Meta Principal:** Progresso resumido (% usado)
+
+### 2. Nova Transação
+
+#### 2.1 Fluxo de Entrada
+```
+Botão "Nova Transação" →
+┌─ Receita (única/recorrente)
+├─ Despesa (única/recorrente + parcelar?)
+├─ Parcelada (sempre despesa)
+└─ Entre Contas (transferência)
+```
+
+#### 2.2 Formulários Específicos
+
+**Receita/Despesa:**
+- Data, Descrição, Valor, Conta
+- Categoria, Subcategoria (opcionais)
+- Forma Pagamento, Centro Custo (opcionais)
+- ☑️ Recorrente? → Frequência
+- Anexo, Observações
+
+**Parcelada:**
+- Campos básicos + Total de Parcelas
+- Gera automaticamente todas as parcelas
+
+**Transferência:**
+- Data, Descrição, Valor
+- Conta Origem → Conta Destino
+- Observações
+
+### 3. Lista de Transações
+
+#### 3.1 Funcionalidades
+- **Visualização:** Tabela paginada
+- **Filtros:** Data, Categoria, Conta, Status, Tipo
+- **Ordenação:** Data (desc/asc), Valor, Categoria
+- **Busca:** Por descrição
+- **Ações:** Editar, Excluir, Duplicar
+
+#### 3.2 Colunas da Tabela
+| Coluna | Conteúdo |
+|--------|----------|
+| Data | DD/MM/AAAA |
+| Descrição | Texto + ícone tipo |
+| Categoria | Nome + cor |
+| Valor | R$ formatado + cor (verde/vermelho) |
+| Conta | Nome da conta |
+| Status | Badge colorido |
+| Ações | ⚙️ Editar 🗑️ Excluir |
+
+### 4. Página de Relatórios e Metas
+
+#### 4.1 Tela de Relatórios
+- **Layout:** Página dedicada acessível pelo menu principal
+- **Gráfico Principal:** Barras horizontais mostrando metas vs uso atual
+- **Visualização:** Cada barra representa uma meta ativa
+- **Cores:** 
+  - Verde: 0-50% usado
+  - Amarelo: 51-80% usado  
+  - Laranja: 81-99% usado
+  - Vermelho: 100%+ usado (estourou)
+
+#### 4.2 Gráfico de Barras - Metas
+```
+Alimentação    ████████░░ 80% (R$ 400/R$ 500)
+Transporte     ██████░░░░ 60% (R$ 180/R$ 300) 
+Lazer          ███░░░░░░░ 30% (R$ 150/R$ 500)
+Total Mensal   ███████░░░ 70% (R$ 2.100/R$ 3.000)
+```
+
+#### 4.3 Gestão de Metas
+- **Botão:** "Nova Meta" no topo da página
+- **Lista:** Abaixo do gráfico, cards compactos
+- **Ações:** Editar, Pausar, Excluir por meta
+- **Criar/Editar:** Modal ou página separada
+
+### 5. Configurações
+
+#### 5.1 Gestão de Categorias
+- **Listar:** Todas as categorias
+- **Criar:** Nova categoria + cor + ícone
+- **Editar:** Alterar nome/cor/ícone
+- **Ativar/Desativar:** Soft delete
+
+#### 5.2 Gestão de Contas
+- **Listar:** Todas as contas
+- **Criar:** Nova conta + tipo + banco
+- **Editar:** Alterar nome/banco
+- **Saldo Atual:** Calculado em tempo real
+
+---
+
+## 🔄 User Stories
+
+### Epic 1: Gestão Básica de Transações
+
+**US001 - Adicionar Receita**
+> Como usuário, quero registrar uma receita para controlar minha entrada financeira
+
+**Critérios de Aceite:**
+- Posso escolher data, descrição, valor e conta
+- Posso categorizar a receita (opcional)
+- Posso anexar comprovante (opcional)
+- Transação fica como "paga" por padrão
+- Saldo da conta é atualizado automaticamente
+
+**US002 - Adicionar Despesa**
+> Como usuário, quero registrar uma despesa para controlar meus gastos
+
+**Critérios de Aceite:**
+- Posso escolher data, descrição, valor e conta
+- Posso categorizar e subcategorizar (opcional)
+- Posso definir forma de pagamento
+- Posso marcar como pendente ou paga
+- Saldo da conta é atualizado se paga
+
+**US003 - Transferir Entre Contas**
+> Como usuário, quero transferir dinheiro entre minhas contas para reorganizar meu dinheiro
+
+**Critérios de Aceite:**
+- Seleciono conta origem e destino
+- Informo valor e descrição
+- Patrimônio total não se altera
+- Saldos das contas são atualizados
+- Transação aparece como "transferência"
+
+### Epic 2: Parcelamento e Recorrência
+
+**US004 - Compra Parcelada**
+> Como usuário, quero registrar uma compra parcelada para controlar prestações
+
+**Critérios de Aceite:**
+- Informo valor total e número de parcelas
+- Sistema cria automaticamente todas as parcelas
+- Cada parcela tem data de vencimento
+- Parcelas ficam agrupadas visualmente
+- Posso marcar parcelas individuais como pagas
+
+**US005 - Transação Recorrente**
+> Como usuário, quero automatizar transações que se repetem mensalmente
+
+**Critérios de Aceite:**
+- Marco transação como recorrente
+- Escolho frequência (diário/semanal/mensal/anual)
+- Sistema gera próxima transação automaticamente
+- Novas transações nascem como "pendente"
+- Posso parar a recorrência a qualquer momento
+
+### Epic 3: Metas e Controle
+
+**US006 - Criar Meta de Gastos**
+> Como usuário, quero definir limites de gastos para controlar meu orçamento
+
+**Critérios de Aceite:**
+- Defino valor limite e período
+- Posso associar a uma categoria específica
+- Sistema calcula progresso automaticamente
+- Recebo alertas visuais quando próximo do limite
+- Posso ver histórico de metas passadas
+
+**US007 - Dashboard Financeiro**
+> Como usuário, quero ver resumo da minha situação financeira na tela inicial
+
+**Critérios de Aceite:**
+- Vejo saldo total de todas as contas
+- Vejo receitas e despesas do mês atual
+- Vejo gráfico de gastos por categoria
+- Vejo últimas transações
+- Vejo progresso das metas ativas
+
+### Epic 4: Organização e Relatórios
+
+**US008 - Filtrar Transações**
+> Como usuário, quero filtrar transações para encontrar informações específicas
+
+**Critérios de Aceite:**
+- Filtro por período (data início/fim)
+- Filtro por categoria/subcategoria
+- Filtro por conta
+- Filtro por status (pago/pendente)
+- Filtro por tipo (receita/despesa/transferência)
+- Posso combinar múltiplos filtros
+
+**US009 - Buscar Transações**
+> Como usuário, quero buscar transações por descrição para encontrar rapidamente
+
+**Critérios de Aceite:**
+- Campo de busca na lista de transações
+- Busca por descrição (texto livre)
+- Resultados em tempo real
+- Destaque do termo buscado
+- Busca não diferencia maiúscula/minúscula
+
+---
+
+## 🎨 Wireframes e Fluxos
+
+### 1. Fluxo Principal de Uso
+
+```
+1. Usuário acessa app
+2. Ve dashboard com resumo
+3. Clica "Nova Transação"
+4. Escolhe tipo (Receita/Despesa/Parcelada/Transferência)
+5. Preenche formulário específico
+6. Salva transação
+7. Volta para dashboard atualizado
+```
+
+### 2. Fluxo de Parcelamento
+
+```
+1. Usuário clica "Nova Transação" → "Parcelada"
+2. Preenche: Descrição, Valor Total, Parcelas
+3. Sistema calcula valor por parcela
+4. Usuário confirma
+5. Sistema cria N transações (1 para cada parcela)
+6. Todas ficam com status "pendente"
+7. Usuário vai marcando como "paga" conforme paga
+```
+
+### 3. Fluxo de Recorrência
+
+```
+1. Usuário cria transação normal
+2. Marca checkbox "Recorrente"
+3. Escolhe frequência
+4. Sistema agenda próxima recorrência
+5. Na data programada, sistema cria nova transação "pendente"
+6. Usuário é notificado e pode marcar como "paga"
+7. Processo se repete automaticamente
+```
+
+---
+
+## 🏆 Critérios de Sucesso
+
+### Objetivos Quantitativos
+- **Performance:** Carregamento < 2 segundos
+- **Usabilidade:** Cadastro de transação em < 30 segundos
+- **Disponibilidade:** 99% uptime
+- **Responsividade:** Funcional em mobile/desktop
+
+### Objetivos Qualitativos
+- Interface intuitiva e limpa
+- Dados sempre íntegros e consistentes
+- Experiência fluida sem bugs críticos
+- Categorização facilitada e lógica
+
+---
+
+## 🚧 Limitações e Restrições
+
+### Limitações Técnicas
+- **Usuário único:** Sem autenticação multi-user
+- **Moeda única:** Apenas Real brasileiro (R$)
+- **Sem integração bancária:** Cadastro manual apenas
+- **Sem notificações:** Alertas apenas visuais
+
+### Limitações de Escopo (Fora do MVP)
+- Import/Export de dados
+- Relatórios avançados em PDF
+- Gráficos complexos e comparativos
+- Categorização automática por IA
+- Sincronização com bancos
+- Notificações push
+- Multi-usuário/compartilhamento
+
+---
+
+## 📅 Roadmap de Desenvolvimento
+
+### Fase 1: Fundação (Semana 1-2)
+- ✅ Schema do banco
+- ✅ PRD detalhado
+- 🔲 Setup do projeto Next.js
+- 🔲 Configuração Supabase
+- 🔲 Estrutura de pastas e tipos
+
+### Fase 2: CRUD Básico (Semana 3-4)
+- 🔲 Tela de dashboard simples
+- 🔲 Cadastro de transações básicas
+- 🔲 Lista de transações
+- 🔲 Edição/exclusão
+- 🔲 Cálculo de saldos
+
+### Fase 3: Funcionalidades Avançadas (Semana 5-6)
+- 🔲 Sistema de parcelamento
+- 🔲 Transferências entre contas
+- 🔲 Upload de anexos
+- 🔲 Filtros e busca
+
+### Fase 4: Metas e Recorrência (Semana 7-8)
+- 🔲 Sistema de metas
+- 🔲 Transações recorrentes
+- 🔲 Dashboard com gráficos
+- 🔲 Alertas visuais
+
+### Fase 5: Polimento (Semana 9-10)
+- 🔲 Testes e correções
+- 🔲 Performance otimizada
+- 🔲 UI/UX refinado
+- 🔲 Deploy produção
+
+---
+
+## 📖 Documentação Adicional
+
+### Próximos Documentos Necessários
+1. **Estrutura do Projeto** - Arquitetura de pastas Next.js
+2. **API Documentation** - Endpoints e tipos TypeScript
+3. **UI/UX Guide** - Componentes e padrões visuais
+4. **README Técnico** - Setup e instruções desenvolvimento
+
+### Referências Técnicas
+- [Supabase Documentation](https://supabase.com/docs)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [shadcn/ui Components](https://ui.shadcn.com/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+
+---
+
+**Documento criado em:** Agosto 2025  
+**Versão:** 1.0  
+**Status:** ✅ Aprovado para desenvolvimento

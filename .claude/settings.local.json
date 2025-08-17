@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mcp list:*)",
+      "Bash(ls:*)",
+      "Bash(env)",
+      "mcp__supabase__list_tables",
+      "Bash(mv:*)",
+      "Bash(true)",
+      "Bash(rmdir:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(npm:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"Verificando $file...\")",
+      "Bash(done)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(npx tsx:*)"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

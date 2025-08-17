@@ -127,7 +127,12 @@ export default function CategoriasPage() {
                     >
                       Editar
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => router.push('/subcategorias')}
+                    >
                       Subcategorias
                     </Button>
                   </div>

@@ -68,13 +68,30 @@ export async function atualizarSubcategoria(
 }
 
 /**
- * Desativar subcategoria (soft delete)
+ * Buscar subcategoria por ID
  */
-export async function desativarSubcategoria(id: string): Promise<void> {
+export async function obterSubcategoriaPorId(id: string): Promise<Subcategoria | null> {
+  const { data, error } = await supabase
+    .from('fp_subcategorias')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw new Error(`Erro ao buscar subcategoria: ${error.message}`)
+  }
+  return data
+}
+
+/**
+ * Excluir subcategoria (hard delete)
+ */
+export async function excluirSubcategoria(id: string): Promise<void> {
   const { error } = await supabase
     .from('fp_subcategorias')
-    .update({ ativo: false })
+    .delete()
     .eq('id', id)
 
-  if (error) throw new Error(`Erro ao desativar subcategoria: ${error.message}`)
+  if (error) throw new Error(`Erro ao excluir subcategoria: ${error.message}`)
 }

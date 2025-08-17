@@ -68,13 +68,30 @@ export async function atualizarFormaPagamento(
 }
 
 /**
- * Desativar forma de pagamento (soft delete)
+ * Buscar forma de pagamento por ID
  */
-export async function desativarFormaPagamento(id: string): Promise<void> {
+export async function obterFormaPagamentoPorId(id: string): Promise<FormaPagamento | null> {
+  const { data, error } = await supabase
+    .from('fp_formas_pagamento')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw new Error(`Erro ao buscar forma de pagamento: ${error.message}`)
+  }
+  return data
+}
+
+/**
+ * Excluir forma de pagamento (hard delete)
+ */
+export async function excluirFormaPagamento(id: string): Promise<void> {
   const { error } = await supabase
     .from('fp_formas_pagamento')
-    .update({ ativo: false })
+    .delete()
     .eq('id', id)
 
-  if (error) throw new Error(`Erro ao desativar forma de pagamento: ${error.message}`)
+  if (error) throw new Error(`Erro ao excluir forma de pagamento: ${error.message}`)
 }

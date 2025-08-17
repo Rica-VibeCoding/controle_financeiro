@@ -59,9 +59,6 @@ export function FiltrosTransacoes({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg">🔍 Filtros</CardTitle>
-            <CardDescription>
-              Refine sua busca por transações
-            </CardDescription>
           </div>
           <div className="flex items-center gap-2">
             {filtrosAtivos && (

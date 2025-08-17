@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { LoadingPage } from '@/componentes/comum/loading'
@@ -96,35 +95,30 @@ export function ListaTransacoes({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Transações</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-4">
+      {/* Erro */}
+      {erro && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <h4 className="font-medium text-red-800 mb-2">❌ Erro</h4>
+          <p className="text-sm text-red-700">{erro}</p>
+        </div>
+      )}
 
-        {/* Erro */}
-        {erro && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <h4 className="font-medium text-red-800 mb-2">❌ Erro</h4>
-            <p className="text-sm text-red-700">{erro}</p>
-          </div>
-        )}
-
-        {/* Tabela */}
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Conta</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-24">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      {/* Tabela */}
+      <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+        <Table className="min-w-full">
+          <TableHeader>
+            <TableRow className="border-b bg-gray-50/50">
+              <TableHead className="w-[110px] font-semibold whitespace-nowrap">Data</TableHead>
+              <TableHead className="min-w-[250px] font-semibold">Descrição</TableHead>
+              <TableHead className="w-[180px] font-semibold">Categoria</TableHead>
+              <TableHead className="w-[130px] font-semibold text-right whitespace-nowrap">Valor</TableHead>
+              <TableHead className="w-[150px] font-semibold">Conta</TableHead>
+              <TableHead className="w-[110px] font-semibold text-center">Status</TableHead>
+              <TableHead className="w-[90px] font-semibold text-center">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
               {transacoes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
@@ -137,15 +131,15 @@ export function ListaTransacoes({
                 </TableRow>
               ) : (
                 transacoes.map((transacao) => (
-                  <TableRow key={transacao.id}>
-                    <TableCell className="font-mono text-sm">
+                  <TableRow key={transacao.id} className="hover:bg-gray-50/50">
+                    <TableCell className="font-mono text-sm whitespace-nowrap">
                       {new Date(transacao.data).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{transacao.descricao}</div>
                         {transacao.observacoes && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             {transacao.observacoes}
                           </div>
                         )}
@@ -163,38 +157,39 @@ export function ListaTransacoes({
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {(transacao as any).categoria?.nome || '-'}
+                        <div className="truncate">{(transacao as any).categoria?.nome || '-'}</div>
                         {(transacao as any).subcategoria?.nome && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             {(transacao as any).subcategoria.nome}
                           </div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
                       {formatarValor(transacao.valor, transacao.tipo)}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>{(transacao as any).conta?.nome || '-'}</div>
+                        <div className="truncate">{(transacao as any).conta?.nome || '-'}</div>
                         {transacao.tipo === 'transferencia' && (transacao as any).conta_destino && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             → {(transacao as any).conta_destino.nome}
                           </div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {formatarStatus(transacao.status)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 justify-center">
                         {aoEditar && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => aoEditar(transacao)}
                             title="Editar transação"
+                            className="h-8 w-8 p-0"
                           >
                             ✏️
                           </Button>
@@ -203,7 +198,7 @@ export function ListaTransacoes({
                           variant="ghost"
                           size="sm"
                           onClick={() => confirmarExclusao(transacao)}
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
                           title="Excluir transação"
                         >
                           🗑️
@@ -216,8 +211,6 @@ export function ListaTransacoes({
             </TableBody>
           </Table>
         </div>
-
-      </CardContent>
-    </Card>
+    </div>
   )
 }

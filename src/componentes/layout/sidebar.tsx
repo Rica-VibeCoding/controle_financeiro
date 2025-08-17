@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { cn } from '@/utilitarios/cn'
 
 const menuItems = [
@@ -24,7 +25,10 @@ const menuItems = [
     title: 'Relatórios',
     href: '/relatorios',
     icon: '📈'
-  },
+  }
+]
+
+const cadastroItems = [
   {
     title: 'Contas',
     href: '/contas',
@@ -34,11 +38,30 @@ const menuItems = [
     title: 'Categorias',
     href: '/categorias',
     icon: '🏷️'
+  },
+  {
+    title: 'Subcategorias',
+    href: '/subcategorias',
+    icon: '🏷️'
+  },
+  {
+    title: 'Formas de Pagamento',
+    href: '/formas-pagamento',
+    icon: '💳'
+  },
+  {
+    title: 'Centros de Custo',
+    href: '/centros-custo',
+    icon: '📂'
   }
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [cadastroExpanded, setCadastroExpanded] = useState(true)
+
+  // Verificar se alguma página de cadastro está ativa
+  const isCadastroActive = cadastroItems.some(item => pathname.startsWith(item.href))
 
   return (
     <aside className="w-64 bg-muted/50 border-r border-border min-h-screen p-4">
@@ -62,13 +85,63 @@ export function Sidebar() {
       
       <div className="mt-8 pt-4 border-t border-border">
         <div className="text-xs text-muted-foreground mb-2">Configurações</div>
+        
+        {/* Configurações */}
         <Link
           href="/configuracoes"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+            pathname === "/configuracoes"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
         >
           <span className="text-base">⚙️</span>
           Configurações
         </Link>
+
+        {/* Cadastramento - Seção Expansível */}
+        <div className="mt-2">
+          <button
+            onClick={() => setCadastroExpanded(!cadastroExpanded)}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left",
+              isCadastroActive
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <span className="text-base">📝</span>
+            <span className="flex-1">Cadastramento</span>
+            <span className={cn(
+              "text-xs transition-transform",
+              cadastroExpanded ? "rotate-90" : "rotate-0"
+            )}>
+              ▶
+            </span>
+          </button>
+
+          {/* Submenu Cadastramento */}
+          {cadastroExpanded && (
+            <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
+              {cadastroItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                    pathname.startsWith(item.href)
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <span className="text-sm">{item.icon}</span>
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   )

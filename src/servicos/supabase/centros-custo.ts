@@ -53,13 +53,30 @@ export async function atualizarCentroCusto(
 }
 
 /**
- * Desativar centro de custo (soft delete)
+ * Buscar centro de custo por ID
  */
-export async function desativarCentroCusto(id: string): Promise<void> {
+export async function obterCentroCustoPorId(id: string): Promise<CentroCusto | null> {
+  const { data, error } = await supabase
+    .from('fp_centros_custo')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw new Error(`Erro ao buscar centro de custo: ${error.message}`)
+  }
+  return data
+}
+
+/**
+ * Excluir centro de custo (hard delete)
+ */
+export async function excluirCentroCusto(id: string): Promise<void> {
   const { error } = await supabase
     .from('fp_centros_custo')
-    .update({ ativo: false })
+    .delete()
     .eq('id', id)
 
-  if (error) throw new Error(`Erro ao desativar centro de custo: ${error.message}`)
+  if (error) throw new Error(`Erro ao excluir centro de custo: ${error.message}`)
 }

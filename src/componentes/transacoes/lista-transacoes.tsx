@@ -6,7 +6,7 @@ import { Button } from '@/componentes/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { LoadingPage } from '@/componentes/comum/loading'
 import { Transacao } from '@/tipos/database'
-import { obterTransacoesSimples, verificarDadosBanco } from '@/servicos/supabase/transacoes-simples'
+import { obterTransacoesSimples } from '@/servicos/supabase/transacoes-simples'
 
 interface ListaTransacoesProps {
   aoEditar?: (transacao: Transacao) => void
@@ -20,7 +20,6 @@ export function ListaTransacoes({
   const [transacoes, setTransacoes] = useState<any[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
-  const [statusBanco, setStatusBanco] = useState<any>(null)
 
   useEffect(() => {
     async function carregarDados() {
@@ -28,9 +27,6 @@ export function ListaTransacoes({
         setCarregando(true)
         setErro(null)
         
-        // Verificar status do banco
-        const status = await verificarDadosBanco()
-        setStatusBanco(status)
         
         // Carregar transações
         const dadosTransacoes = await obterTransacoesSimples()
@@ -103,22 +99,8 @@ export function ListaTransacoes({
     <Card>
       <CardHeader>
         <CardTitle>Transações</CardTitle>
-        <CardDescription>
-          Gerencie suas receitas, despesas e transferências
-        </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Debug: Status do Banco */}
-        {statusBanco && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-800 mb-2">🔍 Status do Banco (Debug)</h4>
-            <div className="text-sm text-blue-700">
-              <p>Transações: {statusBanco.transacoes}</p>
-              <p>Categorias: {statusBanco.categorias}</p>
-              <p>Contas: {statusBanco.contas}</p>
-            </div>
-          </div>
-        )}
 
         {/* Erro */}
         {erro && (
@@ -235,35 +217,6 @@ export function ListaTransacoes({
           </Table>
         </div>
 
-        {/* Estatísticas */}
-        {transacoes.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 p-4 bg-muted/50 rounded-lg">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">
-                {transacoes.length}
-              </div>
-              <div className="text-sm text-muted-foreground">Total</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {transacoes.filter(t => t.tipo === 'receita').length}
-              </div>
-              <div className="text-sm text-muted-foreground">Receitas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {transacoes.filter(t => t.tipo === 'despesa').length}
-              </div>
-              <div className="text-sm text-muted-foreground">Despesas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {transacoes.filter(t => t.tipo === 'transferencia').length}
-              </div>
-              <div className="text-sm text-muted-foreground">Transferências</div>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

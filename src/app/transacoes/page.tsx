@@ -78,9 +78,6 @@ export default function TransacoesPage() {
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
               Transações
             </h1>
-            <p className="text-muted-foreground">
-              Gerencie suas receitas, despesas, transferências e recorrências
-            </p>
           </div>
           
           <div className="flex gap-2">

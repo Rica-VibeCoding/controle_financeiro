@@ -21,7 +21,8 @@
       "Bash(done)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "mcp__supabase__execute_sql"
     ],
     "deny": []
   },

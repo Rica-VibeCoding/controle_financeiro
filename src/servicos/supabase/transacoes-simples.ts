@@ -19,12 +19,12 @@ export async function obterTransacoesSimples(): Promise<TransacaoComRelacoes[]> 
     .from('fp_transacoes')
     .select(`
       *,
-      categoria:fp_categorias(nome, cor, icone),
-      subcategoria:fp_subcategorias(nome),
-      conta:fp_contas(nome, tipo),
-      conta_destino:fp_contas!conta_destino_id(nome, tipo),
-      forma_pagamento:fp_formas_pagamento(nome, tipo),
-      centro_custo:fp_centros_custo(nome, cor)
+      categoria:categoria_id(nome, cor, icone),
+      subcategoria:subcategoria_id(nome),
+      conta:conta_id(nome, tipo),
+      conta_destino:conta_destino_id(nome, tipo),
+      forma_pagamento:forma_pagamento_id(nome, tipo),
+      centro_custo:centro_custo_id(nome, cor)
     `)
     .order('data', { ascending: false })
     .limit(50)

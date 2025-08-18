@@ -175,9 +175,6 @@ export function FormularioParcelada({
     <Card>
       <CardHeader>
         <CardTitle>{titulo}</CardTitle>
-        <CardDescription>
-          Divida uma despesa em parcelas mensais iguais
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -211,14 +208,13 @@ export function FormularioParcelada({
 
           {/* Descrição */}
           <div>
-            <Label htmlFor="descricao">Descrição *</Label>
+            <Label htmlFor="descricao">Descrição</Label>
             <Input
               id="descricao"
               type="text"
               placeholder="Ex: Geladeira, Sofá, Notebook..."
               value={dados.descricao || ''}
               onChange={(e) => atualizarCampo('descricao', e.target.value)}
-              required
             />
           </div>
 
@@ -296,7 +292,7 @@ export function FormularioParcelada({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Forma de Pagamento */}
             <div>
               <Label htmlFor="forma_pagamento">Forma de Pagamento</Label>
@@ -327,6 +323,17 @@ export function FormularioParcelada({
                   </option>
                 ))}
               </Select>
+            </div>
+
+            {/* Data de Vencimento */}
+            <div>
+              <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+              <Input
+                id="data_vencimento"
+                type="date"
+                value={dados.data_vencimento || ''}
+                onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
+              />
             </div>
           </div>
 

@@ -34,15 +34,6 @@ export default function TransacaoParceladaPage() {
   return (
     <LayoutPrincipal>
       <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-            Nova Transação Parcelada
-          </h1>
-          <p className="text-muted-foreground">
-            Divida uma despesa em parcelas mensais iguais
-          </p>
-        </div>
-
         <FormularioParcelada
           aoSalvar={handleCriar}
           aoCancelar={handleCancelar}

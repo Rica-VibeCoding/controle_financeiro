@@ -69,7 +69,7 @@ export function validarTransacao(transacao: any): string[] {
   const erros: string[] = []
 
   // Campos obrigatórios - conforme schema
-  if (!validarDescricao(transacao.descricao)) {
+  if (transacao.descricao && !validarDescricao(transacao.descricao)) {
     erros.push('Descrição deve ter pelo menos 3 caracteres')
   }
 

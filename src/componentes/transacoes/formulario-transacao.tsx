@@ -15,19 +15,22 @@ import { obterContas } from '@/servicos/supabase/contas'
 import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
 import { obterFormasPagamento } from '@/servicos/supabase/formas-pagamento'
 import { obterCentrosCusto } from '@/servicos/supabase/centros-custo'
+import { obterTransacaoPorId } from '@/servicos/supabase/transacoes'
 
 interface FormularioTransacaoProps {
   aoSalvar: (dados: NovaTransacao) => Promise<void>
   aoCancelar: () => void
   transacaoInicial?: Partial<NovaTransacao>
   titulo?: string
+  transacaoId?: string
 }
 
 export function FormularioTransacao({
   aoSalvar,
   aoCancelar,
   transacaoInicial,
-  titulo = "Nova Transação"
+  titulo = "Nova Transação",
+  transacaoId
 }: FormularioTransacaoProps) {
   // Estado do formulário
   const [dados, setDados] = useState<Partial<NovaTransacao>>({
@@ -69,6 +72,34 @@ export function FormularioTransacao({
         setCategorias(categoriasData)
         setFormasPagamento(formasData)
         setCentrosCusto(centrosData)
+
+        // Se for edição, carregar dados da transação
+        if (transacaoId) {
+          const transacao = await obterTransacaoPorId(transacaoId)
+          if (transacao) {
+            setDados({
+              data: transacao.data,
+              descricao: transacao.descricao,
+              valor: transacao.valor,
+              tipo: transacao.tipo,
+              conta_id: transacao.conta_id,
+              conta_destino_id: transacao.conta_destino_id || undefined,
+              categoria_id: transacao.categoria_id || undefined,
+              subcategoria_id: transacao.subcategoria_id || undefined,
+              forma_pagamento_id: transacao.forma_pagamento_id || undefined,
+              centro_custo_id: transacao.centro_custo_id || undefined,
+              status: transacao.status,
+              data_vencimento: transacao.data_vencimento || undefined,
+              observacoes: transacao.observacoes || undefined,
+              anexo_url: transacao.anexo_url || undefined,
+              recorrente: transacao.recorrente,
+              frequencia_recorrencia: transacao.frequencia_recorrencia || undefined,
+              proxima_recorrencia: transacao.proxima_recorrencia || undefined,
+              parcela_atual: transacao.parcela_atual,
+              total_parcelas: transacao.total_parcelas
+            })
+          }
+        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error)
       } finally {
@@ -77,7 +108,7 @@ export function FormularioTransacao({
     }
 
     carregarDados()
-  }, [])
+  }, [transacaoId])
 
   // Carregar subcategorias quando categoria muda
   useEffect(() => {
@@ -200,9 +231,6 @@ export function FormularioTransacao({
     <Card>
       <CardHeader>
         <CardTitle>{titulo}</CardTitle>
-        <CardDescription>
-          Preencha os dados da transação. Campos com * são obrigatórios.
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -235,13 +263,12 @@ export function FormularioTransacao({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição *</Label>
+            <Label htmlFor="descricao">Descrição</Label>
             <Input
               id="descricao"
               value={dados.descricao}
               onChange={(e) => atualizarCampo('descricao', e.target.value)}
               placeholder="Ex: Supermercado, Salário, Transferência..."
-              required
             />
           </div>
 
@@ -335,7 +362,7 @@ export function FormularioTransacao({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
@@ -346,6 +373,16 @@ export function FormularioTransacao({
                 <option value="previsto">🟡 Previsto</option>
                 <option value="realizado">✅ Realizado</option>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+              <Input
+                id="data_vencimento"
+                type="date"
+                value={dados.data_vencimento || ''}
+                onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
@@ -363,6 +400,22 @@ export function FormularioTransacao({
                 ))}
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="centro_custo_id">Centro de Custo</Label>
+            <Select
+              id="centro_custo_id"
+              value={dados.centro_custo_id || ''}
+              onChange={(e) => atualizarCampo('centro_custo_id', e.target.value)}
+            >
+              <option value="">Selecione um centro</option>
+              {centrosCusto.map(centro => (
+                <option key={centro.id} value={centro.id}>
+                  {centro.nome}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <div className="space-y-2">

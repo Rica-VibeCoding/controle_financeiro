@@ -2,21 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Button } from '@/componentes/ui/button'
-import { FormularioTransacao } from '@/componentes/transacoes/formulario-transacao'
 import { ListaTransacoes } from '@/componentes/transacoes/lista-transacoes'
 import { ListaRecorrentes } from '@/componentes/transacoes/lista-recorrentes'
 import { FiltrosTransacoes } from '@/componentes/comum/filtros-transacoes'
 import { Paginacao } from '@/componentes/comum/paginacao'
-import { useTransacoesContexto } from '@/contextos/transacoes-contexto'
-import { Transacao, NovaTransacao } from '@/tipos/database'
+import { Transacao } from '@/tipos/database'
 import type { FiltrosTransacao, ParametrosPaginacao } from '@/tipos/filtros'
 
 export default function TransacoesPage() {
-  const { criar, atualizar } = useTransacoesContexto()
-  const [mostrarFormulario, setMostrarFormulario] = useState(false)
-  const [transacaoEditando, setTransacaoEditando] = useState<Transacao | null>(null)
+  const router = useRouter()
   const [abaAtiva, setAbaAtiva] = useState<'transacoes' | 'recorrentes'>('transacoes')
   
   // Estados para filtros e paginação
@@ -28,31 +25,9 @@ export default function TransacoesPage() {
     direcao: 'desc'
   })
 
-  // Criar nova transação
-  const handleCriar = async (dados: NovaTransacao) => {
-    await criar(dados)
-    setMostrarFormulario(false)
-  }
-
   // Editar transação
   const handleEditar = (transacao: Transacao) => {
-    setTransacaoEditando(transacao)
-    setMostrarFormulario(true)
-  }
-
-  // Atualizar transação
-  const handleAtualizar = async (dados: NovaTransacao) => {
-    if (transacaoEditando) {
-      await atualizar(transacaoEditando.id, dados)
-      setTransacaoEditando(null)
-      setMostrarFormulario(false)
-    }
-  }
-
-  // Cancelar formulário
-  const handleCancelar = () => {
-    setMostrarFormulario(false)
-    setTransacaoEditando(null)
+    router.push(`/transacoes/nova?editar=${transacao.id}`)
   }
 
   // Handlers para filtros e paginação
@@ -81,14 +56,13 @@ export default function TransacoesPage() {
           </div>
           
           <div className="flex gap-2">
-            <Button 
-              onClick={() => setMostrarFormulario(true)}
-              disabled={mostrarFormulario}
-            >
-              + Nova Transação
-            </Button>
+            <Link href="/transacoes/nova">
+              <Button>
+                + Nova Transação
+              </Button>
+            </Link>
             <Link href="/transacoes/parcelada">
-              <Button variant="outline" disabled={mostrarFormulario}>
+              <Button variant="outline">
                 💳 Parcelar
               </Button>
             </Link>
@@ -119,31 +93,8 @@ export default function TransacoesPage() {
           </button>
         </div>
 
-        {/* Formulário */}
-        {mostrarFormulario && (
-          <FormularioTransacao
-            aoSalvar={transacaoEditando ? handleAtualizar : handleCriar}
-            aoCancelar={handleCancelar}
-            transacaoInicial={transacaoEditando ? {
-              data: transacaoEditando.data,
-              descricao: transacaoEditando.descricao,
-              valor: transacaoEditando.valor,
-              tipo: transacaoEditando.tipo,
-              conta_id: transacaoEditando.conta_id,
-              conta_destino_id: transacaoEditando.conta_destino_id || undefined,
-              categoria_id: transacaoEditando.categoria_id || undefined,
-              subcategoria_id: transacaoEditando.subcategoria_id || undefined,
-              forma_pagamento_id: transacaoEditando.forma_pagamento_id || undefined,
-              centro_custo_id: transacaoEditando.centro_custo_id || undefined,
-              status: transacaoEditando.status,
-              observacoes: transacaoEditando.observacoes || undefined
-            } : undefined}
-            titulo={transacaoEditando ? 'Editar Transação' : 'Nova Transação'}
-          />
-        )}
-
         {/* Filtros e Busca */}
-        {!mostrarFormulario && abaAtiva === 'transacoes' && (
+        {abaAtiva === 'transacoes' && (
           <FiltrosTransacoes
             filtros={filtros}
             onFiltrosChange={handleFiltrosChange}
@@ -152,23 +103,21 @@ export default function TransacoesPage() {
         )}
 
         {/* Conteúdo das abas */}
-        {!mostrarFormulario && (
-          <>
-            {abaAtiva === 'transacoes' && (
-              <>
-                <ListaTransacoes
-                  aoEditar={handleEditar}
-                  aoExcluir={() => {}} // Exclusão já implementada no componente
-                />
-                {/* Paginação será integrada via Context API ou props futuras */}
-              </>
-            )}
-            
-            {abaAtiva === 'recorrentes' && (
-              <ListaRecorrentes />
-            )}
-          </>
-        )}
+        <>
+          {abaAtiva === 'transacoes' && (
+            <>
+              <ListaTransacoes
+                aoEditar={handleEditar}
+                aoExcluir={() => {}} // Exclusão já implementada no componente
+              />
+              {/* Paginação será integrada via Context API ou props futuras */}
+            </>
+          )}
+          
+          {abaAtiva === 'recorrentes' && (
+            <ListaRecorrentes />
+          )}
+        </>
       </div>
     </LayoutPrincipal>
   )

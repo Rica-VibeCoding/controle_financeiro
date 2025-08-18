@@ -236,12 +236,6 @@ export function UploadAnexo({
         </div>
       )}
 
-      <div className="text-xs text-muted-foreground">
-        <p className="font-medium">Tipos aceitos:</p>
-        <p>• Imagens: JPG, PNG, WebP</p>
-        <p>• Documentos: PDF</p>
-        <p>• Tamanho máximo: 5MB</p>
-      </div>
     </div>
   )
 }

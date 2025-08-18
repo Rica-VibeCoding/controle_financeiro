@@ -10,7 +10,8 @@ import { LoadingText } from '@/componentes/comum/loading'
 import { UploadAnexo } from './upload-anexo'
 import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
-import { supabase } from '@/servicos/supabase/cliente'
+import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
+import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
 
 interface FormularioParceladaProps {
   aoSalvar: (dados: NovaTransacao, numeroParcelas: number) => Promise<void>
@@ -38,56 +39,53 @@ export function FormularioParcelada({
 
   const [numeroParcelas, setNumeroParcelas] = useState(2)
 
-  // Dados auxiliares
-  const [contas, setContas] = useState<Conta[]>([])
-  const [categorias, setCategorias] = useState<Categoria[]>([])
-  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([])
-  const [centrosCusto, setCentrosCusto] = useState<CentroCusto[]>([])
+  // Dados do Context
+  const { dados: dadosAuxiliares, loading: dadosLoading } = useDadosAuxiliares()
+  const { contas, categorias, formasPagamento, centrosCusto } = dadosAuxiliares
   
-  const [loading, setLoading] = useState(true)
+  // Subcategorias ainda precisam ser carregadas por categoria
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
+  const [carregandoSubcategorias, setCarregandoSubcategorias] = useState(false)
+  
+  const [loading, setLoading] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [mensagemAnexo, setMensagemAnexo] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null)
 
-  // Carregar dados auxiliares
+  // Carregar subcategorias quando categoria muda
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        const [contasRes, categoriasRes, formasRes, centrosRes] = await Promise.all([
-          supabase.from('fp_contas').select('*').eq('ativo', true).order('nome'),
-          supabase.from('fp_categorias').select('*').eq('ativo', true).eq('tipo', 'despesa').order('nome'),
-          supabase.from('fp_formas_pagamento').select('*').eq('ativo', true).eq('permite_parcelamento', true).order('nome'),
-          supabase.from('fp_centros_custo').select('*').eq('ativo', true).order('nome')
-        ])
+    async function carregarSubcategorias() {
+      if (!dados.categoria_id) {
+        setSubcategorias([])
+        return
+      }
 
-        setContas(contasRes.data || [])
-        setCategorias(categoriasRes.data || [])
-        setFormasPagamento(formasRes.data || [])
-        setCentrosCusto(centrosRes.data || [])
+      try {
+        setCarregandoSubcategorias(true)
+        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id)
+        setSubcategorias(subcategoriasData)
       } catch (error) {
-        console.error('Erro ao carregar dados:', error)
+        console.error('Erro ao carregar subcategorias:', error)
       } finally {
-        setLoading(false)
+        setCarregandoSubcategorias(false)
       }
     }
 
-    carregarDados()
-  }, [])
-
-  // Carregar subcategorias quando categoria muda
-  useEffect(() => {
-    if (dados.categoria_id) {
-      supabase
-        .from('fp_subcategorias')
-        .select('*')
-        .eq('categoria_id', dados.categoria_id)
-        .eq('ativo', true)
-        .order('nome')
-        .then(({ data }) => setSubcategorias(data || []))
-    } else {
-      setSubcategorias([])
-    }
+    carregarSubcategorias()
   }, [dados.categoria_id])
+
+  // Filtrar categorias e formas de pagamento para parceladas
+  const categoriasFiltradas = categorias.filter(cat => cat.tipo === 'despesa' || cat.tipo === 'ambos')
+  const formasParcelamento = formasPagamento.filter(forma => forma.permite_parcelamento)
+
+  if (dadosLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <LoadingText>Carregando formulário...</LoadingText>
+        </CardContent>
+      </Card>
+    )
+  }
 
   // Atualizar campo
   const atualizarCampo = (campo: string, valor: any) => {
@@ -161,7 +159,7 @@ export function FormularioParcelada({
     }
   }
 
-  if (loading) {
+  if (loading || salvando) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -266,7 +264,7 @@ export function FormularioParcelada({
                 onChange={(e) => atualizarCampo('categoria_id', e.target.value)}
               >
                 <option value="">Selecione uma categoria</option>
-                {categorias.map((categoria) => (
+                {categoriasFiltradas.map((categoria) => (
                   <option key={categoria.id} value={categoria.id}>
                     {categoria.nome}
                   </option>
@@ -301,7 +299,7 @@ export function FormularioParcelada({
                 onChange={(e) => atualizarCampo('forma_pagamento_id', e.target.value)}
               >
                 <option value="">Selecione uma forma</option>
-                {formasPagamento.map((forma) => (
+                {formasParcelamento.map((forma) => (
                   <option key={forma.id} value={forma.id}>
                     {forma.nome} ({forma.tipo})
                   </option>

@@ -29,7 +29,10 @@
       "Bash(rg:*)",
       "WebFetch(domain:stripe.com)",
       "WebFetch(domain:docs.stripe.com)",
-      "WebFetch(domain:uxplanet.org)"
+      "WebFetch(domain:uxplanet.org)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(timeout 10 npm run dev)"
     ],
     "deny": []
   },

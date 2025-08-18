@@ -114,13 +114,7 @@ export function ListaRecorrentes() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>🔄 Transações Recorrentes</CardTitle>
-            <CardDescription>
-              Gerencie suas transações automáticas (salário, contas fixas, etc.)
-            </CardDescription>
-          </div>
+        <div className="flex justify-between items-center">
           <Button 
             onClick={handleProcessarRecorrencias}
             disabled={processando}

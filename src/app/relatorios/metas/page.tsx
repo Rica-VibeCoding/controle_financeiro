@@ -5,11 +5,10 @@ import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
-import { obterMetasComProgresso, criarMeta, desativarMeta } from '@/servicos/supabase/metas-funcoes'
+import { MetasService, type MetaComProgresso } from '@/servicos/supabase/metas'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import { usarToast } from '@/hooks/usar-toast'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
-import type { MetaComProgresso } from '@/servicos/supabase/metas-funcoes'
 import type { Categoria } from '@/tipos/database'
 
 export default function MetasPage() {
@@ -27,7 +26,7 @@ export default function MetasPage() {
       setErro(null)
       
       const [dadosMetas, dadosCategorias] = await Promise.all([
-        obterMetasComProgresso(),
+        MetasService.obterMetasComProgresso(),
         obterCategorias()
       ])
       
@@ -55,7 +54,7 @@ export default function MetasPage() {
     }
 
     try {
-      await desativarMeta(metaId)
+      await MetasService.excluir(metaId)
       toast({
         title: "Meta desativada",
         description: `A meta "${nomeMeta}" foi desativada com sucesso.`,

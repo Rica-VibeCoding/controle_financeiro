@@ -3,18 +3,15 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
-import { Input } from '@/componentes/ui/input'
-import { Select } from '@/componentes/ui/select'
-import { Label } from '@/componentes/ui/label'
 import { LoadingText } from '@/componentes/comum/loading'
 import { UploadAnexo } from './upload-anexo'
+import { CamposEssenciais } from './campos-essenciais'
+import { SecaoOpcoesAvancadas } from './secao-opcoes-avancadas'
+import { SecaoRecorrencia } from './secao-recorrencia'
 import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
-import { obterCategorias } from '@/servicos/supabase/categorias'
-import { obterContas } from '@/servicos/supabase/contas'
 import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
-import { obterFormasPagamento } from '@/servicos/supabase/formas-pagamento'
-import { obterCentrosCusto } from '@/servicos/supabase/centros-custo'
+import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { obterTransacaoPorId } from '@/servicos/supabase/transacoes'
 
 interface FormularioTransacaoProps {
@@ -46,37 +43,30 @@ export function FormularioTransacao({
     ...transacaoInicial
   })
 
-  // Dados auxiliares
-  const [contas, setContas] = useState<Conta[]>([])
-  const [categorias, setCategorias] = useState<Categoria[]>([])
-  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([])
-  const [centrosCusto, setCentrosCusto] = useState<CentroCusto[]>([])
+  // Dados do Context
+  const { dados: dadosAuxiliares, loading: dadosLoading } = useDadosAuxiliares()
+  const { contas, categorias, formasPagamento, centrosCusto } = dadosAuxiliares
   
-  const [loading, setLoading] = useState(true)
+  // Subcategorias ainda precisam ser carregadas por categoria
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
+  const [carregandoSubcategorias, setCarregandoSubcategorias] = useState(false)
+  
+  const [loading, setLoading] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [mensagemAnexo, setMensagemAnexo] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null)
 
-  // Carregar dados auxiliares
+  // Carregar transação para edição (se necessário)
   useEffect(() => {
-    async function carregarDados() {
+    async function carregarTransacao() {
+      if (!transacaoId) {
+        return
+      }
+      
       try {
-        const [contasData, categoriasData, formasData, centrosData] = await Promise.all([
-          obterContas(),
-          obterCategorias(),
-          obterFormasPagamento(),
-          obterCentrosCusto()
-        ])
+        setLoading(true)
 
-        setContas(contasData)
-        setCategorias(categoriasData)
-        setFormasPagamento(formasData)
-        setCentrosCusto(centrosData)
-
-        // Se for edição, carregar dados da transação
-        if (transacaoId) {
-          const transacao = await obterTransacaoPorId(transacaoId)
-          if (transacao) {
+        const transacao = await obterTransacaoPorId(transacaoId)
+        if (transacao) {
             setDados({
               data: transacao.data,
               descricao: transacao.descricao,
@@ -98,7 +88,6 @@ export function FormularioTransacao({
               parcela_atual: transacao.parcela_atual,
               total_parcelas: transacao.total_parcelas
             })
-          }
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error)
@@ -107,7 +96,7 @@ export function FormularioTransacao({
       }
     }
 
-    carregarDados()
+    carregarTransacao()
   }, [transacaoId])
 
   // Carregar subcategorias quando categoria muda
@@ -119,10 +108,13 @@ export function FormularioTransacao({
       }
 
       try {
+        setCarregandoSubcategorias(true)
         const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id)
         setSubcategorias(subcategoriasData)
       } catch (error) {
         console.error('Erro ao carregar subcategorias:', error)
+      } finally {
+        setCarregandoSubcategorias(false)
       }
     }
 
@@ -217,7 +209,7 @@ export function FormularioTransacao({
     }
   }
 
-  if (loading) {
+  if (dadosLoading || loading) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -234,97 +226,14 @@ export function FormularioTransacao({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Campos obrigatórios */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo *</Label>
-              <Select
-                id="tipo"
-                value={dados.tipo}
-                onChange={(e) => atualizarCampo('tipo', e.target.value)}
-                required
-              >
-                <option value="receita">💰 Receita</option>
-                <option value="despesa">💸 Despesa</option>
-                <option value="transferencia">🔄 Transferência</option>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="data">Data *</Label>
-              <Input
-                id="data"
-                type="date"
-                value={dados.data}
-                onChange={(e) => atualizarCampo('data', e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição</Label>
-            <Input
-              id="descricao"
-              value={dados.descricao}
-              onChange={(e) => atualizarCampo('descricao', e.target.value)}
-              placeholder="Ex: Supermercado, Salário, Transferência..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="valor">Valor (R$) *</Label>
-              <Input
-                id="valor"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max="99999999.99"
-                value={dados.valor}
-                onChange={(e) => atualizarCampo('valor', parseFloat(e.target.value) || 0)}
-                placeholder="0,00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="conta_id">Conta {dados.tipo === 'transferencia' ? 'Origem' : ''} *</Label>
-              <Select
-                id="conta_id"
-                value={dados.conta_id}
-                onChange={(e) => atualizarCampo('conta_id', e.target.value)}
-                required
-              >
-                <option value="">Selecione uma conta</option>
-                {contas.map(conta => (
-                  <option key={conta.id} value={conta.id}>
-                    {conta.nome}{conta.banco ? ` - ${conta.banco}` : ''} ({conta.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())})
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </div>
-
-          {/* Conta destino para transferências */}
-          {dados.tipo === 'transferencia' && (
-            <div className="space-y-2">
-              <Label htmlFor="conta_destino_id">Conta Destino *</Label>
-              <Select
-                id="conta_destino_id"
-                value={dados.conta_destino_id || ''}
-                onChange={(e) => atualizarCampo('conta_destino_id', e.target.value)}
-                required
-              >
-                <option value="">Selecione a conta destino</option>
-                {contas.filter(c => c.id !== dados.conta_id).map(conta => (
-                  <option key={conta.id} value={conta.id}>
-                    {conta.nome}{conta.banco ? ` - ${conta.banco}` : ''} ({conta.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())})
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
+          {/* Campos Essenciais */}
+          <CamposEssenciais
+            dados={dados}
+            onUpdate={atualizarCampo}
+            contas={contas}
+            categorias={categorias}
+            carregando={dadosLoading}
+          />
 
           {/* Campos opcionais */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

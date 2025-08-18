@@ -6,8 +6,7 @@ import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'
 import { Label } from '@/componentes/ui/label'
 import { Select } from '@/componentes/ui/select'
-import { obterCategorias } from '@/servicos/supabase/categorias'
-import { obterContas } from '@/servicos/supabase/contas'
+import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { FiltrosTransacao } from '@/tipos/filtros'
 import type { Categoria, Conta } from '@/tipos/database'
@@ -25,25 +24,9 @@ export function FiltrosTransacoes({
   onLimpar,
   carregando = false 
 }: FiltrosTransacoesProps) {
-  const [categorias, setCategorias] = useState<Categoria[]>([])
-  const [contas, setContas] = useState<Conta[]>([])
+  const { dados: dadosAuxiliares } = useDadosAuxiliares()
+  const { categorias, contas } = dadosAuxiliares
   const [expandido, setExpandido] = useState(false)
-
-  useEffect(() => {
-    async function carregarDados() {
-      try {
-        const [dadosCategorias, dadosContas] = await Promise.all([
-          obterCategorias(),
-          obterContas()
-        ])
-        setCategorias(dadosCategorias)
-        setContas(dadosContas)
-      } catch (error) {
-        console.error('Erro ao carregar dados para filtros:', error)
-      }
-    }
-    carregarDados()
-  }, [])
 
   const handleChange = (campo: keyof FiltrosTransacao, valor: any) => {
     onFiltrosChange({

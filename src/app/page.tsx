@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTransacoesContexto } from '@/contextos/transacoes-contexto'
-import { obterCategorias } from '@/servicos/supabase/categorias'
+import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { calcularSaldoTotal } from '@/servicos/supabase/transacoes'
 import { Categoria } from '@/tipos/database'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
@@ -12,7 +12,8 @@ import { LoadingText } from '@/componentes/comum/loading'
 
 export default function Home() {
   const { transacoes } = useTransacoesContexto()
-  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const { dados: dadosAuxiliares } = useDadosAuxiliares()
+  const { categorias } = dadosAuxiliares
   const [saldoTotal, setSaldoTotal] = useState(0)
   const [receitasDoMes, setReceitasDoMes] = useState(0)
   const [despesasDoMes, setDespesasDoMes] = useState(0)
@@ -22,9 +23,7 @@ export default function Home() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        // Buscar categorias usando serviço
-        const categoriasData = await obterCategorias()
-        setCategorias(categoriasData.slice(0, 5))
+        // Categorias já vem do Context
         
         // Calcular saldo total usando serviço
         const saldoCalculado = await calcularSaldoTotal()

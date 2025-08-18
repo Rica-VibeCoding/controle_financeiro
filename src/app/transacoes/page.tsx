@@ -12,6 +12,7 @@ import { Paginacao } from '@/componentes/comum/paginacao'
 import { ModalTransferencia } from '@/componentes/modais/modal-transferencia'
 import { ModalLancamento } from '@/componentes/modais/modal-lancamento'
 import { ModalParcelamento } from '@/componentes/modais/modal-parcelamento'
+import { ModalImportacaoCSV } from '@/componentes/importacao/modal-importacao-csv'
 import { useModais } from '@/contextos/modais-contexto'
 import { Transacao } from '@/tipos/database'
 import type { FiltrosTransacao, ParametrosPaginacao } from '@/tipos/filtros'
@@ -75,6 +76,12 @@ export default function TransacoesPage() {
               onClick={() => abrirModal('transferencia')}
             >
               🔄 Transferir
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => abrirModal('importacao')}
+            >
+              📂 Importar CSV
             </Button>
           </div>
         </div>
@@ -145,6 +152,12 @@ export default function TransacoesPage() {
         
         <ModalTransferencia 
           isOpen={modalAberto === 'transferencia'}
+          onClose={fecharModal}
+          onSuccess={() => window.location.reload()}
+        />
+
+        <ModalImportacaoCSV
+          isOpen={modalAberto === 'importacao'}
           onClose={fecharModal}
           onSuccess={() => window.location.reload()}
         />

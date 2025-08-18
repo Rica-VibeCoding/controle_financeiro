@@ -1,6 +1,19 @@
 import { supabase } from './cliente'
 import { Meta, NovaMeta } from '@/tipos/database'
 
+// Tipo para metas com progresso calculado
+export type MetaComProgresso = Meta & {
+  valor_usado: number
+  percentual_usado: number
+  valor_restante: number
+  status_cor: 'verde' | 'amarelo' | 'laranja' | 'vermelho'
+  categoria?: {
+    nome: string
+    cor: string
+    icone: string
+  }
+}
+
 export class MetasService {
   
   /**
@@ -199,6 +212,43 @@ export class MetasService {
     }
 
     return erros
+  }
+
+  /**
+   * Buscar metas com progresso calculado (migrado de metas-funcoes.ts)
+   */
+  static async obterMetasComProgresso(): Promise<MetaComProgresso[]> {
+    const { data: metas, error } = await supabase
+      .from('fp_metas')
+      .select(`
+        *,
+        categoria:fp_categorias(nome, cor, icone)
+      `)
+      .eq('ativo', true)
+      .order('periodo_inicio', { ascending: false })
+
+    if (error) throw new Error(`Erro ao buscar metas: ${error.message}`)
+
+    const metasComProgresso: MetaComProgresso[] = []
+
+    for (const meta of metas || []) {
+      const progresso = await this.calcularProgresso(meta)
+      
+      let statusCor: MetaComProgresso['status_cor'] = 'verde'
+      if (progresso.percentual >= 100) statusCor = 'vermelho'
+      else if (progresso.percentual >= 80) statusCor = 'laranja'
+      else if (progresso.percentual >= 50) statusCor = 'amarelo'
+
+      metasComProgresso.push({
+        ...meta,
+        valor_usado: progresso.valorGasto,
+        percentual_usado: Math.round(progresso.percentual),
+        valor_restante: progresso.valorLimite - progresso.valorGasto,
+        status_cor: statusCor
+      })
+    }
+
+    return metasComProgresso
   }
 
   /**

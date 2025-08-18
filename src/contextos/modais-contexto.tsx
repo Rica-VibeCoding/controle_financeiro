@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react'
 
-type TipoModal = 'transferencia' | 'lancamento' | 'parcelamento' | null
+type TipoModal = 'transferencia' | 'lancamento' | 'parcelamento' | 'importacao' | null
 
 interface ModaisContextoType {
   modalAberto: TipoModal

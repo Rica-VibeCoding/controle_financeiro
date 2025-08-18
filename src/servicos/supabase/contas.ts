@@ -37,20 +37,31 @@ export async function obterContas(incluirInativas = false): Promise<Conta[]> {
 }
 
 /**
- * Buscar contas com saldo calculado
+ * Buscar contas com saldo calculado (otimizado - corrige problema N+1)
  */
 export async function obterContasComSaldo(): Promise<ContaComSaldo[]> {
+  // Buscar contas ativas
   const contas = await obterContas()
-  const contasComSaldo: ContaComSaldo[] = []
-
-  for (const conta of contas) {
-    const saldo = await calcularSaldoConta(conta.id)
-    contasComSaldo.push({
+  
+  // Calcular todos os saldos de uma vez usando função SQL
+  const { data: saldos, error } = await supabase
+    .rpc('calcular_saldos_contas')
+  
+  if (error) throw new Error(`Erro ao calcular saldos: ${error.message}`)
+  
+  // Mapear saldos por conta_id para acesso O(1)
+  const saldosMap = new Map<string, number>()
+  saldos?.forEach((item: any) => saldosMap.set(item.conta_id, item.saldo || 0))
+  
+  // Combinar dados das contas com seus saldos
+  const contasComSaldo: ContaComSaldo[] = contas.map(conta => {
+    const saldo = saldosMap.get(conta.id) || 0
+    return {
       ...conta,
       saldo,
       saldo_formatado: formatarMoeda(saldo)
-    })
-  }
+    }
+  })
 
   return contasComSaldo
 }

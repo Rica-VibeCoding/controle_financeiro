@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { LoadingPage } from '@/componentes/comum/loading'
 import { Transacao } from '@/tipos/database'
 import { obterTransacoesSimples } from '@/servicos/supabase/transacoes-simples'
+import { excluirTransacao, excluirGrupoParcelamento } from '@/servicos/supabase/transacoes'
 
 interface ListaTransacoesProps {
   aoEditar?: (transacao: Transacao) => void
@@ -82,11 +83,76 @@ export function ListaTransacoes({
     )
   }
 
-  // Confirmar exclusão (temporário - sem Context API)
-  const confirmarExclusao = (transacao: Transacao) => {
-    if (window.confirm(`Tem certeza que deseja excluir a transação "${transacao.descricao}"?`)) {
-      console.log('Exclusão temporariamente desabilitada para debug')
-      // excluir(transacao.id)
+  // Hard delete da transação conforme solicitado
+  const confirmarExclusao = async (transacao: Transacao) => {
+    // Verificar se é transação parcelada
+    const isParcelada = transacao.total_parcelas > 1
+    const hasGrupoParcelamento = transacao.grupo_parcelamento !== null
+    
+    let mensagemConfirmacao = `⚠️ ATENÇÃO: Esta ação será PERMANENTE!\n\n`
+    mensagemConfirmacao += `Transação: "${transacao.descricao}"\n`
+    mensagemConfirmacao += `Valor: ${transacao.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n`
+    mensagemConfirmacao += `Data: ${new Date(transacao.data).toLocaleDateString('pt-BR')}\n`
+    
+    // Opcões para transações parceladas
+    if (isParcelada && hasGrupoParcelamento) {
+      mensagemConfirmacao += `\n🔹 Esta é a parcela ${transacao.parcela_atual} de ${transacao.total_parcelas}\n`
+      mensagemConfirmacao += `\nEscolha uma opção:\n`
+      mensagemConfirmacao += `• OK = Excluir APENAS esta parcela\n`
+      mensagemConfirmacao += `• Cancelar = Não excluir nada\n\n`
+      mensagemConfirmacao += `💡 Para excluir TODAS as parcelas, clique no botão "🗑️📦" ao lado`
+    } else {
+      mensagemConfirmacao += `\nTem certeza que deseja excluir DEFINITIVAMENTE esta transação?`
+    }
+    
+    const confirmar = window.confirm(mensagemConfirmacao)
+    
+    if (confirmar) {
+      try {
+        await excluirTransacao(transacao.id)
+        
+        // Atualizar lista local após exclusão
+        setTransacoes(prev => prev.filter(t => t.id !== transacao.id))
+        
+        // Exibir feedback de sucesso
+        alert(`✅ Transação "${transacao.descricao}" excluída com sucesso!`)
+        
+      } catch (error) {
+        console.error('Erro ao excluir transação:', error)
+        alert(`❌ Erro ao excluir transação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+      }
+    }
+  }
+
+  // Excluir todas as parcelas de um grupo
+  const confirmarExclusaoGrupo = async (transacao: Transacao) => {
+    if (!transacao.grupo_parcelamento) {
+      alert('Esta transação não faz parte de um grupo de parcelas.')
+      return
+    }
+    
+    const confirmar = window.confirm(
+      `⚠️ ATENÇÃO: Esta ação excluirá TODAS as parcelas!\n\n` +
+      `Transação: "${transacao.descricao}"\n` +
+      `Total de parcelas: ${transacao.total_parcelas}\n` +
+      `Valor total: ${(transacao.valor * transacao.total_parcelas).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n\n` +
+      `Tem certeza que deseja excluir DEFINITIVAMENTE todas as ${transacao.total_parcelas} parcelas?`
+    )
+    
+    if (confirmar) {
+      try {
+        await excluirGrupoParcelamento(transacao.grupo_parcelamento)
+        
+        // Atualizar lista local removendo todas as parcelas do grupo
+        setTransacoes(prev => prev.filter(t => t.grupo_parcelamento !== transacao.grupo_parcelamento))
+        
+        // Exibir feedback de sucesso
+        alert(`✅ Todas as ${transacao.total_parcelas} parcelas de "${transacao.descricao}" foram excluídas com sucesso!`)
+        
+      } catch (error) {
+        console.error('Erro ao excluir grupo de parcelas:', error)
+        alert(`❌ Erro ao excluir parcelas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+      }
     }
   }
 
@@ -115,7 +181,7 @@ export function ListaTransacoes({
               <TableHead className="w-[130px] font-semibold text-right whitespace-nowrap">Valor</TableHead>
               <TableHead className="w-[150px] font-semibold">Conta</TableHead>
               <TableHead className="w-[110px] font-semibold text-center">Status</TableHead>
-              <TableHead className="w-[90px] font-semibold text-center">Ações</TableHead>
+              <TableHead className="w-[120px] font-semibold text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -199,10 +265,26 @@ export function ListaTransacoes({
                           size="sm"
                           onClick={() => confirmarExclusao(transacao)}
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
-                          title="Excluir transação"
+                          title={
+                            transacao.total_parcelas > 1 && transacao.grupo_parcelamento
+                              ? `Excluir apenas esta parcela (${transacao.parcela_atual}/${transacao.total_parcelas})`
+                              : "Excluir transação"
+                          }
                         >
                           🗑️
                         </Button>
+                        {/* Botão para excluir todas as parcelas */}
+                        {transacao.total_parcelas > 1 && transacao.grupo_parcelamento && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => confirmarExclusaoGrupo(transacao)}
+                            className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                            title={`Excluir TODAS as ${transacao.total_parcelas} parcelas`}
+                          >
+                            🗑️📦
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

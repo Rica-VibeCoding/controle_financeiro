@@ -1,4 +1,5 @@
 import { supabase } from './cliente'
+import { prepararTransacaoParaInsercao } from '@/utilitarios/validacao'
 import type { Transacao, NovaTransacao } from '@/tipos/database'
 
 type TransacaoComRelacoes = Transacao & {
@@ -39,12 +40,15 @@ export async function obterTransacoesSimples(): Promise<TransacaoComRelacoes[]> 
 }
 
 /**
- * Criar nova transação - versão simplificada
+ * Criar nova transação - versão simplificada com limpeza de campos
  */
 export async function criarTransacaoSimples(transacao: NovaTransacao): Promise<Transacao> {
+  // Limpar campos UUID vazios também na versão simples
+  const transacaoPreparada = prepararTransacaoParaInsercao(transacao)
+  
   const { data, error } = await supabase
     .from('fp_transacoes')
-    .insert([transacao])
+    .insert([transacaoPreparada])
     .select()
     .single()
 

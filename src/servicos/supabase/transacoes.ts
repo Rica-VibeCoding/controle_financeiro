@@ -1,4 +1,5 @@
 import { supabase } from './cliente'
+import { prepararTransacaoParaInsercao, validarTransacao, limparCamposUUID, corrigirTransacaoRecorrente } from '@/utilitarios/validacao'
 import type { 
   Transacao, 
   NovaTransacao
@@ -124,9 +125,18 @@ export async function obterTransacaoPorId(id: string): Promise<TransacaoComRelac
  * Criar nova transação
  */
 export async function criarTransacao(transacao: NovaTransacao): Promise<Transacao> {
+  // Validar dados antes de inserir
+  const errosValidacao = validarTransacao(transacao)
+  if (errosValidacao.length > 0) {
+    throw new Error(`Dados inválidos: ${errosValidacao.join(', ')}`)
+  }
+
+  // Preparar transação (limpar campos vazios para null)
+  const transacaoPreparada = prepararTransacaoParaInsercao(transacao)
+
   const { data, error } = await supabase
     .from('fp_transacoes')
-    .insert([transacao])
+    .insert([transacaoPreparada])
     .select()
     .single()
 
@@ -143,9 +153,12 @@ export async function atualizarTransacao(
   id: string, 
   atualizacoes: AtualizarTransacao
 ): Promise<void> {
+  // Limpar campos UUID vazios antes de atualizar
+  const atualizacoesLimpas = limparCamposUUID(atualizacoes)
+  
   const { error } = await supabase
     .from('fp_transacoes')
-    .update(atualizacoes)
+    .update(atualizacoesLimpas)
     .eq('id', id)
 
   if (error) throw new Error(`Erro ao atualizar transação: ${error.message}`)
@@ -258,9 +271,12 @@ export async function criarTransacaoParcelada(
     })
   }
 
+  // Preparar todas as parcelas (limpar campos UUID vazios)
+  const parcelasPreparadas = parcelas.map(parcela => prepararTransacaoParaInsercao(parcela))
+
   const { data, error } = await supabase
     .from('fp_transacoes')
-    .insert(parcelas)
+    .insert(parcelasPreparadas)
     .select()
 
   if (error) throw new Error(`Erro ao criar transação parcelada: ${error.message}`)
@@ -320,41 +336,55 @@ export async function obterTransacoesRecorrentesVencidas(): Promise<Transacao[]>
  * Processar recorrência - gerar próxima transação
  */
 export async function processarRecorrencia(transacaoBase: Transacao): Promise<Transacao> {
-  if (!transacaoBase.recorrente || !transacaoBase.proxima_recorrencia || !transacaoBase.frequencia_recorrencia) {
+  // Auto-corrigir transação recorrente com dados inconsistentes
+  const transacaoCorrigida = corrigirTransacaoRecorrente(transacaoBase)
+  
+  if (!transacaoCorrigida.recorrente || !transacaoCorrigida.proxima_recorrencia || !transacaoCorrigida.frequencia_recorrencia) {
     throw new Error('Transação não é recorrente ou dados incompletos')
   }
 
-  // Calcular próxima data com base na frequência
+  // Atualizar a transação original se foi corrigida
+  if (transacaoCorrigida !== transacaoBase) {
+    await atualizarTransacao(transacaoBase.id, {
+      frequencia_recorrencia: transacaoCorrigida.frequencia_recorrencia,
+      proxima_recorrencia: transacaoCorrigida.proxima_recorrencia
+    })
+  }
+
+  // Calcular próxima data com base na frequência (usar dados corrigidos)
   const proximaData = calcularProximaDataRecorrencia(
-    transacaoBase.proxima_recorrencia, 
-    transacaoBase.frequencia_recorrencia as 'diario' | 'semanal' | 'mensal' | 'anual'
+    transacaoCorrigida.proxima_recorrencia!, 
+    transacaoCorrigida.frequencia_recorrencia as 'diario' | 'semanal' | 'mensal' | 'anual'
   )
 
-  // Criar nova transação recorrente
+  // Criar nova transação recorrente (usar dados corrigidos)
   const novaTransacao: NovaTransacao = {
-    data: transacaoBase.proxima_recorrencia,
-    descricao: transacaoBase.descricao,
-    valor: transacaoBase.valor,
-    tipo: transacaoBase.tipo,
-    conta_id: transacaoBase.conta_id,
-    conta_destino_id: transacaoBase.conta_destino_id,
-    categoria_id: transacaoBase.categoria_id,
-    subcategoria_id: transacaoBase.subcategoria_id,
-    forma_pagamento_id: transacaoBase.forma_pagamento_id,
-    centro_custo_id: transacaoBase.centro_custo_id,
+    data: transacaoCorrigida.proxima_recorrencia!,
+    descricao: transacaoCorrigida.descricao,
+    valor: transacaoCorrigida.valor,
+    tipo: transacaoCorrigida.tipo,
+    conta_id: transacaoCorrigida.conta_id,
+    conta_destino_id: transacaoCorrigida.conta_destino_id,
+    categoria_id: transacaoCorrigida.categoria_id,
+    subcategoria_id: transacaoCorrigida.subcategoria_id,
+    forma_pagamento_id: transacaoCorrigida.forma_pagamento_id,
+    centro_custo_id: transacaoCorrigida.centro_custo_id,
     status: 'pendente', // Conforme PRD - sempre nasce pendente
     parcela_atual: 1,
     total_parcelas: 1,
     recorrente: true,
-    frequencia_recorrencia: transacaoBase.frequencia_recorrencia,
+    frequencia_recorrencia: transacaoCorrigida.frequencia_recorrencia,
     proxima_recorrencia: proximaData,
-    observacoes: transacaoBase.observacoes
+    observacoes: transacaoCorrigida.observacoes
   }
+
+  // Preparar transação (limpar campos UUID vazios)
+  const transacaoPreparada = prepararTransacaoParaInsercao(novaTransacao)
 
   // Inserir nova transação
   const { data, error } = await supabase
     .from('fp_transacoes')
-    .insert([novaTransacao])
+    .insert([transacaoPreparada])
     .select()
     .single()
 
@@ -431,4 +461,45 @@ export async function buscarTransacoesRecorrentes(): Promise<Transacao[]> {
 
   if (error) throw new Error(`Erro ao buscar transações recorrentes: ${error.message}`)
   return data || []
+}
+
+/**
+ * Corrigir transações recorrentes com dados inconsistentes
+ */
+export async function corrigirTransacoesRecorrentesInconsistentes(): Promise<void> {
+  try {
+    // Buscar transações recorrentes com frequência nula
+    const { data: transacoesInconsistentes, error } = await supabase
+      .from('fp_transacoes')
+      .select('*')
+      .eq('recorrente', true)
+      .is('frequencia_recorrencia', null)
+
+    if (error) throw new Error(`Erro ao buscar transações inconsistentes: ${error.message}`)
+
+    if (!transacoesInconsistentes || transacoesInconsistentes.length === 0) {
+      console.log('Não há transações recorrentes inconsistentes')
+      return
+    }
+
+    console.log(`Encontradas ${transacoesInconsistentes.length} transações recorrentes inconsistentes`)
+
+    // Corrigir cada transação
+    for (const transacao of transacoesInconsistentes) {
+      await supabase
+        .from('fp_transacoes')
+        .update({ 
+          frequencia_recorrencia: 'mensal' // Padrão para transações sem frequência
+        })
+        .eq('id', transacao.id)
+
+      console.log(`Corrigida transação recorrente: ${transacao.descricao} (${transacao.id})`)
+    }
+
+    console.log(`Corrigidas ${transacoesInconsistentes.length} transações recorrentes`)
+
+  } catch (error) {
+    console.error('Erro ao corrigir transações recorrentes:', error)
+    throw error
+  }
 }

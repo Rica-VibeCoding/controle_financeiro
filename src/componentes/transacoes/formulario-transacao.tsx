@@ -8,6 +8,7 @@ import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
 import { LoadingText } from '@/componentes/comum/loading'
 import { UploadAnexo } from './upload-anexo'
+import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import { obterContas } from '@/servicos/supabase/contas'
@@ -167,24 +168,10 @@ export function FormularioTransacao({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validações conforme documentação
-    if (!dados.data || !dados.descricao || !dados.conta_id) {
-      alert('Preencha todos os campos obrigatórios')
-      return
-    }
-
-    if (!dados.valor || dados.valor <= 0) {
-      alert('Valor deve ser maior que zero')
-      return
-    }
-
-    if (dados.tipo === 'transferencia' && !dados.conta_destino_id) {
-      alert('Transferências precisam de conta destino')
-      return
-    }
-
-    if (dados.conta_id === dados.conta_destino_id) {
-      alert('Conta origem e destino devem ser diferentes')
+    // Usar validação centralizada
+    const errosValidacao = validarTransacao(dados)
+    if (errosValidacao.length > 0) {
+      alert(`Erro de validação:\n${errosValidacao.join('\n')}`)
       return
     }
 
@@ -193,6 +180,7 @@ export function FormularioTransacao({
       await aoSalvar(dados as NovaTransacao)
     } catch (error) {
       console.error('Erro ao salvar:', error)
+      alert(`Erro ao salvar transação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     } finally {
       setSalvando(false)
     }

@@ -8,6 +8,7 @@ import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
 import { LoadingText } from '@/componentes/comum/loading'
 import { UploadAnexo } from './upload-anexo'
+import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
 import { supabase } from '@/servicos/supabase/cliente'
 

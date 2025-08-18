@@ -30,7 +30,7 @@ export function SeletorConta({
         <option value="">Selecione uma conta</option>
         {contas.map((conta) => (
           <option key={conta.id} value={conta.id}>
-            {conta.nome} ({conta.tipo})
+            {conta.nome} ({conta.tipo}){conta.banco && ` - ${conta.banco}`}
           </option>
         ))}
       </Select>

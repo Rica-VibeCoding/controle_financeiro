@@ -157,6 +157,7 @@ export interface Database {
           data_registro: string
           anexo_url: string | null
           observacoes: string | null
+          identificador_externo: string | null
           created_at: string
           updated_at: string
         }
@@ -183,6 +184,7 @@ export interface Database {
           data_registro?: string
           anexo_url?: string | null
           observacoes?: string | null
+          identificador_externo?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -209,6 +211,7 @@ export interface Database {
           data_registro?: string
           anexo_url?: string | null
           observacoes?: string | null
+          identificador_externo?: string | null
           created_at?: string
           updated_at?: string
         }

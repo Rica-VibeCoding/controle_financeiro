@@ -50,10 +50,23 @@ export function limparCamposUUID<T extends Record<string, any>>(objeto: T): T {
     'centro_custo_id',
     'conta_destino_id'
   ]
+  
+  // Campos de texto que podem ser vazios (não UUID)
+  const camposTexto = [
+    'identificador_externo'
+  ]
 
   const objetoLimpo: any = { ...objeto }
 
+  // Limpar campos UUID vazios
   camposUUID.forEach(campo => {
+    if (objetoLimpo[campo] === '' || objetoLimpo[campo] === undefined) {
+      objetoLimpo[campo] = null
+    }
+  })
+  
+  // Preservar campos de texto, mas limpar se vazios
+  camposTexto.forEach(campo => {
     if (objetoLimpo[campo] === '' || objetoLimpo[campo] === undefined) {
       objetoLimpo[campo] = null
     }
@@ -143,7 +156,8 @@ export function prepararTransacaoParaInsercao(transacao: Partial<NovaTransacao>)
     anexo_url: transacaoLimpa.anexo_url,
     observacoes: transacaoLimpa.observacoes,
     frequencia_recorrencia: transacaoLimpa.frequencia_recorrencia,
-    proxima_recorrencia: transacaoLimpa.proxima_recorrencia
+    proxima_recorrencia: transacaoLimpa.proxima_recorrencia,
+    identificador_externo: transacaoLimpa.identificador_externo
   }
 
   return transacaoCompleta

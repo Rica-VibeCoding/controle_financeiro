@@ -8,6 +8,10 @@ import { SeletorConta } from './seletor-conta'
 import { usarToast } from '@/hooks/usar-toast'
 import { processarCSV } from '@/servicos/importacao/processador-csv'
 import { mapearLinhasNubank } from '@/servicos/importacao/mapeador-nubank'
+import { verificarDuplicatas } from '@/servicos/importacao/validador-duplicatas'
+import { importarTransacoes } from '@/servicos/importacao/importador-transacoes'
+import { PreviewImportacao } from './preview-importacao'
+import { TransacaoImportada } from '@/tipos/importacao'
 
 interface ModalImportacaoCSVProps {
   isOpen: boolean
@@ -24,6 +28,9 @@ export function ModalImportacaoCSV({
   const [contaSelecionada, setContaSelecionada] = useState('')
   const [carregando, setCarregando] = useState(false)
   const [dadosProcessados, setDadosProcessados] = useState<any[]>([])
+  const [transacoesMapeadas, setTransacoesMapeadas] = useState<TransacaoImportada[]>([])
+  const [duplicadas, setDuplicadas] = useState<TransacaoImportada[]>([])
+  const [mostrarPreview, setMostrarPreview] = useState(false)
   
   const { erro, info, sucesso } = usarToast()
 
@@ -54,23 +61,69 @@ export function ModalImportacaoCSV({
 
     setCarregando(true)
     try {
-      const transacoesMapeadas = mapearLinhasNubank(dadosProcessados, contaSelecionada)
-      info(`Dados processados: ${transacoesMapeadas.length} transações mapeadas. Importação será finalizada na Fase 3.`)
+      // Mapear dados
+      const transacoesMap = mapearLinhasNubank(dadosProcessados, contaSelecionada)
       
-      if (onSuccess) onSuccess()
-      onClose()
+      // Verificar duplicatas
+      const { novas, duplicadas: dups } = await verificarDuplicatas(transacoesMap)
+      
+      setTransacoesMapeadas(novas)
+      setDuplicadas(dups)
+      setMostrarPreview(true)
+      
+      sucesso(`${novas.length} transações prontas para importar. ${dups.length} duplicadas encontradas.`)
     } catch (error) {
-      erro('Erro ao mapear transações')
+      erro('Erro ao processar transações')
       console.error(error)
     } finally {
       setCarregando(false)
     }
   }
 
+  const handleConfirmarImportacao = async () => {
+    if (transacoesMapeadas.length === 0) {
+      erro('Nenhuma transação para importar')
+      return
+    }
+
+    setCarregando(true)
+    try {
+      const resultado = await importarTransacoes(transacoesMapeadas)
+      
+      if (resultado.erros.length === 0) {
+        sucesso(`✅ ${resultado.importadas} transações importadas com sucesso!`)
+      } else if (resultado.importadas > 0) {
+        sucesso(`✅ ${resultado.importadas} importadas. ${resultado.erros.length} com erro (veja console)`)
+        console.error('Detalhes dos erros:', resultado.erros)
+      } else {
+        erro(`❌ Nenhuma transação foi importada. ${resultado.erros.length} erros encontrados`)
+        console.error('Erros de importação:', resultado.erros)
+        return // Não fecha o modal se nada foi importado
+      }
+      
+      if (onSuccess) onSuccess()
+      onClose()
+    } catch (error) {
+      erro('Erro ao importar transações')
+      console.error('Erro na importação:', error)
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  const handleVoltarUpload = () => {
+    setMostrarPreview(false)
+    setTransacoesMapeadas([])
+    setDuplicadas([])
+  }
+
   const handleFechar = () => {
     setArquivo(null)
     setContaSelecionada('')
     setDadosProcessados([])
+    setTransacoesMapeadas([])
+    setDuplicadas([])
+    setMostrarPreview(false)
     onClose()
   }
 
@@ -78,10 +131,20 @@ export function ModalImportacaoCSV({
     <ModalBase
       isOpen={isOpen}
       onClose={handleFechar}
-      title="📂 Importar CSV"
-      maxWidth="md"
+      title={mostrarPreview ? "📋 Preview da Importação" : "📂 Importar CSV"}
+      maxWidth={mostrarPreview ? "xl" : "md"}
     >
       <div className="space-y-6">
+        {mostrarPreview ? (
+          <PreviewImportacao
+            transacoes={transacoesMapeadas}
+            duplicadas={duplicadas}
+            onConfirmar={handleConfirmarImportacao}
+            onCancelar={handleVoltarUpload}
+            carregando={carregando}
+          />
+        ) : (
+          <>
         {/* Seleção de Conta */}
         <SeletorConta
           contaSelecionada={contaSelecionada}
@@ -135,6 +198,8 @@ export function ModalImportacaoCSV({
             {carregando ? 'Processando...' : 'Importar'}
           </Button>
         </div>
+          </>
+        )}
       </div>
     </ModalBase>
   )

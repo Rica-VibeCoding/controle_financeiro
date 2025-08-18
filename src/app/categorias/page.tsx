@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { obterCategoriasComSubcategorias, excluirCategoria } from '@/servicos/supabase/categorias'
+import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { Categoria } from '@/tipos/database'
 
 type CategoriaComSubcategorias = Categoria & {
@@ -120,7 +121,10 @@ export default function CategoriasPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <span style={{ color: categoria.cor }} className="text-lg">●</span>
-                          <span className="text-2xl">{categoria.icone}</span>
+                          {(() => {
+                            const IconeComponente = obterIconePorNome(categoria.icone)
+                            return <IconeComponente size={20} style={{ color: categoria.cor }} />
+                          })()}
                           <div className="font-medium">{categoria.nome}</div>
                         </div>
                       </TableCell>

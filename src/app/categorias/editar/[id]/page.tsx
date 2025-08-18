@@ -11,12 +11,7 @@ import { Select } from '@/componentes/ui/select'
 import { obterCategorias, atualizarCategoria } from '@/servicos/supabase/categorias'
 import { usarToast } from '@/hooks/usar-toast'
 import type { Categoria } from '@/tipos/database'
-
-const ICONES_CATEGORIAS = [
-  '🍕', '🛒', '🏠', '🚗', '💊', '🎓', '🎮', '🎭',
-  '💼', '💳', '🛍️', '⛽', '🍽️', '🚇', '🏥', '🎸',
-  '📚', '🧾', '💰', '📱', '💡', '🚲', '✈️', '🎯'
-]
+import { IconePicker } from '@/componentes/ui/icone-picker'
 
 const CORES_CATEGORIAS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e', 
@@ -266,29 +261,11 @@ export default function EditarCategoriaPage() {
               </div>
 
               {/* Ícone */}
-              <div className="space-y-2">
-                <Label>Ícone *</Label>
-                <div className="grid grid-cols-8 gap-2">
-                  {ICONES_CATEGORIAS.map((icone) => (
-                    <button
-                      key={icone}
-                      type="button"
-                      onClick={() => setDados(prev => ({ ...prev, icone }))}
-                      disabled={salvando}
-                      className={`
-                        p-3 text-xl rounded-lg border-2 transition-colors
-                        hover:bg-accent hover:text-accent-foreground
-                        ${dados.icone === icone 
-                          ? 'border-primary bg-primary/10' 
-                          : 'border-border'
-                        }
-                      `}
-                    >
-                      {icone}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <IconePicker
+                iconeSelecionado={dados.icone}
+                onIconeChange={(icone) => setDados(prev => ({ ...prev, icone }))}
+                disabled={salvando}
+              />
 
               {/* Cor */}
               <div className="space-y-2">

@@ -8,6 +8,7 @@ import { Button } from '@/componentes/ui/button'
 import { obterMetasComProgresso, criarMeta, desativarMeta } from '@/servicos/supabase/metas-funcoes'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import { usarToast } from '@/hooks/usar-toast'
+import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { MetaComProgresso } from '@/servicos/supabase/metas-funcoes'
 import type { Categoria } from '@/tipos/database'
 
@@ -194,11 +195,10 @@ export default function MetasPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          {meta.categoria && (
-                            <span style={{ color: meta.categoria.cor }}>
-                              {meta.categoria.icone}
-                            </span>
-                          )}
+                          {meta.categoria && (() => {
+                            const IconeComponente = obterIconePorNome(meta.categoria.icone)
+                            return <IconeComponente size={16} style={{ color: meta.categoria.cor }} />
+                          })()}
                           {meta.nome}
                           <span className={`inline-block w-3 h-3 rounded-full ${getStatusColor(meta.status_cor)}`} />
                         </CardTitle>

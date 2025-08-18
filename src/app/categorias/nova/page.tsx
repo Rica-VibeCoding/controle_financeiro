@@ -10,12 +10,7 @@ import { Label } from '@/componentes/ui/label'
 import { Select } from '@/componentes/ui/select'
 import { criarCategoria } from '@/servicos/supabase/categorias'
 import { usarToast } from '@/hooks/usar-toast'
-
-const ICONES_CATEGORIAS = [
-  '🍕', '🛒', '🏠', '🚗', '💊', '🎓', '🎮', '🎭',
-  '💼', '💳', '🛍️', '⛽', '🍽️', '🚇', '🏥', '🎸',
-  '📚', '🧾', '💰', '📱', '💡', '🚲', '✈️', '🎯'
-]
+import { IconePicker } from '@/componentes/ui/icone-picker'
 
 const CORES_CATEGORIAS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e', 
@@ -32,7 +27,7 @@ export default function NovaCategoriaPage() {
   const [dados, setDados] = useState({
     nome: '',
     tipo: '' as 'receita' | 'despesa' | 'ambos' | '',
-    icone: '🏷️',
+    icone: 'banknote',
     cor: '#3b82f6',
     ativo: true
   })
@@ -185,29 +180,11 @@ export default function NovaCategoriaPage() {
               </div>
 
               {/* Ícone */}
-              <div className="space-y-2">
-                <Label>Ícone *</Label>
-                <div className="grid grid-cols-8 gap-2">
-                  {ICONES_CATEGORIAS.map((icone) => (
-                    <button
-                      key={icone}
-                      type="button"
-                      onClick={() => setDados(prev => ({ ...prev, icone }))}
-                      disabled={carregando}
-                      className={`
-                        p-3 text-xl rounded-lg border-2 transition-colors
-                        hover:bg-accent hover:text-accent-foreground
-                        ${dados.icone === icone 
-                          ? 'border-primary bg-primary/10' 
-                          : 'border-border'
-                        }
-                      `}
-                    >
-                      {icone}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <IconePicker
+                iconeSelecionado={dados.icone}
+                onIconeChange={(icone) => setDados(prev => ({ ...prev, icone }))}
+                disabled={carregando}
+              />
 
               {/* Cor */}
               <div className="space-y-2">

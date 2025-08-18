@@ -8,6 +8,7 @@ import { Label } from '@/componentes/ui/label'
 import { Select } from '@/componentes/ui/select'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import { obterContas } from '@/servicos/supabase/contas'
+import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { FiltrosTransacao } from '@/tipos/filtros'
 import type { Categoria, Conta } from '@/tipos/database'
 
@@ -136,11 +137,14 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               >
                 <option value="">Todas as categorias</option>
-                {categorias.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>
-                    {categoria.icone} {categoria.nome}
-                  </option>
-                ))}
+                {categorias.map((categoria) => {
+                  const IconeComponente = obterIconePorNome(categoria.icone)
+                  return (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
+                  )
+                })}
               </Select>
             </div>
 

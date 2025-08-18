@@ -52,6 +52,36 @@ const formatarTipoConta = (tipo: string): string => {
 }
 
 /**
+ * Calcula próxima data de recorrência
+ * @param dataAtual - Data atual em formato YYYY-MM-DD
+ * @param frequencia - Frequência da recorrência
+ * @returns Próxima data em formato YYYY-MM-DD
+ */
+const calcularProximaRecorrencia = (
+  dataAtual: string,
+  frequencia: 'diario' | 'semanal' | 'mensal' | 'anual'
+): string => {
+  const data = new Date(dataAtual + 'T00:00:00')
+  
+  switch (frequencia) {
+    case 'diario':
+      data.setDate(data.getDate() + 1)
+      break
+    case 'semanal':
+      data.setDate(data.getDate() + 7)
+      break
+    case 'mensal':
+      data.setMonth(data.getMonth() + 1)
+      break
+    case 'anual':
+      data.setFullYear(data.getFullYear() + 1)
+      break
+  }
+  
+  return data.toISOString().split('T')[0]
+}
+
+/**
  * Modal para criacao de transferencias entre contas
  * 
  * @component
@@ -347,6 +377,65 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
             onChange={(e) => atualizarCampo('observacoes', e.target.value)}
             placeholder="Observacoes adicionais..."
           />
+        </div>
+
+        {/* Seção Recorrência */}
+        <div className="border-t pt-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <input
+              type="checkbox"
+              id="recorrente"
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={dados.recorrente || false}
+              onChange={(e) => {
+                const isRecorrente = e.target.checked
+                atualizarCampo('recorrente', isRecorrente)
+                if (!isRecorrente) {
+                  atualizarCampo('frequencia_recorrencia', undefined)
+                  atualizarCampo('proxima_recorrencia', undefined)
+                }
+              }}
+            />
+            <Label htmlFor="recorrente" className="text-sm font-medium">
+              🔄 Transferência Recorrente
+            </Label>
+          </div>
+
+          {dados.recorrente && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="frequencia_recorrencia">Frequência</Label>
+                <Select
+                  id="frequencia_recorrencia"
+                  value={dados.frequencia_recorrencia || ''}
+                  onChange={(e) => {
+                    const freq = e.target.value as 'diario' | 'semanal' | 'mensal' | 'anual'
+                    atualizarCampo('frequencia_recorrencia', freq)
+                    if (dados.data) {
+                      const proximaData = calcularProximaRecorrencia(dados.data, freq)
+                      atualizarCampo('proxima_recorrencia', proximaData)
+                    }
+                  }}
+                >
+                  <option value="">Selecione...</option>
+                  <option value="diario">📅 Diário</option>
+                  <option value="semanal">📆 Semanal</option>
+                  <option value="mensal">🗓️ Mensal</option>
+                  <option value="anual">📊 Anual</option>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="proxima_recorrencia">Próxima Recorrência</Label>
+                <Input
+                  id="proxima_recorrencia"
+                  type="date"
+                  value={dados.proxima_recorrencia || ''}
+                  onChange={(e) => atualizarCampo('proxima_recorrencia', e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )

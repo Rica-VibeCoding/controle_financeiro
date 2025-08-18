@@ -327,7 +327,7 @@ export function usarTransacoes() {
   }, [sucesso, erro])
 
   // Buscar transações recorrentes
-  const buscarTransacoesRecorrentes = useCallback(async () => {
+  const buscarTransacoesRecorrentesHook = useCallback(async () => {
     try {
       return await buscarTransacoesRecorrentes()
     } catch (err) {
@@ -358,7 +358,7 @@ export function usarTransacoes() {
     // Recorrência
     processarRecorrenciasVencidas,
     pararRecorrencia,
-    buscarTransacoesRecorrentes,
+    buscarTransacoesRecorrentes: buscarTransacoesRecorrentesHook,
     
     // Cálculos
     calcularSaldoConta,

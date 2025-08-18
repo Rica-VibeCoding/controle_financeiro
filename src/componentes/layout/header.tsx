@@ -33,12 +33,6 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="hidden sm:flex">
-          Nova Transação
-        </Button>
-        <Button variant="outline" size="sm" className="sm:hidden">
-          +
-        </Button>
         <Button variant="ghost" size="icon">
           <span className="sr-only">Menu do usuário</span>
           👤

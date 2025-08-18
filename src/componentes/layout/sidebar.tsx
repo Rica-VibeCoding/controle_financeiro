@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/utilitarios/cn'
 
 const menuItems = [
@@ -58,10 +58,19 @@ const cadastroItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [cadastroExpanded, setCadastroExpanded] = useState(true)
-
+  
   // Verificar se alguma página de cadastro está ativa
   const isCadastroActive = cadastroItems.some(item => pathname.startsWith(item.href))
+  
+  // Estado do menu cadastramento - abre automaticamente se estiver em uma página de cadastro
+  const [cadastroExpanded, setCadastroExpanded] = useState(isCadastroActive)
+
+  // Fechar menu cadastramento quando navegar para outras páginas
+  useEffect(() => {
+    if (!isCadastroActive) {
+      setCadastroExpanded(false)
+    }
+  }, [isCadastroActive])
 
   return (
     <aside className="w-64 bg-muted/50 border-r border-border min-h-screen p-4">

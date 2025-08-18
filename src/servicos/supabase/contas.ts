@@ -64,7 +64,7 @@ async function calcularSaldoConta(contaId: string): Promise<number> {
     .from('fp_transacoes')
     .select('valor, tipo')
     .eq('conta_id', contaId)
-    .eq('status', 'pago')
+    .eq('status', 'realizado')
 
   if (error) throw new Error(`Erro ao calcular saldo: ${error.message}`)
 
@@ -85,7 +85,7 @@ async function calcularSaldoConta(contaId: string): Promise<number> {
     .select('valor')
     .eq('conta_destino_id', contaId)
     .eq('tipo', 'transferencia')
-    .eq('status', 'pago')
+    .eq('status', 'realizado')
 
   if (errorRecebidas) throw new Error(`Erro ao calcular transferências: ${errorRecebidas.message}`)
 
@@ -99,7 +99,7 @@ async function calcularSaldoConta(contaId: string): Promise<number> {
     .select('valor')
     .eq('conta_id', contaId)
     .eq('tipo', 'transferencia')
-    .eq('status', 'pago')
+    .eq('status', 'realizado')
 
   if (errorEnviadas) throw new Error(`Erro ao calcular transferências: ${errorEnviadas.message}`)
 

@@ -22,7 +22,7 @@ import { usarToast } from './usar-toast'
 
 interface FiltrosTransacao {
   tipo?: 'receita' | 'despesa' | 'transferencia'
-  status?: 'pendente' | 'pago' | 'cancelado'
+  status?: 'previsto' | 'realizado'
   conta_id?: string
   data_inicio?: string
   data_fim?: string
@@ -77,7 +77,7 @@ export function usarTransacoes() {
 
       const novaTransacao = await criarTransacao({
         ...dadosTransacao,
-        status: dadosTransacao.status || 'pendente'
+        status: dadosTransacao.status || 'previsto'
       })
 
       // Atualizar lista local
@@ -215,7 +215,7 @@ export function usarTransacoes() {
       const parcelas = await criarTransacaoParcelada({
         ...dadosTransacao,
         tipo: 'despesa', // Parceladas são sempre despesas conforme PRD
-        status: dadosTransacao.status || 'pendente'
+        status: dadosTransacao.status || 'previsto'
       }, numeroParcelas)
 
       // Atualizar lista local com todas as parcelas

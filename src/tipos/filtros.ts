@@ -5,7 +5,7 @@ export interface FiltrosTransacao {
   subcategoria_id?: string;
   conta_id?: string;
   tipo?: 'receita' | 'despesa' | 'transferencia';
-  status?: 'pendente' | 'pago' | 'cancelado';
+  status?: 'previsto' | 'realizado';
   valor_min?: number;
   valor_max?: number;
   recorrente?: boolean;

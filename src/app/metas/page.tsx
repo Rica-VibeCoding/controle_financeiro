@@ -167,7 +167,7 @@ export default function MetasPage() {
               <div>
                 <p><strong>Cálculo:</strong></p>
                 <p className="text-xs mt-1">
-                  Soma todas as despesas do período (status "pago") 
+                  Soma todas as despesas do período (status "realizado") 
                   comparado com o limite definido na meta.
                 </p>
               </div>

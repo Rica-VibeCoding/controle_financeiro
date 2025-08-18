@@ -94,7 +94,7 @@ export class MetasService {
       .from('fp_transacoes')
       .select('valor')
       .eq('tipo', 'despesa')
-      .eq('status', 'pago')
+      .eq('status', 'realizado')
       .gte('data', meta.periodo_inicio)
       .lte('data', meta.periodo_fim)
 

@@ -94,7 +94,7 @@ CREATE TABLE fp_transacoes (
   proxima_recorrencia DATE, -- Quando gerar próxima transação
   
   -- Status e datas
-  status TEXT DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago', 'cancelado')),
+  status TEXT DEFAULT 'previsto' CHECK (status IN ('previsto', 'realizado')),
   data_vencimento DATE,
   data_registro TIMESTAMP DEFAULT NOW(),
   

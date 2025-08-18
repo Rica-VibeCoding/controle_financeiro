@@ -89,7 +89,7 @@ async function calcularValorUsadoMeta(meta: Meta): Promise<number> {
     .select('valor')
     .gte('data', meta.periodo_inicio)
     .lte('data', meta.periodo_fim)
-    .eq('status', 'pago')
+    .eq('status', 'realizado')
 
   // Se meta é por categoria específica
   if (meta.tipo === 'categoria' && meta.categoria_id) {

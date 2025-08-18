@@ -185,7 +185,7 @@ export async function calcularSaldoConta(contaId: string): Promise<number> {
       .from('fp_transacoes')
       .select('valor, tipo')
       .eq('conta_id', contaId)
-      .eq('status', 'pago')
+      .eq('status', 'realizado')
 
     if (errorTransacoes) {
       throw new Error(`Erro ao calcular saldo: ${errorTransacoes.message}`)
@@ -197,7 +197,7 @@ export async function calcularSaldoConta(contaId: string): Promise<number> {
       .select('valor')
       .eq('conta_destino_id', contaId)
       .eq('tipo', 'transferencia')
-      .eq('status', 'pago')
+      .eq('status', 'realizado')
 
     if (errorRecebidas) {
       throw new Error(`Erro ao calcular transferências: ${errorRecebidas.message}`)
@@ -369,7 +369,7 @@ export async function processarRecorrencia(transacaoBase: Transacao): Promise<Tr
     subcategoria_id: transacaoCorrigida.subcategoria_id,
     forma_pagamento_id: transacaoCorrigida.forma_pagamento_id,
     centro_custo_id: transacaoCorrigida.centro_custo_id,
-    status: 'pendente', // Conforme PRD - sempre nasce pendente
+    status: 'previsto', // Conforme PRD - sempre nasce previsto
     parcela_atual: 1,
     total_parcelas: 1,
     recorrente: true,

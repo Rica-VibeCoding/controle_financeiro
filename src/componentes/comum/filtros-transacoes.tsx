@@ -122,9 +122,8 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               >
                 <option value="">Todos os status</option>
-                <option value="pendente">⏳ Pendente</option>
-                <option value="pago">✅ Pago</option>
-                <option value="cancelado">❌ Cancelado</option>
+                <option value="previsto">🟡 Previsto</option>
+                <option value="realizado">✅ Realizado</option>
               </Select>
             </div>
 

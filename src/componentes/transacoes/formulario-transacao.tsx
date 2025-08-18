@@ -36,7 +36,7 @@ export function FormularioTransacao({
     valor: 0,
     tipo: 'despesa',
     conta_id: '',
-    status: 'pendente',
+    status: 'previsto',
     parcela_atual: 1,
     total_parcelas: 1,
     recorrente: false,
@@ -343,9 +343,8 @@ export function FormularioTransacao({
                 value={dados.status}
                 onChange={(e) => atualizarCampo('status', e.target.value)}
               >
-                <option value="pendente">🟡 Pendente</option>
-                <option value="pago">🟢 Pago</option>
-                <option value="cancelado">🔴 Cancelado</option>
+                <option value="previsto">🟡 Previsto</option>
+                <option value="realizado">✅ Realizado</option>
               </Select>
             </div>
 
@@ -468,8 +467,8 @@ export function FormularioTransacao({
                 <div className="bg-blue-50 p-3 rounded text-sm text-blue-800">
                   <p className="font-medium">ℹ️ Como funciona a recorrência:</p>
                   <ul className="mt-1 space-y-1 text-xs">
-                    <li>• Transações recorrentes sempre nascem como "pendente"</li>
-                    <li>• Marque como "pago" quando efetuar o pagamento</li>
+                    <li>• Transações recorrentes sempre nascem como "previsto"</li>
+                    <li>• Marque como "realizado" quando efetuar o pagamento</li>
                     <li>• A próxima ocorrência será gerada automaticamente</li>
                     <li>• Você pode parar a recorrência a qualquer momento</li>
                   </ul>

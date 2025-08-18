@@ -86,9 +86,9 @@ export function ItemParcela({
                 {formatarValor(transacao.valor)}
               </span>
               <span className={`
-                ${transacao.status === 'pago' ? 'texto-pago' : 
-                  transacao.status === 'pendente' ? 'texto-pendente' : 
-                  'texto-cancelado'}
+                ${transacao.status === 'realizado' ? 'texto-realizado' : 
+                  transacao.status === 'previsto' ? 'texto-previsto' : 
+                  'texto-outro'}
               `}>
                 {transacao.status}
               </span>

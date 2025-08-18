@@ -206,9 +206,9 @@ export function ListaRecorrentes() {
             <div className="bg-blue-50 p-3 rounded text-sm text-blue-800 mt-4">
               <p className="font-medium">💡 Dicas sobre transações recorrentes:</p>
               <ul className="mt-1 space-y-1 text-xs">
-                <li>• <strong>Vencidas:</strong> Use "⚡ Processar Vencidas" para gerar as pendentes</li>
-                <li>• <strong>Automático:</strong> Transações são criadas como "pendente"</li>
-                <li>• <strong>Manual:</strong> Marque como "pago" após efetuar o pagamento</li>
+                <li>• <strong>Vencidas:</strong> Use "⚡ Processar Vencidas" para gerar as previstas</li>
+                <li>• <strong>Automático:</strong> Transações são criadas como "previsto"</li>
+                <li>• <strong>Manual:</strong> Marque como "realizado" após efetuar o pagamento</li>
                 <li>• <strong>Parar:</strong> Use "🛑 Parar" para interromper a recorrência</li>
               </ul>
             </div>

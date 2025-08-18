@@ -152,7 +152,7 @@ export interface Database {
           recorrente: boolean
           frequencia_recorrencia: string | null
           proxima_recorrencia: string | null
-          status: 'pendente' | 'pago' | 'cancelado'
+          status: 'previsto' | 'realizado'
           data_vencimento: string | null
           data_registro: string
           anexo_url: string | null
@@ -178,7 +178,7 @@ export interface Database {
           recorrente?: boolean
           frequencia_recorrencia?: string | null
           proxima_recorrencia?: string | null
-          status?: 'pendente' | 'pago' | 'cancelado'
+          status?: 'previsto' | 'realizado'
           data_vencimento?: string | null
           data_registro?: string
           anexo_url?: string | null
@@ -204,7 +204,7 @@ export interface Database {
           recorrente?: boolean
           frequencia_recorrencia?: string | null
           proxima_recorrencia?: string | null
-          status?: 'pendente' | 'pago' | 'cancelado'
+          status?: 'previsto' | 'realizado'
           data_vencimento?: string | null
           data_registro?: string
           anexo_url?: string | null

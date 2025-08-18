@@ -64,15 +64,13 @@ export function ListaTransacoes({
   // Formatar status
   const formatarStatus = (status: string) => {
     const cores = {
-      'pendente': 'text-yellow-600',
-      'pago': 'text-green-600',
-      'cancelado': 'text-red-600'
+      'previsto': 'text-yellow-600',
+      'realizado': 'text-green-600'
     }
 
     const icones = {
-      'pendente': '⏳',
-      'pago': '✅',
-      'cancelado': '❌'
+      'previsto': '🟡',
+      'realizado': '✅'
     }
 
     return (

@@ -105,6 +105,5 @@ body {
 .texto-receita { color: var(--receita); }
 .texto-despesa { color: var(--despesa); }
 .texto-transferencia { color: var(--transferencia); }
-.texto-pendente { color: var(--pendente); }
-.texto-pago { color: var(--pago); }
-.texto-cancelado { color: var(--cancelado); }
+.texto-previsto { color: var(--pendente); }
+.texto-realizado { color: var(--pago); }

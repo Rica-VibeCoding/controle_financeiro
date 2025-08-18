@@ -129,7 +129,7 @@ export function prepararTransacaoParaInsercao(transacao: Partial<NovaTransacao>)
     valor: transacaoLimpa.valor || 0,
     tipo: transacaoLimpa.tipo || 'despesa',
     conta_id: transacaoLimpa.conta_id || '',
-    status: transacaoLimpa.status || 'pendente',
+    status: transacaoLimpa.status || 'previsto',
     parcela_atual: transacaoLimpa.parcela_atual || 1,
     total_parcelas: transacaoLimpa.total_parcelas || 1,
     recorrente: transacaoLimpa.recorrente || false,

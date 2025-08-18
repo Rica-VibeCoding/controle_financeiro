@@ -36,7 +36,7 @@ export default function Home() {
         const fimDoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0]
         
         const transacoesDoMes = transacoes.filter(t => 
-          t.data >= inicioDoMes && t.data <= fimDoMes && t.status === 'pago'
+          t.data >= inicioDoMes && t.data <= fimDoMes && t.status === 'realizado'
         )
         
         let receitas = 0

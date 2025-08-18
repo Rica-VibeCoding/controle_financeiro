@@ -30,7 +30,7 @@ export function FormularioParcelada({
     valor: 0,
     tipo: 'despesa', // Parceladas são sempre despesas conforme PRD
     conta_id: '',
-    status: 'pendente',
+    status: 'previsto',
     parcela_atual: 1,
     total_parcelas: 1,
     recorrente: false

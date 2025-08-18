@@ -6,7 +6,7 @@ import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
-import { obterCategoriasComSubcategorias } from '@/servicos/supabase/categorias'
+import { obterCategoriasComSubcategorias, excluirCategoria } from '@/servicos/supabase/categorias'
 import type { Categoria } from '@/tipos/database'
 
 type CategoriaComSubcategorias = Categoria & {
@@ -24,6 +24,17 @@ export default function CategoriasPage() {
   const [categorias, setCategorias] = useState<CategoriaComSubcategorias[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+
+  const handleExcluir = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir permanentemente esta categoria?')) {
+      try {
+        await excluirCategoria(id)
+        setCategorias(prev => prev.filter(cat => cat.id !== id))
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Erro ao excluir categoria')
+      }
+    }
+  }
 
   useEffect(() => {
     async function carregarCategorias() {
@@ -151,11 +162,11 @@ export default function CategoriasPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.push('/subcategorias')}
-                            title="Ver subcategorias"
-                            className="h-8 w-8 p-0"
+                            onClick={() => handleExcluir(categoria.id)}
+                            className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                            title="Excluir categoria"
                           >
-                            🏷️
+                            🗑️
                           </Button>
                         </div>
                       </TableCell>

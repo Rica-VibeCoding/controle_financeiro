@@ -138,3 +138,50 @@ export async function atualizarConta(
 
   if (error) throw new Error(`Erro ao atualizar conta: ${error.message}`)
 }
+
+/**
+ * Verificar se conta possui transações vinculadas
+ */
+async function verificarTransacoesVinculadasConta(contaId: string): Promise<boolean> {
+  // Verificar transações normais
+  const { data: transacoes, error: errorTransacoes } = await supabase
+    .from('fp_transacoes')
+    .select('id')
+    .eq('conta_id', contaId)
+    .limit(1)
+
+  if (errorTransacoes) throw new Error(`Erro ao verificar transações: ${errorTransacoes.message}`)
+
+  if (transacoes && transacoes.length > 0) return true
+
+  // Verificar transferências como conta destino
+  const { data: transferencias, error: errorTransferencias } = await supabase
+    .from('fp_transacoes')
+    .select('id')
+    .eq('conta_destino_id', contaId)
+    .limit(1)
+
+  if (errorTransferencias) throw new Error(`Erro ao verificar transferências: ${errorTransferencias.message}`)
+
+  return (transferencias && transferencias.length > 0) || false
+}
+
+/**
+ * Excluir conta (hard delete)
+ * Verifica integridade antes da exclusão
+ */
+export async function excluirConta(id: string): Promise<void> {
+  // Verificar se tem transações vinculadas
+  const temTransacoes = await verificarTransacoesVinculadasConta(id)
+  if (temTransacoes) {
+    throw new Error('Não é possível excluir conta com transações vinculadas')
+  }
+
+  // Executar exclusão
+  const { error } = await supabase
+    .from('fp_contas')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(`Erro ao excluir conta: ${error.message}`)
+}

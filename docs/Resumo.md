@@ -7,6 +7,8 @@
 - **Comunicação:** Prefere relatórios simples, não técnicos
 - **Autorização:** Sempre pedir permissão antes de refatorar ou implementar
 
+### Comnu
+
 ## 🎯 Sobre o Projeto
 
 **Nome:** Sistema de Controle Financeiro Pessoal  
@@ -53,38 +55,12 @@
 - `fp_centros_custo`
 - `fp_metas`
 
-## 📊 Funcionalidades Detalhadas
-
-### Transações
-- **4 tipos:** receita, despesa, transferência, parcelada
-- **Parcelamento:** 1 compra → N parcelas automáticas
-- **Recorrência:** salário mensal, conta de luz, etc.
-- **Anexos:** comprovantes em PDF/imagem
-
-### Metas
-- **Por categoria:** "máximo R$ 500 em alimentação/mês"
-- **Total:** "máximo R$ 3.000 gastos/mês"
-- **Alertas visuais:** verde → amarelo → laranja → vermelho
-
-### Relatórios
-- **Dashboard:** saldos, gráficos, últimas transações
-- **Página específica:** gráficos de barras para metas
-- **Cálculos em tempo real:** sem armazenar saldos
 
 ## ⚙️ Configuração Atual
 
 **Supabase:** Projeto `nzgifjdewdfibcopolof`  
 **GitHub:** https://github.com/Rica-VibeCoding/controle_financeiro  
 **Status:** Documentação completa, código em desenvolvimento
-
-## 📝 Documentos Criados
-- ✅ **Schema SQL** (banco completo)
-- ✅ **PRD** (especificações detalhadas)
-- ✅ **Estrutura do Projeto** (arquitetura)
-- ✅ **API Documentation** (tipos + serviços)
-- ✅ **README** (setup e desenvolvimento)
-
----
 
 ## 💡 Como Ajudar o Ricardo
 

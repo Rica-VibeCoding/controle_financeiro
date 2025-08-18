@@ -9,11 +9,16 @@ import { ListaTransacoes } from '@/componentes/transacoes/lista-transacoes'
 import { ListaRecorrentes } from '@/componentes/transacoes/lista-recorrentes'
 import { FiltrosTransacoes } from '@/componentes/comum/filtros-transacoes'
 import { Paginacao } from '@/componentes/comum/paginacao'
+import { ModalTransferencia } from '@/componentes/modais/modal-transferencia'
+import { ModalLancamento } from '@/componentes/modais/modal-lancamento'
+import { ModalParcelamento } from '@/componentes/modais/modal-parcelamento'
+import { useModais } from '@/contextos/modais-contexto'
 import { Transacao } from '@/tipos/database'
 import type { FiltrosTransacao, ParametrosPaginacao } from '@/tipos/filtros'
 
 export default function TransacoesPage() {
   const router = useRouter()
+  const { modalAberto, dadosModal, abrirModal, fecharModal } = useModais()
   const [abaAtiva, setAbaAtiva] = useState<'transacoes' | 'recorrentes'>('transacoes')
   
   // Estados para filtros e paginação
@@ -27,7 +32,7 @@ export default function TransacoesPage() {
 
   // Editar transação
   const handleEditar = (transacao: Transacao) => {
-    router.push(`/transacoes/nova?editar=${transacao.id}`)
+    abrirModal('lancamento', { transacaoId: transacao.id })
   }
 
   // Handlers para filtros e paginação
@@ -56,16 +61,21 @@ export default function TransacoesPage() {
           </div>
           
           <div className="flex gap-2">
-            <Link href="/transacoes/nova">
-              <Button>
-                + Nova Transação
-              </Button>
-            </Link>
-            <Link href="/transacoes/parcelada">
-              <Button variant="outline">
-                💳 Parcelar
-              </Button>
-            </Link>
+            <Button onClick={() => abrirModal('lancamento')}>
+              📝 Lançar
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => abrirModal('parcelamento')}
+            >
+              💳 Parcelar
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => abrirModal('transferencia')}
+            >
+              🔄 Transferir
+            </Button>
           </div>
         </div>
 
@@ -118,6 +128,26 @@ export default function TransacoesPage() {
             <ListaRecorrentes />
           )}
         </>
+
+        {/* Modais */}
+        <ModalLancamento
+          isOpen={modalAberto === 'lancamento'}
+          onClose={fecharModal}
+          onSuccess={() => window.location.reload()}
+          transacaoId={dadosModal?.transacaoId}
+        />
+        
+        <ModalParcelamento
+          isOpen={modalAberto === 'parcelamento'}
+          onClose={fecharModal}
+          onSuccess={() => window.location.reload()}
+        />
+        
+        <ModalTransferencia 
+          isOpen={modalAberto === 'transferencia'}
+          onClose={fecharModal}
+          onSuccess={() => window.location.reload()}
+        />
       </div>
     </LayoutPrincipal>
   )

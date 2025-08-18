@@ -184,7 +184,7 @@ export default function EditarSubcategoriaPage() {
                   <option value="">Selecione uma categoria</option>
                   {categorias.map((categoria) => (
                     <option key={categoria.id} value={categoria.id}>
-                      {categoria.icone} {categoria.nome}
+                      {categoria.nome}
                     </option>
                   ))}
                 </Select>

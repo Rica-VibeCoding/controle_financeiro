@@ -254,7 +254,7 @@ export function FormularioParcelada({
                 <option value="">Selecione uma conta</option>
                 {contas.map((conta) => (
                   <option key={conta.id} value={conta.id}>
-                    {conta.nome} ({conta.tipo})
+                    {conta.nome}{conta.banco ? ` - ${conta.banco}` : ''} ({conta.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())})
                   </option>
                 ))}
               </Select>

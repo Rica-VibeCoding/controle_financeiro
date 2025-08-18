@@ -25,7 +25,8 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__apply_migration",
       "WebSearch",
-      "WebFetch(domain:lucide.dev)"
+      "WebFetch(domain:lucide.dev)",
+      "Bash(rg:*)"
     ],
     "deny": []
   },

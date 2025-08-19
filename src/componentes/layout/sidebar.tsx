@@ -17,11 +17,6 @@ const menuItems = [
     icon: '💳'
   },
   {
-    title: 'Metas',
-    href: '/metas',
-    icon: '🎯'
-  },
-  {
     title: 'Relatórios',
     href: '/relatorios',
     icon: '📈'

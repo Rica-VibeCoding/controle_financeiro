@@ -53,23 +53,6 @@ export default function RelatoriosPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">🎯 Status das Metas</CardTitle>
-              <CardDescription>
-                Progresso das suas metas financeiras
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => router.push('/relatorios/metas')}
-              >
-                Ver Metas
-              </Button>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>
@@ -126,7 +109,6 @@ export default function RelatoriosPage() {
               <p>📈 Gráficos interativos com dados reais</p>
               <p>📊 Análises personalizáveis por período</p>
               <p>📋 Exportação em PDF e Excel</p>
-              <p>🎯 Comparação com metas estabelecidas</p>
             </div>
           </CardContent>
         </Card>

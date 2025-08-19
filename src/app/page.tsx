@@ -3,6 +3,7 @@
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { CardsFinanceiros } from '@/componentes/dashboard/cards-financeiros'
 import { FiltroTemporal } from '@/componentes/dashboard/filtro-temporal'
+import { SecaoGraficos } from '@/componentes/dashboard/secao-graficos'
 import { usarFiltroTemporal } from '@/hooks/usar-filtro-temporal'
 
 export default function Home() {
@@ -10,24 +11,27 @@ export default function Home() {
 
   return (
     <LayoutPrincipal>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="px-4 space-y-6">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
             Dashboard
           </h1>
         </div>
 
-        {/* Layout Responsivo: Cards sempre largura fixa, filtro embaixo em mobile */}
-        <div className="flex flex-col xl:flex-row gap-8">
-          {/* Cards Financeiros - largura fixa sempre */}
-          <div className="flex-shrink-0">
-            <CardsFinanceiros periodo={filtro.obterPeriodoAtivo()} />
-          </div>
+        {/* Layout Responsivo Inteligente */}
+        <div className="flex flex-col 2xl:flex-row gap-6 items-start">
+          {/* Cards Financeiros - grid responsivo */}
+          <CardsFinanceiros periodo={filtro.obterPeriodoAtivo()} />
           
-          {/* Filtro Temporal - vem embaixo em mobile */}
-          <div className="flex justify-center xl:justify-start">
+          {/* Filtro Temporal - largura fixa, embaixo em mobile */}
+          <div className="w-full 2xl:w-auto flex justify-center 2xl:justify-start">
             <FiltroTemporal />
           </div>
+        </div>
+        
+        {/* Seção de Gráficos */}
+        <div className="mt-8">
+          <SecaoGraficos periodo={filtro.obterPeriodoAtivo()} />
         </div>
       </div>
     </LayoutPrincipal>

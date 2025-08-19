@@ -61,18 +61,29 @@ export function FiltroTemporal() {
     }
   }
 
+  const calcularLarguraFiltro = () => {
+    const larguraBase = 300 // largura dos meses
+    const larguraAno = 60 // largura de cada ano
+    const colunas = Math.ceil(anosDisponiveis.length / 2) // 2 linhas, expandindo em colunas
+    const larguraAnos = colunas * larguraAno + (colunas - 1) * 8 // incluindo gaps
+    return larguraBase + larguraAnos + 16 + 4 // incluindo divisor e padding
+  }
+
   return (
-    <div className="bg-gray-800 rounded-lg p-6 flex gap-6">
+    <div 
+      className="bg-gray-800 rounded-lg p-4 flex gap-4 h-[120px] flex-shrink-0"
+      style={{ width: `${calcularLarguraFiltro()}px` }}
+    >
       {/* Grid de Meses - 2 linhas x 6 colunas */}
-      <div className="flex-1">
-        <div className="grid grid-cols-6 gap-3 mb-3">
+      <div className="w-[300px] flex flex-col justify-center">
+        <div className="grid grid-cols-6 gap-2 mb-2">
           {meses.slice(0, 6).map((mes) => (
             <button
               key={mes.numero}
               onClick={() => handleClickMes(mes.numero)}
               disabled={!mesTemDados(mes.numero, anoAtivo)}
               className={cn(
-                "px-3 py-2 text-sm font-normal rounded-md transition-all duration-150",
+                "px-2 py-1.5 text-xs font-normal rounded transition-all duration-200 transform hover:scale-105",
                 obterEstiloMes(mes.numero)
               )}
             >
@@ -81,14 +92,14 @@ export function FiltroTemporal() {
           ))}
         </div>
         
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-6 gap-2">
           {meses.slice(6, 12).map((mes) => (
             <button
               key={mes.numero}
               onClick={() => handleClickMes(mes.numero)}
               disabled={!mesTemDados(mes.numero, anoAtivo)}
               className={cn(
-                "px-3 py-2 text-sm font-normal rounded-md transition-all duration-150",
+                "px-2 py-1.5 text-xs font-normal rounded transition-all duration-200 transform hover:scale-105",
                 obterEstiloMes(mes.numero)
               )}
             >
@@ -98,14 +109,23 @@ export function FiltroTemporal() {
         </div>
       </div>
 
-      {/* Anos - lateral direita */}
-      <div className="flex flex-col gap-3 justify-center">
+      {/* Linha divisória vertical */}
+      <div className="w-px bg-gray-600 self-stretch"></div>
+
+      {/* Anos - grid 2 linhas, expandindo lateralmente */}
+      <div 
+        className="grid grid-rows-2 gap-2 justify-center content-center"
+        style={{ 
+          gridTemplateColumns: `repeat(${Math.ceil(anosDisponiveis.length / 2)}, 60px)`,
+          gap: '8px'
+        }}
+      >
         {anosDisponiveis.map((ano) => (
           <button
             key={ano}
             onClick={() => alterarAno(ano)}
             className={cn(
-              "px-4 py-2 text-sm font-normal rounded-md transition-all duration-150 min-w-[60px]",
+              "px-3 py-1.5 text-xs font-normal rounded transition-all duration-200 transform hover:scale-105 w-[60px]",
               obterEstiloAno(ano)
             )}
           >

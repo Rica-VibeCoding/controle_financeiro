@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { LucideIcon } from 'lucide-react'
 import { cn } from '@/utilitarios/cn'
 
@@ -9,7 +10,7 @@ interface CardFinanceiroProps {
   loading?: boolean
 }
 
-export function CardFinanceiro({ 
+function CardFinanceiroComponent({ 
   titulo, 
   valor, 
   icone: Icone, 
@@ -46,8 +47,8 @@ export function CardFinanceiro({
 
   if (loading) {
     return (
-      <div className="w-[220px] rounded-lg border border-gray-200 bg-gray-50 p-6 animate-pulse">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="w-[220px] h-[120px] rounded-lg border border-gray-200 bg-gray-50 p-6 animate-pulse flex flex-col justify-between">
+        <div className="flex items-center gap-3">
           <div className="w-4 h-4 bg-gray-300 rounded"></div>
           <div className="h-3 bg-gray-300 rounded w-20"></div>
         </div>
@@ -57,11 +58,14 @@ export function CardFinanceiro({
   }
 
   return (
-    <div className={cn(
-      "w-[220px] rounded-lg border p-6 transition-all duration-200 hover:shadow-sm",
-      obterEstilosCard()
-    )}>
-      <div className="flex items-center gap-3 mb-4">
+    <div 
+      className={cn(
+        "w-[220px] h-[120px] rounded-lg border p-6 transition-all duration-300 hover:shadow-md hover:scale-[1.02] flex flex-col justify-between",
+        obterEstilosCard()
+      )}
+      title={`${titulo}: ${formatarValor(valor)}`}
+    >
+      <div className="flex items-center gap-3">
         <Icone className={cn("h-4 w-4", obterCorIcone())} />
         <p className="text-sm font-normal opacity-70">
           {titulo}
@@ -76,3 +80,5 @@ export function CardFinanceiro({
     </div>
   )
 }
+
+export const CardFinanceiro = memo(CardFinanceiroComponent)

@@ -6,6 +6,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { DadosDashboard, PeriodoFiltro } from '@/tipos/dashboard'
 import { DashboardService } from '@/servicos/supabase/dashboard'
 
+// Função debounce simples
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number) {
+  let timeout: NodeJS.Timeout
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
+
 export function usarDadosDashboard(periodo: PeriodoFiltro) {
   const [dados, setDados] = useState<DadosDashboard>({
     receitas: 0,
@@ -48,12 +57,18 @@ export function usarDadosDashboard(periodo: PeriodoFiltro) {
     }
   }, [])
 
+  // Debounce para evitar múltiplas chamadas rápidas
+  const carregarDadosDebounced = useCallback(
+    debounce((periodo: PeriodoFiltro) => carregarDados(periodo), 300),
+    [carregarDados]
+  )
+
   /**
    * Recarregar dados quando período muda
    */
   useEffect(() => {
-    carregarDados(periodo)
-  }, [periodo, carregarDados])
+    carregarDadosDebounced(periodo)
+  }, [periodo, carregarDadosDebounced])
 
   /**
    * Forçar recarregamento dos dados

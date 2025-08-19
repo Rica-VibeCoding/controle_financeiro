@@ -42,7 +42,7 @@ export function CardsFinanceiros({ periodo }: CardsFinanceirosProps) {
   ]
 
   return (
-    <div className="flex flex-wrap gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 w-fit">
       {cards.map((card, index) => (
         <CardFinanceiro
           key={index}

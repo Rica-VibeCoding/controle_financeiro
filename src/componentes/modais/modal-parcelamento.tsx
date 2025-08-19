@@ -522,7 +522,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
               </div>
             )}
 
-            {datasParcelas.length > 0 && dados.valor && (
+            {datasParcelas.length > 0 && (dados.valor ?? 0) > 0 && (
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
                 <h5 className="font-medium text-gray-900 mb-3">📅 Cronograma das Parcelas</h5>
                 <div className="max-h-40 overflow-y-auto space-y-1 text-sm">

@@ -16,6 +16,24 @@ export default function ConfiguracoesPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle>🎯 Metas e Orçamento</CardTitle>
+            <CardDescription>
+              Configure suas metas mensais de gastos por categoria
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.location.href = '/configuracoes/metas'}
+            >
+              🎯 Configurar Metas Mensais
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>💾 Backup e Dados</CardTitle>
             <CardDescription>
               Gerencie seus dados e configurações

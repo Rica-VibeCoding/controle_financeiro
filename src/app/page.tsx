@@ -2,12 +2,14 @@
 
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { CardsFinanceiros } from '@/componentes/dashboard/cards-financeiros'
-import { FiltroTemporal } from '@/componentes/dashboard/filtro-temporal'
-import { SecaoGraficos } from '@/componentes/dashboard/secao-graficos'
-import { usarFiltroTemporal } from '@/hooks/usar-filtro-temporal'
+import { usarDadosDashboard } from '@/hooks/usar-dados-dashboard'
 
 export default function Home() {
-  const filtro = usarFiltroTemporal()
+  // Buscar apenas dados dos cards (sem gráficos)
+  const {
+    loading,
+    dadosCards,
+  } = usarDadosDashboard()
 
   return (
     <LayoutPrincipal>
@@ -18,20 +20,9 @@ export default function Home() {
           </h1>
         </div>
 
-        {/* Layout Responsivo Inteligente */}
-        <div className="flex flex-col 2xl:flex-row gap-6 items-start">
-          {/* Cards Financeiros - grid responsivo */}
-          <CardsFinanceiros periodo={filtro.obterPeriodoAtivo()} />
-          
-          {/* Filtro Temporal - largura fixa, embaixo em mobile */}
-          <div className="w-full 2xl:w-auto flex justify-center 2xl:justify-start">
-            <FiltroTemporal />
-          </div>
-        </div>
-        
-        {/* Seção de Gráficos */}
-        <div className="mt-8">
-          <SecaoGraficos periodo={filtro.obterPeriodoAtivo()} />
+        {/* Apenas Cards Financeiros */}
+        <div className="flex justify-center">
+          <CardsFinanceiros dados={dadosCards} loading={loading} />
         </div>
       </div>
     </LayoutPrincipal>

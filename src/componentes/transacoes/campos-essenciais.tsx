@@ -7,7 +7,7 @@ import { NovaTransacao, Conta, Categoria } from '@/tipos/database'
 
 interface CamposEssenciaisProps {
   dados: Partial<NovaTransacao>
-  onUpdate: (campo: string, valor: any) => void
+  onUpdate: (campo: keyof NovaTransacao, valor: any) => void
   contas: Conta[]
   categorias: Categoria[]
   carregando?: boolean

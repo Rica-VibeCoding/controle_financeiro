@@ -2,6 +2,53 @@
 
 ## 🗓️ Histórico de Desenvolvimento
 
+### 📅 18 Agosto 2025
+
+---
+
+## ✅ FASE 5: Otimização e Refatoração da Dashboard
+**Período:** 18/08 - Manhã
+**Status:** CONCLUÍDA
+
+### Implementações:
+- ✅ **Criação de Função RPC no Supabase (`obter_dados_dashboard_completo`):**
+  - **Objetivo:** Centralizar todo o processamento de dados da dashboard no banco de dados para máxima performance.
+  - **Lógica:** A função recebe `mês` e `ano` e calcula em uma única execução:
+    - Totais para os cards (Receitas, Despesas, Saldo, Gastos no Cartão).
+    - Dados para o gráfico de Metas vs. Gastos por Categoria.
+    - Dados para o gráfico de Utilização de Cartões de Crédito.
+  - **Benefício:** Reduz dezenas de chamadas de rede para uma única chamada, eliminando a lentidão e corrigindo o bug de atualização do filtro.
+- ✅ **Simplificação dos Serviços de Frontend:**
+  - **Objetivo:** Unificar a camada de busca de dados no frontend para usar a nova função RPC.
+  - **Lógica:** O `DashboardService` foi reescrito para ter um único método `buscarDadosCompletos` que chama a função RPC. O antigo `DashboardGraficosService` foi removido.
+  - **Benefício:** Reduz a complexidade do código, elimina redundância e cria um ponto único e otimizado para a busca de dados da dashboard.
+- ✅ **Unificação do Hook de Dados (`usarDadosDashboard`):**
+  - **Objetivo:** Criar uma única fonte de verdade para todos os dados da dashboard no frontend.
+  - **Lógica:** O hook `usarDadosDashboard` foi reescrito para chamar o novo serviço unificado e gerenciar o estado de todos os dados da página (cards e gráficos).
+  - **Benefício:** Simplifica o gerenciamento de estado, elimina a busca de dados duplicada e garante que todos os componentes reajam à mesma fonte de dados.
+- ✅ **Refatoração dos Componentes de UI:**
+  - **Objetivo:** Fazer com que todos os componentes da dashboard consumam os dados do hook unificado.
+  - **Lógica:** Os componentes (`CardsFinanceiros`, `GraficoCategorias`, `GraficoCartoes`) foram modificados para não buscar mais seus próprios dados. Eles agora recebem os dados e o estado de `loading` como propriedades.
+  - **Benefício:** Elimina a quebra da aplicação, garante que toda a UI seja consistente e reaja às mudanças de filtro, e simplifica drasticamente os componentes.
+
+### Arquivos Criados/Modificados:
+- **Banco de Dados:** Nova função `obter_dados_dashboard_completo` aplicada via migração.
+- `src/servicos/supabase/dashboard.ts`: Totalmente reescrito.
+- `src/servicos/supabase/dashboard-graficos.ts`: Removido.
+- `src/hooks/usar-dados-dashboard.ts`: Totalmente reescrito.
+- `src/app/page.tsx`: Refatorado para usar o novo hook e passar os dados.
+- `src/componentes/dashboard/cards-financeiros.tsx`: Refatorado para receber props.
+- `src/componentes/dashboard/secao-graficos.tsx`: Refatorado para passar props.
+- `src/componentes/dashboard/grafico-categorias.tsx`: Refatorado para receber props.
+- `src/componentes/dashboard/grafico-cartoes.tsx`: Refatorado para receber props.
+
+### Problemas Resolvidos:
+- ✅ **Bug do Filtro da Dashboard:** O filtro agora funciona corretamente, atualizando todos os elementos da página.
+- ✅ **Performance da Dashboard:** O carregamento da página está drasticamente mais rápido devido à chamada única ao banco de dados.
+- ✅ **Quebra da Aplicação:** O erro `Module not found` foi resolvido.
+
+---
+
 ### 📅 16-17 Agosto 2025
 
 ---

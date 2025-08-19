@@ -451,8 +451,9 @@ Dashboard
 - **Acessibilidade:** Tooltips, feedback visual, mensagens claras
 - **Documentação:** JSDoc completo, comentários explicativos
 - **Qualidade:** Tratamento de erros robusto, fallbacks seguros
-- **Total otimizações:** 15+ melhorias implementadas
-- **Resultado:** Dashboard profissional, performático e acessível
+- **Arquitetura:** Componentes "burros", hook centralizado, single source of truth
+- **Total otimizações:** 20+ melhorias implementadas
+- **Resultado:** Dashboard profissional, performático e escalável
 
 ---
 
@@ -680,14 +681,16 @@ src/
 ```
 
 ### **🔧 FUNCIONALIDADES PRONTAS:**
-1. **DashboardService:** 5 métodos estáticos para queries otimizadas
+1. **DashboardService:** Busca centralizada de dados completos
 2. **Hook Filtro Temporal:** Estado reativo + 10 funções utilitárias
-3. **Hook Dados Dashboard:** Reatividade automática + cache local
-4. **Interfaces TypeScript:** Tipagem 100% completa
-5. **Cards Financeiros:** Largura fixa 220x120px, sem R$, layout moderno
+3. **Hook Dados Dashboard:** Single source of truth + cache local
+4. **Interfaces TypeScript:** Tipagem 100% completa + DadosDashboardCompleto
+5. **Cards Financeiros:** Largura fixa 220x120px, sem R$, componentes burros
 6. **Filtro Temporal:** Fundo escuro, grid 2x6, divisória, expansão lateral anos
-7. **Responsividade:** Mobile cards 2x2, desktop lado a lado, breakpoints inteligentes
-8. **Layout Dashboard:** Estrutura preparada para novos elementos
+7. **Gráficos:** Barras duplas animadas, status visuais, fallbacks elegantes
+8. **Responsividade:** Mobile cards 2x2, desktop lado a lado, breakpoints inteligentes
+9. **Performance:** React.memo, debounce, animações suaves
+10. **Arquitetura:** Componentes desacoplados, props drilling otimizado
 
 ### **📊 DADOS REAIS IDENTIFICADOS:**
 - **Ano disponível:** 2025 apenas

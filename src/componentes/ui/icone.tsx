@@ -31,6 +31,7 @@ import {
   FileSearch,
   PlusCircle,
   Banknote,
+  User,
 } from 'lucide-react'
 
 type IconName =
@@ -62,6 +63,7 @@ type IconName =
   | 'file-search'
   | 'plus-circle'
   | 'banknote'
+  | 'user'
 
 const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'layout-dashboard': LayoutDashboard,
@@ -92,6 +94,7 @@ const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'file-search': FileSearch,
   'plus-circle': PlusCircle,
   'banknote': Banknote,
+  'user': User,
 }
 
 export interface IconeProps extends Omit<LucideProps, 'ref'> {

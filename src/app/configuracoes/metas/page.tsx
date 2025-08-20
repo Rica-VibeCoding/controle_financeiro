@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'
 import { useState, useEffect } from 'react'
-import { usarMetasMensais } from '@/hooks/usar-metas-mensais'
+import { useMetasMensais } from '@/hooks/usar-metas-mensais'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { gerarMesReferencia, formatarMesReferencia } from '@/utilitarios/metas-helpers'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
@@ -18,7 +18,7 @@ export default function ConfiguracaoMetasPage() {
     metasDoMes, 
     loading, 
     carregarMetasDoMes 
-  } = usarMetasMensais()
+  } = useMetasMensais()
   
   const [valoresEdicao, setValoresEdicao] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState<Record<string, boolean>>({})

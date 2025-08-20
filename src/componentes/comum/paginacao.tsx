@@ -53,7 +53,7 @@ export function Paginacao<T>({
     const maxPaginas = 5 // Mostrar no máximo 5 números de página
     
     let inicio = Math.max(1, pagina - Math.floor(maxPaginas / 2))
-    let fim = Math.min(total_paginas, inicio + maxPaginas - 1)
+    const fim = Math.min(total_paginas, inicio + maxPaginas - 1)
     
     // Ajustar início se estivermos no final
     if (fim - inicio < maxPaginas - 1) {

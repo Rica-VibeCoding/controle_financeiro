@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { LoadingText } from '@/componentes/comum/loading'
 import { Transacao } from '@/tipos/database'
 import { usarTransacoes } from '@/hooks/usar-transacoes'
@@ -86,13 +87,13 @@ export function ListaRecorrentes() {
 
   // Formatar frequência
   const formatarFrequencia = (freq: string | null) => {
-    const frequencias = {
-      'diario': '📅 Diário',
-      'semanal': '📅 Semanal', 
-      'mensal': '📅 Mensal',
-      'anual': '📅 Anual'
+    const map: Record<string, string> = {
+      'diario': 'Diário',
+      'semanal': 'Semanal',
+      'mensal': 'Mensal',
+      'anual': 'Anual'
     }
-    return freq ? frequencias[freq as keyof typeof frequencias] : 'N/A'
+    return freq ? map[freq] : 'N/A'
   }
 
   // Verificar se está vencida
@@ -121,14 +122,14 @@ export function ListaRecorrentes() {
             size="sm"
             className="bg-green-600 hover:bg-green-700"
           >
-            {processando ? 'Processando...' : '⚡ Processar Vencidas'}
+            {processando ? 'Processando...' : 'Processar Vencidas'}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {recorrentes.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <div className="text-4xl mb-2">🔄</div>
+            <div className="text-4xl mb-2" aria-hidden="true"><Icone name="refresh-ccw" className="w-6 h-6" /></div>
             <p>Nenhuma transação recorrente cadastrada</p>
             <p className="text-sm">Crie uma transação e marque como recorrente</p>
           </div>
@@ -189,7 +190,7 @@ export function ListaRecorrentes() {
                       onClick={() => handlePararRecorrencia(transacao.id, transacao.descricao)}
                       className="text-xs text-red-600 hover:text-red-700"
                     >
-                      🛑 Parar
+                      Parar
                     </Button>
                   </div>
                 </div>
@@ -198,12 +199,12 @@ export function ListaRecorrentes() {
 
             {/* Informações úteis */}
             <div className="bg-blue-50 p-3 rounded text-sm text-blue-800 mt-4">
-              <p className="font-medium">💡 Dicas sobre transações recorrentes:</p>
+              <p className="font-medium">Dicas sobre transações recorrentes:</p>
               <ul className="mt-1 space-y-1 text-xs">
-                <li>• <strong>Vencidas:</strong> Use "⚡ Processar Vencidas" para gerar as previstas</li>
+                <li>• <strong>Vencidas:</strong> Use "Processar Vencidas" para gerar as previstas</li>
                 <li>• <strong>Automático:</strong> Transações são criadas como "previsto"</li>
                 <li>• <strong>Manual:</strong> Marque como "realizado" após efetuar o pagamento</li>
-                <li>• <strong>Parar:</strong> Use "🛑 Parar" para interromper a recorrência</li>
+                <li>• <strong>Parar:</strong> Use "Parar" para interromper a recorrência</li>
               </ul>
             </div>
           </div>

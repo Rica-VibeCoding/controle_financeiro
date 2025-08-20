@@ -14,7 +14,7 @@ interface EstadoMetasMensais {
   error: string | null
 }
 
-export function usarMetasMensais() {
+export function useMetasMensais() {
   const [estado, setEstado] = useState<EstadoMetasMensais>({
     metasDoMes: [],
     resumo: null,

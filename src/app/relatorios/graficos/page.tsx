@@ -8,6 +8,7 @@ import { Button } from '@/componentes/ui/button'
 import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
 import { usarToast } from '@/hooks/usar-toast'
+import { Icone } from '@/componentes/ui/icone'
 
 // Simulação de dados para gráficos (será substituído por dados reais)
 interface DadosGrafico {
@@ -77,7 +78,8 @@ export default function GraficosPage() {
               size="sm" 
               onClick={() => router.push('/relatorios')}
             >
-              ← Voltar
+              <Icone name="chevron-left" className="w-4 h-4 mr-1" aria-hidden="true" />
+              Voltar
             </Button>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
@@ -117,7 +119,10 @@ export default function GraficosPage() {
             {/* Gráfico de Pizza - Gastos por Categoria */}
             <Card>
               <CardHeader>
-                <CardTitle>📊 Gastos por Categoria</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Icone name="list" className="w-4 h-4" aria-hidden="true" />
+                  Gastos por Categoria
+                </CardTitle>
                 <CardDescription>
                   Distribuição dos seus gastos nas principais categorias
                 </CardDescription>
@@ -190,7 +195,10 @@ export default function GraficosPage() {
             {/* Gráfico de Barras - Evolução Mensal */}
             <Card>
               <CardHeader>
-                <CardTitle>📈 Evolução Mensal</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Icone name="line-chart" className="w-4 h-4" aria-hidden="true" />
+                  Evolução Mensal
+                </CardTitle>
                 <CardDescription>
                   Comparativo entre receitas, despesas e saldo ao longo dos meses
                 </CardDescription>
@@ -269,18 +277,21 @@ export default function GraficosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>💡 Insights Automáticos</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Icone name="info" className="w-4 h-4" aria-hidden="true" />
+                    Insights Automáticos
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 text-sm">
                     <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="font-medium text-blue-800">💰 Categoria com Maior Gasto</div>
+                      <div className="font-medium text-blue-800">Categoria com Maior Gasto</div>
                       <div className="text-blue-600">
                         {dadosCategorias[0]?.label} representa {((dadosCategorias[0]?.valor || 0) / totalDespesas * 100).toFixed(1)}% dos seus gastos
                       </div>
                     </div>
                     <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="font-medium text-green-800">📈 Tendência</div>
+                      <div className="font-medium text-green-800">Tendência</div>
                       <div className="text-green-600">
                         {resumoMensal.length > 1 && resumoMensal[resumoMensal.length - 1].saldo > resumoMensal[resumoMensal.length - 2].saldo 
                           ? 'Seu saldo está melhorando!' 
@@ -288,7 +299,7 @@ export default function GraficosPage() {
                       </div>
                     </div>
                     <div className="p-3 bg-yellow-50 rounded-lg">
-                      <div className="font-medium text-yellow-800">⚠️ Oportunidade</div>
+                      <div className="font-medium text-yellow-800">Oportunidade</div>
                       <div className="text-yellow-600">
                         Considere reduzir gastos em {dadosCategorias[0]?.label} para melhorar o saldo
                       </div>
@@ -299,7 +310,7 @@ export default function GraficosPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>🎯 Próximos Passos</CardTitle>
+                  <CardTitle>Próximos Passos</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3 text-sm">
@@ -341,7 +352,7 @@ export default function GraficosPage() {
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground text-center">
-              <span className="font-medium">💡 Nota:</span> Os gráficos mostram dados simulados para demonstração. 
+              <span className="font-medium">Nota:</span> Os gráficos mostram dados simulados para demonstração. 
               Em produção, eles refletirão suas transações reais do banco de dados.
             </div>
           </CardContent>

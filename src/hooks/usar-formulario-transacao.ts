@@ -12,7 +12,7 @@ interface UseFormularioTransacaoOptions {
   transacaoId?: string
 }
 
-export function usarFormularioTransacao({
+export function useFormularioTransacao({
   transacaoInicial = {},
   transacaoId
 }: UseFormularioTransacaoOptions = {}) {

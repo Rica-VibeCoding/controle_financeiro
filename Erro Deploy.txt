@@ -1,366 +1,44 @@
-[22:21:09.426] Running build in Washington, D.C., USA (East) – iad1
-[22:21:09.426] Build machine configuration: 2 cores, 8 GB
-[22:21:09.449] Cloning github.com/Rica-VibeCoding/controle_financeiro (Branch: main, Commit: e0e312c)
-[22:21:09.561] Previous build caches not available
-[22:21:09.770] Cloning completed: 319.000ms
-[22:21:10.144] Running "vercel build"
-[22:21:10.522] Vercel CLI 46.0.2
-[22:21:10.842] Installing dependencies...
-[22:21:33.429] 
-[22:21:33.429] added 435 packages in 22s
-[22:21:33.430] 
-[22:21:33.430] 143 packages are looking for funding
-[22:21:33.430]   run `npm fund` for details
-[22:21:33.668] Detected Next.js version: 15.4.6
-[22:21:33.674] Running "npm run build"
-[22:21:33.965] 
-[22:21:33.966] > controle-financeiro@0.1.0 build
-[22:21:33.967] > next build
-[22:21:33.967] 
-[22:21:35.534] Attention: Next.js now collects completely anonymous telemetry regarding usage.
-[22:21:35.535] This information is used to shape Next.js' roadmap and prioritize features.
-[22:21:35.535] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-[22:21:35.535] https://nextjs.org/telemetry
-[22:21:35.536] 
-[22:21:35.813]    ▲ Next.js 15.4.6
-[22:21:35.815] 
-[22:21:35.908]    Creating an optimized production build ...
-[22:21:56.648]  ✓ Compiled successfully in 17.0s
-[22:21:56.654]    Linting and checking validity of types ...
-[22:22:06.471] 
-[22:22:06.472] Failed to compile.
-[22:22:06.473] 
-[22:22:06.474] ./src/app/categorias/editar/[id]/page.tsx
-[22:22:06.474] 204:46  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.474] 204:63  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.474] 
-[22:22:06.474] ./src/app/centros-custo/nova/page.tsx
-[22:22:06.475] 200:50  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.475] 200:66  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.475] 200:69  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.475] 200:86  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.476] 200:89  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.476] 200:105  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.476] 201:47  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.476] 201:55  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.476] 201:58  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.477] 201:67  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.477] 201:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.477] 201:78  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.477] 201:81  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.477] 201:89  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.478] 202:59  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.478] 202:64  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.478] 202:67  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.478] 202:73  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.478] 202:76  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.479] 202:84  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.479] 
-[22:22:06.479] ./src/app/centros-custo/page.tsx
-[22:22:06.479] 42:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.479] 
-[22:22:06.479] ./src/app/configuracoes/metas/page.tsx
-[22:22:06.480] 15:18  Warning: 'recarregarDados' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.480] 
-[22:22:06.480] ./src/app/contas/editar/[id]/page.tsx
-[22:22:06.480] 215:42  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.480] 215:55  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.480] 
-[22:22:06.481] ./src/app/formas-pagamento/nova/page.tsx
-[22:22:06.481] 175:57  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.481] 175:65  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.482] 176:62  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.484] 176:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.484] 177:71  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.484] 177:79  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.485] 178:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.485] 178:77  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.485] 179:43  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.485] 179:57  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.485] 179:60  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.485] 179:64  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.486] 179:78  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.486] 179:85  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.486] 
-[22:22:06.489] ./src/app/formas-pagamento/page.tsx
-[22:22:06.490] 42:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.490] 
-[22:22:06.490] ./src/app/relatorios/graficos/page.tsx
-[22:22:06.490] 28:11  Warning: 'toast' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.490] 131:51  Warning: 'index' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.490] 
-[22:22:06.502] ./src/app/subcategorias/nova/page.tsx
-[22:22:06.503] 31:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.503] 172:43  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.503] 172:56  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.503] 172:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.504] 172:78  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.505] 174:39  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.505] 174:51  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.505] 174:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.509] 174:83  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.509] 174:86  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.509] 174:98  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.510] 174:101  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.510] 174:110  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.510] 
-[22:22:06.516] ./src/app/subcategorias/page.tsx
-[22:22:06.516] 59:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.516] 
-[22:22:06.516] ./src/app/transacoes/page.tsx
-[22:22:06.517] 4:8  Warning: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.517] 11:10  Warning: 'Paginacao' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.517] 22:9  Warning: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.517] 28:10  Warning: 'parametrosPaginacao' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.517] 51:9  Warning: 'handleParametrosPaginacaoChange' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.517] 
-[22:22:06.517] ./src/componentes/comum/error-boundary.tsx
-[22:22:06.518] 27:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.518] 
-[22:22:06.518] ./src/componentes/comum/filtros-transacoes.tsx
-[22:22:06.518] 3:20  Warning: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.518] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.518] 12:15  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.518] 12:26  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.519] 32:63  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.519] 125:25  Warning: 'IconeComponente' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.519] 285:29  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.519] 286:33  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.519] 
-[22:22:06.519] ./src/componentes/comum/paginacao.tsx
-[22:22:06.519] 56:9  Error: 'fim' is never reassigned. Use 'const' instead.  prefer-const
-[22:22:06.520] 
-[22:22:06.520] ./src/componentes/importacao/modal-importacao-csv.tsx
-[22:22:06.520] 30:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.520] 35:17  Warning: 'info' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.520] 
-[22:22:06.520] ./src/componentes/modais/modal-lancamento.tsx
-[22:22:06.521] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.521] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.521] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.521] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.521] 13:10  Warning: 'Icone' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.521] 259:57  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.521] 
-[22:22:06.522] ./src/componentes/modais/modal-transferencia.tsx
-[22:22:06.522] 9:10  Warning: 'Skeleton' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.522] 12:10  Warning: 'Icone' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.522] 
-[22:22:06.522] ./src/componentes/transacoes/campos-essenciais.tsx
-[22:22:06.522] 10:49  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.523] 21:3  Warning: 'carregando' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.523] 24:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.523] 94:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.523] 112:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.523] 112:77  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.524] 130:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.524] 
-[22:22:06.524] ./src/componentes/transacoes/formulario-parcelada.tsx
-[22:22:06.524] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.524] 11:10  Warning: 'validarTransacao' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.524] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.525] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.525] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.525] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.525] 48:10  Warning: 'carregandoSubcategorias' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.525] 50:19  Warning: 'setLoading' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.526] 91:49  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.526] 99:45  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.526] 
-[22:22:06.526] ./src/componentes/transacoes/formulario-transacao.tsx
-[22:22:06.526] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.526] 9:10  Warning: 'SecaoOpcoesAvancadas' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 10:10  Warning: 'SecaoRecorrencia' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 52:10  Warning: 'carregandoSubcategorias' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.527] 152:62  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.527] 168:45  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.528] 241:16  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.528] 242:16  Error: 'Select' is not defined.  react/jsx-no-undef
-[22:22:06.528] 257:16  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.528] 258:16  Error: 'Select' is not defined.  react/jsx-no-undef
-[22:22:06.528] 276:16  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.528] 277:16  Error: 'Select' is not defined.  react/jsx-no-undef
-[22:22:06.529] 288:16  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.529] 289:16  Error: 'Input' is not defined.  react/jsx-no-undef
-[22:22:06.529] 298:16  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.529] 299:16  Error: 'Select' is not defined.  react/jsx-no-undef
-[22:22:06.529] 315:14  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.529] 316:14  Error: 'Select' is not defined.  react/jsx-no-undef
-[22:22:06.530] 331:14  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.531] 332:14  Error: 'Input' is not defined.  react/jsx-no-undef
-[22:22:06.531] 385:18  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.531] 393:22  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.531] 394:22  Error: 'Select' is not defined.  react/jsx-no-undef
-[22:22:06.531] 415:22  Error: 'Label' is not defined.  react/jsx-no-undef
-[22:22:06.531] 416:22  Error: 'Input' is not defined.  react/jsx-no-undef
-[22:22:06.532] 432:69  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.532] 432:78  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.532] 433:39  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.532] 433:49  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.532] 
-[22:22:06.532] ./src/componentes/transacoes/item-parcela.tsx
-[22:22:06.532] 6:10  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.532] 6:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.533] 157:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.533] 163:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.533] 169:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.533] 
-[22:22:06.534] ./src/componentes/transacoes/lista-recorrentes.tsx
-[22:22:06.534] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.534] 4:58  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.534] 174:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.534] 203:54  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.535] 203:75  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.535] 204:80  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.535] 204:89  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.535] 205:60  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.535] 205:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.536] 206:51  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.536] 206:60  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.536] 
-[22:22:06.536] ./src/componentes/transacoes/lista-transacoes.tsx
-[22:22:06.536] 19:3  Warning: 'aoExcluir' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.536] 21:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.537] 226:66  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.537] 227:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.537] 229:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.537] 239:66  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.537] 240:78  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.538] 242:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.538] 
-[22:22:06.538] ./src/componentes/transacoes/secao-opcoes-avancadas.tsx
-[22:22:06.538] 11:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.538] 46:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.538] 64:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.538] 81:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.538] 
-[22:22:06.539] ./src/componentes/transacoes/secao-recorrencia.tsx
-[22:22:06.539] 11:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.539] 91:58  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.539] 91:70  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
-[22:22:06.539] 
-[22:22:06.539] ./src/componentes/transacoes/upload-anexo.tsx
-[22:22:06.539] 184:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-[22:22:06.540] 
-[22:22:06.540] ./src/componentes/ui/input.tsx
-[22:22:06.540] 4:18  Error: An interface declaring no members is equivalent to its supertype.  @typescript-eslint/no-empty-object-type
-[22:22:06.540] 
-[22:22:06.540] ./src/componentes/ui/label.tsx
-[22:22:06.540] 4:18  Error: An interface declaring no members is equivalent to its supertype.  @typescript-eslint/no-empty-object-type
-[22:22:06.540] 
-[22:22:06.541] ./src/componentes/ui/select.tsx
-[22:22:06.541] 4:18  Error: An interface declaring no members is equivalent to its supertype.  @typescript-eslint/no-empty-object-type
-[22:22:06.541] 
-[22:22:06.541] ./src/componentes/ui/toast.tsx
-[22:22:06.541] 3:10  Warning: 'useState' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.541] 
-[22:22:06.541] ./src/contextos/modais-contexto.tsx
-[22:22:06.542] 9:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.542] 10:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.542] 22:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.542] 24:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.542] 
-[22:22:06.542] ./src/contextos/transacoes-contexto.tsx
-[22:22:06.542] 97:6  Warning: React Hook useEffect has a missing dependency: 'carregarTransacoes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-[22:22:06.543] 
-[22:22:06.543] ./src/hooks/usar-formulario-transacao.ts
-[22:22:06.543] 20:61  Error: React Hook "useDadosAuxiliares" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.543] 24:29  Error: React Hook "useState" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.543] 36:45  Error: React Hook "useState" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.543] 37:65  Error: React Hook "useState" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.543] 38:33  Error: React Hook "useState" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.544] 39:35  Error: React Hook "useState" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.544] 42:3  Error: React Hook "useEffect" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.544] 83:3  Error: React Hook "useEffect" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.544] 105:26  Error: React Hook "useCallback" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.544] 105:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.545] 110:29  Error: React Hook "useCallback" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.545] 125:24  Error: React Hook "useCallback" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.545] 130:38  Error: React Hook "useCallback" is called in function "usarFormularioTransacao" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.545] 164:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.545] 
-[22:22:06.545] ./src/hooks/usar-metas-mensais.ts
-[22:22:06.546] 4:10  Warning: 'MetaMensal' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.546] 18:31  Error: React Hook "useState" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.546] 29:30  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.546] 56:22  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.546] 102:21  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.547] 110:24  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.547] 134:28  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.547] 158:22  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.547] 163:34  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.547] 168:38  Error: React Hook "useCallback" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.548] 190:3  Error: React Hook "useEffect" is called in function "usarMetasMensais" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.548] 192:6  Warning: React Hook useEffect has a missing dependency: 'carregarMetasDoMes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-[22:22:06.548] 
-[22:22:06.548] ./src/hooks/usar-toast.ts
-[22:22:06.548] 14:31  Error: React Hook "useState" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.549] 16:26  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.549] 21:24  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.549] 25:17  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.549] 30:19  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.549] 34:16  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.550] 38:17  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.550] 42:16  Error: React Hook "useCallback" is called in function "usarToast" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.550] 
-[22:22:06.550] ./src/hooks/usar-transacoes.ts
-[22:22:06.550] 11:3  Warning: 'calcularSaldoConta' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.550] 12:3  Warning: 'calcularSaldoTotal' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.551] 14:3  Warning: 'excluirGrupoParcelamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.551] 15:3  Warning: 'buscarParcelasPorGrupo' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.551] 18:3  Warning: 'pararRecorrencia' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.551] 32:39  Error: React Hook "useState" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.551] 33:33  Error: React Hook "useState" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.551] 34:29  Error: React Hook "useState" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.551] 38:20  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.552] 59:17  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.552] 98:23  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.552] 114:21  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.552] 152:19  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.552] 174:30  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.553] 185:30  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.553] 196:26  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.553] 236:36  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.553] 258:34  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.553] 269:41  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.554] 304:28  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.554] 330:43  Error: React Hook "useCallback" is called in function "usarTransacoes" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.554] 
-[22:22:06.554] ./src/hooks/usar-upload-anexo.ts
-[22:22:06.554] 11:45  Error: React Hook "useState" is called in function "usarUploadAnexo" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.554] 12:35  Error: React Hook "useState" is called in function "usarUploadAnexo" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.555] 14:31  Error: React Hook "useCallback" is called in function "usarUploadAnexo" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.555] 25:29  Error: React Hook "useCallback" is called in function "usarUploadAnexo" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.555] 35:26  Error: React Hook "useCallback" is called in function "usarUploadAnexo" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.555] 39:24  Error: React Hook "useCallback" is called in function "usarUploadAnexo" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
-[22:22:06.555] 
-[22:22:06.555] ./src/servicos/supabase/anexos.ts
-[22:22:06.556] 45:13  Warning: 'data' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.556] 
-[22:22:06.556] ./src/servicos/supabase/contas.ts
-[22:22:06.556] 54:26  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.556] 72:16  Warning: 'calcularSaldoConta' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.557] 
-[22:22:06.557] ./src/servicos/supabase/dashboard-queries.ts
-[22:22:06.557] 3:3  Warning: 'CardMetricaData' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.557] 5:3  Warning: 'CategoriaData' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.557] 6:3  Warning: 'CartaoData' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.558] 7:3  Warning: 'ContaData' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.558] 204:16  Warning: 'ano' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.558] 
-[22:22:06.558] ./src/servicos/supabase/metas-mensais.ts
-[22:22:06.558] 7:3  Warning: 'FiltrosMetas' is defined but never used.  @typescript-eslint/no-unused-vars
-[22:22:06.558] 
-[22:22:06.559] ./src/utilitarios/validacao.ts
-[22:22:06.559] 45:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.559] 59:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.559] 81:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.559] 170:56  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.559] 170:62  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[22:22:06.560] 
-[22:22:06.560] info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
-[22:22:06.569] Error: Command "npm run build" exited with 1
+[23:05:01.873] Running build in Washington, D.C., USA (East) – iad1
+[23:05:01.874] Build machine configuration: 2 cores, 8 GB
+[23:05:01.889] Cloning github.com/Rica-VibeCoding/controle_financeiro (Branch: main, Commit: a30f6c4)
+[23:05:02.024] Previous build caches not available
+[23:05:02.239] Cloning completed: 350.000ms
+[23:05:02.589] Running "vercel build"
+[23:05:02.986] Vercel CLI 46.0.2
+[23:05:03.322] Installing dependencies...
+[23:05:26.211] 
+[23:05:26.212] added 435 packages in 23s
+[23:05:26.213] 
+[23:05:26.213] 143 packages are looking for funding
+[23:05:26.213]   run `npm fund` for details
+[23:05:26.454] Detected Next.js version: 15.4.6
+[23:05:26.459] Running "npm run build"
+[23:05:26.583] 
+[23:05:26.585] > controle-financeiro@0.1.0 build
+[23:05:26.585] > next build
+[23:05:26.586] 
+[23:05:28.161] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[23:05:28.161] This information is used to shape Next.js' roadmap and prioritize features.
+[23:05:28.162] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[23:05:28.162] https://nextjs.org/telemetry
+[23:05:28.162] 
+[23:05:28.362]    ▲ Next.js 15.4.6
+[23:05:28.362] 
+[23:05:28.460]    Creating an optimized production build ...
+[23:05:50.169]  ✓ Compiled successfully in 18.0s
+[23:05:50.174]    Linting and checking validity of types ...
+[23:05:53.850]  ⨯ ESLint: Key "rules": Key "react-hooks/rules-of-hooks": 	Value [{"additionalHooks":"^(usar[A-Z].*)$"}] should NOT have more than 0 items. 
+[23:06:00.397] Failed to compile.
+[23:06:00.397] 
+[23:06:00.397] ./src/app/formas-pagamento/editar/[id]/page.tsx:138:20
+[23:06:00.397] Type error: Type '"chevron-left"' is not assignable to type 'IconName'.
+[23:06:00.397] 
+[23:06:00.397] [0m [90m 136 |[39m             onClick[33m=[39m{() [33m=>[39m router[33m.[39mback()}
+[23:06:00.398]  [90m 137 |[39m           [33m>[39m
+[23:06:00.398] [31m[1m>[22m[39m[90m 138 |[39m             [33m<[39m[33mIcone[39m name[33m=[39m[32m"chevron-left"[39m className[33m=[39m[32m"w-4 h-4 mr-1"[39m aria[33m-[39mhidden[33m=[39m[32m"true"[39m [33m/[39m[33m>[39m
+[23:06:00.398]  [90m     |[39m                    [31m[1m^[22m[39m
+[23:06:00.398]  [90m 139 |[39m             [33mVoltar[39m
+[23:06:00.398]  [90m 140 |[39m           [33m<[39m[33m/[39m[33mButton[39m[33m>[39m
+[23:06:00.398]  [90m 141 |[39m           [33m<[39m[33mdiv[39m[33m>[39m[0m
+[23:06:00.425] Next.js build worker exited with code: 1 and signal: null
+[23:06:00.446] Error: Command "npm run build" exited with 1

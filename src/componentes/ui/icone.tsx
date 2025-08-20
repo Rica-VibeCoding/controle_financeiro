@@ -28,6 +28,7 @@ import {
   List,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   FileSearch,
   PlusCircle,
   Banknote,
@@ -60,6 +61,7 @@ type IconName =
   | 'list'
   | 'chevron-down'
   | 'chevron-right'
+  | 'chevron-left'
   | 'file-search'
   | 'plus-circle'
   | 'banknote'
@@ -91,6 +93,7 @@ const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'list': List,
   'chevron-down': ChevronDown,
   'chevron-right': ChevronRight,
+  'chevron-left': ChevronLeft,
   'file-search': FileSearch,
   'plus-circle': PlusCircle,
   'banknote': Banknote,

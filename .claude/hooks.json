@@ -1,0 +1,11 @@
+{
+    "hooks": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "prettier --write \"$CLAUDE_FILE_PATHS\"" },
+          { "type": "command", "command": "npm run lint --fix" }
+        ]
+      }
+    ]
+  }

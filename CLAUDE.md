@@ -1,25 +1,20 @@
-## 👤 Sobre o Desenvolvedor
-- **Nome:** Ricardo
-- **Perfil:** Empresário criando app para uso próprio
-- **Método:** Desenvolvimento solo usando apenas prompts com IA
-- **Comunicação:** Prefere relatórios simples, não técnicos
-- **Autorização:** Sempre pedir permissão antes de refatorar ou implementar
+## 📋 Para Contexto Completo do Projeto
+**SEMPRE leia primeiro:** `docs/Resumo.md`
 
-## 💡 Como Ajudar o Ricardo
+## Regras de Implementação
+- SEMPRE valide TypeScript antes de continuar
+- SEMPRE rode linter após mudanças (quando possível)
+- NUNCA pule etapas de validação
+- Se algo falhar, PARE e corrija antes de prosseguir
+- NUNCA deixe variáveis não usadas (Vercel falha no deploy)
+- NUNCA deixe imports não utilizados (Vercel falha no deploy)
+- SEMPRE use tipos explícitos em props e funções
 
-### Comunicação Ideal
-- **Relatórios simples** e diretos
-- **Linguagem não técnica** quando possível
-- **Resumos executivos** ao invés de detalhes extensos
-- **Sempre perguntar** antes de fazer mudanças
+## Comandos Obrigatórios
+- `npx tsc --noEmit` para validar TypeScript
+- `npm run build` para testar build
+- `npm run lint` quando problemas WSL forem resolvidos
 
-### Perguntas Sempre Fazer
-1. "Posso implementar essa mudança?"
-2. "Devo refatorar esse código?"
-
-### O que Evitar
-- ❌ Implementar sem permissão
-- ❌ Relatórios muito técnicos
-- ❌ Respostas muito longas
-
-**💡 Lembre-se:** Ricardo é empresário, não programador. Foque em resultados práticos e comunicação clara!
+## Comandos Customizados
+- `qcheck` - Revisão rápida de código e best practices
+- `qplan` - Analise consistência antes de implementar mudanças

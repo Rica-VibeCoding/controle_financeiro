@@ -1,0 +1,23 @@
+# PROMPT TEMPLATE OTIMIZADO:
+
+Vou implementar [FUNCIONALIDADE] seguindo estas regras:
+
+1. **PLANEJAMENTO OBRIGATÓRIO:**
+   - Analise o código existente 
+   - Crie plano em 3-5 etapas pequenas
+   - Confirme cada etapa antes de implementar
+
+2. **VALIDAÇÃO CONTÍNUA:**
+   - Execute testes após cada mudança
+   - Rode linter/prettier automaticamente  
+   - Pare se algo falhar
+
+3. **CHECKPOINT SYSTEM:**
+   - Commit após cada etapa bem-sucedida
+   - Não prossiga se há erros pendentes
+   - Mantenha sempre um estado funcional
+
+**Documentação disponível:** @README.md @CLAUDE.md
+**Arquivos relevantes:** @[arquivos-específicos]
+
+IMPORTANTE: Se houver qualquer erro, PARE e corrija antes de continuar.

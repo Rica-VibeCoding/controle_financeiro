@@ -7,7 +7,6 @@
 - **Comunicação:** Prefere relatórios simples, não técnicos
 - **Autorização:** Sempre pedir permissão antes de refatorar ou implementar
 
-### Comnu
 
 ## 🎯 Sobre o Projeto
 
@@ -18,7 +17,7 @@
 ### Stack Principal
 - **Frontend:** Next.js + TypeScript + Tailwind
 - **Backend:** Supabase (PostgreSQL + Storage)
-- **Deploy:** Vercel
+- **Deploy:** Vercel (regras rigorosas - sem variáveis/imports não usados)
 
 ### Funcionalidades Principais
 - ✅ **Transações** (receitas, despesas, transferências)
@@ -61,6 +60,7 @@
 **Supabase:** Projeto `nzgifjdewdfibcopolof`  
 **GitHub:** https://github.com/Rica-VibeCoding/controle_financeiro  
 **Status:** Documentação completa, código em desenvolvimento
+**Deploy:** Vercel com regras rigorosas de build (sem unused vars/imports)
 
 ## 💡 Como Ajudar o Ricardo
 

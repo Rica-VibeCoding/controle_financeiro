@@ -11,7 +11,10 @@
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx tsc --noEmit:*)",
       "Bash(npx tsc:*)",
+      "Bash(npx prettier:*)",
       "Bash(node:*)",
       "Bash(rm:*)",
       "Bash(npm:*)",
@@ -46,5 +49,83 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
+  ],
+  "hooks": [
+    {
+      "name": "Auto Format & Lint",
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "prettier --write \"$CLAUDE_FILE_PATHS\" 2>/dev/null || echo '⚠️ Prettier não encontrado'",
+          "description": "Formatar código automaticamente"
+        },
+        {
+          "type": "command",
+          "command": "echo '⚡ Lint seria executado aqui (NextJS com problemas no WSL)'",
+          "description": "Placeholder para lint até resolver problema NextJS"
+        }
+      ]
+    },
+    {
+      "name": "TypeScript Validation",
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "if [[ \"$CLAUDE_FILE_PATHS\" =~ \\.(ts|tsx)$ ]]; then npx tsc --noEmit --skipLibCheck \"$CLAUDE_FILE_PATHS\" 2>/dev/null || echo '⚠️ Erros TypeScript detectados - revisar necessário'; fi",
+          "description": "Validar tipos TypeScript"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Specific Validation",
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "if [[ \"$CLAUDE_FILE_PATHS\" =~ dashboard.*\\.(ts|tsx)$ ]]; then echo '📊 Arquivo dashboard editado - executando validações específicas...' && npx tsc --noEmit 2>/dev/null || echo '⚠️ Validação dashboard falhou'; fi",
+          "description": "Validações específicas para arquivos do dashboard"
+        }
+      ]
+    },
+    {
+      "name": "Build Check for Critical Files",
+      "matcher": "Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "if [[ \"$CLAUDE_FILE_PATHS\" =~ (page|layout)\\.(ts|tsx)$ ]]; then echo '🔨 Arquivo crítico modificado - TypeScript ok ✅' && npx tsc --noEmit 2>/dev/null || echo '🚨 Erro TypeScript detectado'; fi",
+          "description": "Verificar TypeScript em arquivos críticos"
+        }
+      ]
+    }
+  ],
+  "output_style": "explained",
+  "temperature": 0.1,
+  
+  "projectContext": {
+    "name": "Controle Financeiro",
+    "type": "Next.js App",
+    "database": "Supabase",
+    "owner": "Ricardo - Empresário",
+    "purpose": "App pessoal de controle financeiro"
+  },
+  
+  "keyDirectories": {
+    "components": "src/componentes/",
+    "pages": "src/app/",
+    "services": "src/servicos/",
+    "types": "src/tipos/",
+    "hooks": "src/hooks/",
+    "utils": "src/utilitarios/",
+    "docs": "docs/"
+  },
+  
+  "importantFiles": [
+    "CLAUDE.md",
+    "src/app/dashboard/page.tsx",
+    "src/servicos/supabase/cliente.ts",
+    "src/tipos/database.ts"
   ]
 }

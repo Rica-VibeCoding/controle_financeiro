@@ -61,6 +61,7 @@ export interface Database {
           nome: string
           tipo: string
           banco: string | null
+          limite: number | null
           ativo: boolean
           created_at: string
         }
@@ -69,6 +70,7 @@ export interface Database {
           nome: string
           tipo: string
           banco?: string | null
+          limite?: number | null
           ativo?: boolean
           created_at?: string
         }
@@ -77,6 +79,7 @@ export interface Database {
           nome?: string
           tipo?: string
           banco?: string | null
+          limite?: number | null
           ativo?: boolean
           created_at?: string
         }

@@ -1,50 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mcp list:*)",
-      "Bash(ls:*)",
-      "Bash(env)",
-      "mcp__supabase__list_tables",
-      "Bash(mv:*)",
-      "Bash(true)",
-      "Bash(rmdir:*)",
-      "Bash(mkdir:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run build:*)",
-      "Bash(npm run lint:*)",
-      "Bash(npx tsc --noEmit:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npx prettier:*)",
-      "Bash(node:*)",
-      "Bash(rm:*)",
-      "Bash(npm:*)",
-      "Bash(npx shadcn@latest init:*)",
-      "Bash(for:*)",
-      "Bash(do echo \"Verificando $file...\")",
-      "Bash(done)",
-      "Bash(grep:*)",
-      "Bash(find:*)",
-      "Bash(npx tsx:*)",
-      "mcp__supabase__execute_sql",
-      "mcp__supabase__apply_migration",
-      "WebSearch",
-      "WebFetch(domain:lucide.dev)",
-      "Bash(rg:*)",
-      "WebFetch(domain:stripe.com)",
-      "WebFetch(domain:docs.stripe.com)",
-      "WebFetch(domain:uxplanet.org)",
-      "WebFetch(domain:gist.github.com)",
-      "WebFetch(domain:github.com)",
-      "Bash(timeout 10 npm run dev)",
-      "Bash(timeout 15 npm run dev)",
-      "WebFetch(domain:ui.shadcn.com)",
-      "WebFetch(domain:recharts.org)",
-      "WebFetch(domain:refine.dev)",
-      "WebFetch(domain:swr.vercel.app)",
-      "WebFetch(domain:supabase.com)",
-      "Bash(npx next dev:*)"
+      "Bash(./node_modules/.bin/next --version)"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
@@ -103,7 +63,6 @@
   ],
   "output_style": "explained",
   "temperature": 0.1,
-  
   "projectContext": {
     "name": "Controle Financeiro",
     "type": "Next.js App",
@@ -111,7 +70,6 @@
     "owner": "Ricardo - Empresário",
     "purpose": "App pessoal de controle financeiro"
   },
-  
   "keyDirectories": {
     "components": "src/componentes/",
     "pages": "src/app/",
@@ -121,7 +79,6 @@
     "utils": "src/utilitarios/",
     "docs": "docs/"
   },
-  
   "importantFiles": [
     "CLAUDE.md",
     "src/app/dashboard/page.tsx",

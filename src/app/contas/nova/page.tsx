@@ -43,6 +43,7 @@ export default function NovaContaPage() {
     nome: '',
     tipo: '' as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro' | '',
     banco: '',
+    limite: '' as string | number | '',
     ativo: true
   })
   const [erros, setErros] = useState<string[]>([])
@@ -58,6 +59,15 @@ export default function NovaContaPage() {
 
     if (!dados.tipo) {
       novosErros.push('Tipo é obrigatório')
+    }
+    // Limite é obrigatório para cartão de crédito; aceita 0 e centavos
+    if (dados.tipo === 'cartao_credito') {
+      const valorLimite = dados.limite === '' ? '' : Number(dados.limite)
+      if (valorLimite === '') {
+        novosErros.push('Limite é obrigatório para cartão de crédito')
+      } else if (isNaN(valorLimite) || valorLimite < 0) {
+        novosErros.push('Limite deve ser um número maior ou igual a 0')
+      }
     }
 
     // Banco é opcional, mas se preenchido deve ter pelo menos 2 caracteres
@@ -88,6 +98,7 @@ export default function NovaContaPage() {
         nome: dados.nome.trim(),
         tipo: dados.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
         banco: dados.banco.trim() || null,
+        limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || 0 : null,
         ativo: dados.ativo
       })
 
@@ -221,6 +232,25 @@ export default function NovaContaPage() {
                       className="mt-2"
                     />
                   )}
+                </div>
+              )}
+
+              {/* Limite (apenas para cartão de crédito) */}
+              {dados.tipo === 'cartao_credito' && (
+                <div className="space-y-2">
+                  <Label htmlFor="limite">Limite do cartão (R$) *</Label>
+                  <Input
+                    id="limite"
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="Ex: 5000.00"
+                    value={dados.limite}
+                    onChange={(e) => setDados(prev => ({ ...prev, limite: e.target.value }))}
+                    disabled={carregando}
+                    className={erros.some(e => e.toLowerCase().includes('limite')) ? 'border-destructive' : ''}
+                  />
+                  <p className="text-xs text-muted-foreground">Aceita centavos e permite 0.</p>
                 </div>
               )}
 

@@ -12,6 +12,7 @@ import { verificarDuplicatas } from '@/servicos/importacao/validador-duplicatas'
 import { importarTransacoes } from '@/servicos/importacao/importador-transacoes'
 import { PreviewImportacao } from './preview-importacao'
 import { TransacaoImportada } from '@/tipos/importacao'
+import { logger } from '@/utilitarios/logger'
 
 interface ModalImportacaoCSVProps {
   isOpen: boolean
@@ -46,7 +47,7 @@ export function ModalImportacaoCSV({
         setDadosProcessados(linhasCSV)
       } catch (error) {
         erro('Erro ao processar arquivo CSV')
-        console.error(error)
+        logger.error(error)
       } finally {
         setCarregando(false)
       }
@@ -74,7 +75,7 @@ export function ModalImportacaoCSV({
       sucesso(`${novas.length} transações prontas para importar. ${dups.length} duplicadas encontradas.`)
     } catch (error) {
       erro('Erro ao processar transações')
-      console.error(error)
+      logger.error(error)
     } finally {
       setCarregando(false)
     }
@@ -94,10 +95,10 @@ export function ModalImportacaoCSV({
         sucesso(`✅ ${resultado.importadas} transações importadas com sucesso!`)
       } else if (resultado.importadas > 0) {
         sucesso(`✅ ${resultado.importadas} importadas. ${resultado.erros.length} com erro (veja console)`)
-        console.error('Detalhes dos erros:', resultado.erros)
+        logger.error('Detalhes dos erros:', resultado.erros)
       } else {
         erro(`❌ Nenhuma transação foi importada. ${resultado.erros.length} erros encontrados`)
-        console.error('Erros de importação:', resultado.erros)
+        logger.error('Erros de importação:', resultado.erros)
         return // Não fecha o modal se nada foi importado
       }
       
@@ -105,7 +106,7 @@ export function ModalImportacaoCSV({
       onClose()
     } catch (error) {
       erro('Erro ao importar transações')
-      console.error('Erro na importação:', error)
+      logger.error('Erro na importação:', error)
     } finally {
       setCarregando(false)
     }

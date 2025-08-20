@@ -1,6 +1,7 @@
 'use client'
 
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
+import { CardMetrica } from '@/componentes/dashboard/card-metrica'
 import { useCardsData } from '@/hooks/usar-cards-dados'
 import { usePeriodo } from '@/hooks/usar-periodo'
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   return (
     <LayoutPrincipal>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">
@@ -18,40 +20,89 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <CardMetrica
+            titulo="Receitas"
+            valor={cards?.receitas.atual}
+            icone="receitas"
+            percentual={cards?.receitas.percentual || 0}
+            cor="green"
+            loading={isLoading}
+          />
+          
+          <CardMetrica
+            titulo="Despesas"
+            valor={cards?.despesas.atual}
+            icone="despesas"
+            percentual={cards?.despesas.percentual || 0}
+            cor="red"
+            loading={isLoading}
+          />
+          
+          <CardMetrica
+            titulo="Saldo"
+            valor={cards?.saldo.atual}
+            icone="saldo"
+            percentual={cards?.saldo.percentual || 0}
+            cor="blue"
+            loading={isLoading}
+          />
+          
+          <CardMetrica
+            titulo="Cartões"
+            valor={cards?.gastosCartao.atual}
+            icone="cartoes"
+            percentual={cards?.gastosCartao.percentual || 0}
+            cor="purple"
+            loading={isLoading}
+          />
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">Erro ao carregar dados: {error.message}</p>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            FASE 1 - Estrutura Base Concluída ✅
+            FASE 2 - Cards de Métricas ✅
           </h2>
           
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>SWR configurado e funcionando</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h3 className="font-medium text-gray-900">Cards Implementados:</h3>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Receitas com comparativo</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Despesas com comparativo</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Saldo calculado</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Cartões - gastos vs limite</span>
+                </div>
+              </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Hooks SWR criados</span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>CSS customizado adicionado</span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Interfaces TypeScript definidas</span>
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-2">Status do Hook SWR:</h3>
-            <div className="space-y-1 text-sm">
-              <p>Loading: {isLoading ? '✅ Sim' : '❌ Não'}</p>
-              <p>Error: {error ? '❌ ' + error.message : '✅ Sem erros'}</p>
-              <p>Data: {cards ? '✅ Dados carregados' : '⏳ Aguardando'}</p>
-            </div>
+            {cards && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-gray-900">Dados Atuais:</h3>
+                <div className="space-y-2 text-sm">
+                  <p>Receitas: {cards.receitas.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                  <p>Despesas: {cards.despesas.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                  <p>Saldo: {cards.saldo.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                  <p>Cartões: {cards.gastosCartao.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -47,6 +47,7 @@ export default function EditarContaPage() {
     nome: '',
     tipo: '' as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro' | '',
     banco: '',
+    limite: '' as string | number | '',
     ativo: true
   })
   const [erros, setErros] = useState<string[]>([])
@@ -74,6 +75,9 @@ export default function EditarContaPage() {
           nome: contaEncontrada.nome,
           tipo: contaEncontrada.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
           banco: contaEncontrada.banco || '',
+          limite: typeof (contaEncontrada as any).limite === 'number' && (contaEncontrada as any).limite !== null
+            ? (contaEncontrada as any).limite
+            : '',
           ativo: contaEncontrada.ativo
         })
       } catch (error) {
@@ -111,6 +115,16 @@ export default function EditarContaPage() {
       novosErros.push('Nome do banco deve ter pelo menos 2 caracteres')
     }
 
+    // Limite obrigatório para cartão; aceita 0 e centavos
+    if (dados.tipo === 'cartao_credito') {
+      const valorLimite = dados.limite === '' ? '' : Number(dados.limite)
+      if (valorLimite === '') {
+        novosErros.push('Limite é obrigatório para cartão de crédito')
+      } else if (isNaN(valorLimite) || valorLimite < 0) {
+        novosErros.push('Limite deve ser um número maior ou igual a 0')
+      }
+    }
+
     setErros(novosErros)
     return novosErros.length === 0
   }
@@ -136,6 +150,7 @@ export default function EditarContaPage() {
         nome: dados.nome.trim(),
         tipo: dados.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
         banco: dados.banco.trim() || null,
+        limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || 0 : null,
         ativo: dados.ativo
       })
 
@@ -301,6 +316,25 @@ export default function EditarContaPage() {
                       className="mt-2"
                     />
                   )}
+                </div>
+              )}
+
+              {/* Limite (apenas para cartão de crédito) */}
+              {dados.tipo === 'cartao_credito' && (
+                <div className="space-y-2">
+                  <Label htmlFor="limite">Limite do cartão (R$) *</Label>
+                  <Input
+                    id="limite"
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="Ex: 5000.00"
+                    value={dados.limite}
+                    onChange={(e) => setDados(prev => ({ ...prev, limite: e.target.value }))}
+                    disabled={salvando}
+                    className={erros.some(e => e.toLowerCase().includes('limite')) ? 'border-destructive' : ''}
+                  />
+                  <p className="text-xs text-muted-foreground">Aceita centavos e permite 0.</p>
                 </div>
               )}
 

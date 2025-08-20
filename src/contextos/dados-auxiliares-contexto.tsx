@@ -7,6 +7,7 @@ import { obterContas } from '@/servicos/supabase/contas'
 import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
 import { obterFormasPagamento } from '@/servicos/supabase/formas-pagamento'
 import { obterCentrosCusto } from '@/servicos/supabase/centros-custo'
+import { logger } from '@/utilitarios/logger'
 
 /**
  * Interface para dados auxiliares do sistema
@@ -84,7 +85,7 @@ export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderPro
         centrosCusto: centrosData
       })
     } catch (error) {
-      console.error('Erro ao carregar dados auxiliares:', error)
+      logger.error('Erro ao carregar dados auxiliares:', error)
       setError(error instanceof Error ? error.message : 'Erro desconhecido')
     } finally {
       setLoading(false)
@@ -113,7 +114,7 @@ export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderPro
 
       return subcategorias
     } catch (error) {
-      console.error('Erro ao carregar subcategorias:', error)
+      logger.error('Erro ao carregar subcategorias:', error)
       return []
     }
   }

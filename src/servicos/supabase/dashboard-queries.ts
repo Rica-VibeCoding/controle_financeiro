@@ -58,31 +58,31 @@ export async function obterDadosCards(periodo: Periodo) {
       .gte('data', periodoAnteriorInicio.toISOString().split('T')[0])
       .lte('data', periodoAnteriorFim.toISOString().split('T')[0])
 
-    // Cartões: gastos do período
+    // Cartões: buscar limites dos cartões
+    const { data: cartoesInfo } = await supabase
+      .from('fp_contas')
+      .select('id, limite')
+      .eq('tipo', 'cartao_credito')
+
+    const cartoesIds = cartoesInfo?.map(c => c.id) || []
+    
+    // Cartões: apenas gastos (despesas) do período - o que realmente foi "usado" no cartão
     const { data: cartoesGastos } = await supabase
       .from('fp_transacoes')
-      .select(`
-        valor,
-        fp_contas!inner(tipo, limite)
-      `)
-      .eq('fp_contas.tipo', 'cartao_credito')
+      .select('valor')
+      .eq('tipo', 'despesa')
       .eq('status', 'realizado')
       .gte('data', periodo.inicio)
       .lte('data', periodo.fim)
+      .in('conta_id', cartoesIds)
 
-    // Cartões: limites totais
-    const { data: cartoesLimites } = await supabase
-      .from('fp_contas')
-      .select('limite')
-      .eq('tipo', 'cartao_credito')
-
-    // Calcular totais
-    const totalReceitas = receitasAtual?.reduce((sum, r) => sum + (r.valor || 0), 0) || 0
-    const totalDespesas = despesasAtual?.reduce((sum, d) => sum + (d.valor || 0), 0) || 0
-    const totalReceitasAnterior = receitasAnterior?.reduce((sum, r) => sum + (r.valor || 0), 0) || 0
-    const totalDespesasAnterior = despesasAnterior?.reduce((sum, d) => sum + (d.valor || 0), 0) || 0
-    const totalCartoesUsado = cartoesGastos?.reduce((sum, c) => sum + (c.valor || 0), 0) || 0
-    const totalCartoesLimite = cartoesLimites?.reduce((sum, c) => sum + (c.limite || 0), 0) || 0
+    // Calcular totais (convertendo strings para números)
+    const totalReceitas = receitasAtual?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0
+    const totalDespesas = despesasAtual?.reduce((sum, d) => sum + Number(d.valor || 0), 0) || 0
+    const totalReceitasAnterior = receitasAnterior?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0
+    const totalDespesasAnterior = despesasAnterior?.reduce((sum, d) => sum + Number(d.valor || 0), 0) || 0
+    const totalCartoesUsado = cartoesGastos?.reduce((sum, c) => sum + Number(c.valor || 0), 0) || 0
+    const totalCartoesLimite = cartoesInfo?.reduce((sum, c) => sum + Number(c.limite || 0), 0) || 0
 
     const saldoAtual = totalReceitas - totalDespesas
     const saldoAnterior = totalReceitasAnterior - totalDespesasAnterior

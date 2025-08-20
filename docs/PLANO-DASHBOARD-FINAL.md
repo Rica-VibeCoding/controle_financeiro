@@ -235,26 +235,32 @@ const swrConfig = {
 
 ---
 
-### **FASE 2: Cards de Métricas (1 hora)**
+### **FASE 2: Cards de Métricas (1 hora) ✅ CONCLUÍDA**
 **Objetivo:** 4 cards com dados reais + comparativo
 
 **Tarefas:**
-1. **Componente reutilizável:**
-   - `src/componentes/dashboard/card-metrica.tsx`
-   - Props: título, valor, ícone, percentual, sparkline
-   - Estados: loading (skeleton), dados
+1. **✅ Componente reutilizável:**
+   - ✅ `src/componentes/dashboard/card-metrica.tsx`
+   - ✅ Props: título, valor, ícone, percentual, sparkline
+   - ✅ Estados: loading (skeleton), dados
 
-2. **Dashboard principal:**
-   - `src/app/dashboard/page.tsx`
-   - Grid responsivo 4 cards
-   - Integração com hooks SWR
+2. **✅ Dashboard principal:**
+   - ✅ `src/app/dashboard/page.tsx`
+   - ✅ Grid responsivo 4 cards
+   - ✅ Integração com hooks SWR
 
-3. **Queries de dados:**
-   - Receitas/despesas por período
-   - Comparativo mês anterior
-   - Sparklines (últimos 7 dias)
+3. **✅ Queries de dados:**
+   - ✅ Receitas/despesas por período
+   - ✅ Comparativo mês anterior
+   - ✅ **REFATORAÇÃO:** Query cartões corrigida (limites únicos)
+   - ⏳ Sparklines (últimos 7 dias) - TODO para próxima fase
 
-**Entregável:** 4 cards funcionando com dados reais
+4. **✅ Validações e correções:**
+   - ✅ TypeScript sem erros
+   - ✅ Query cartões otimizada (evita duplicação de limites)
+   - ✅ Cálculo percentual correto (50% = R$ 4.000/R$ 8.000)
+
+**✅ Entregável:** 4 cards funcionando com dados reais validados
 
 ---
 

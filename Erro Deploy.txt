@@ -1,220 +1,221 @@
-[23:10:00.341] Running build in Washington, D.C., USA (East) – iad1
-[23:10:00.342] Build machine configuration: 2 cores, 8 GB
-[23:10:00.365] Cloning github.com/Rica-VibeCoding/controle_financeiro (Branch: main, Commit: e9d7944)
-[23:10:00.540] Previous build caches not available
-[23:10:00.739] Cloning completed: 373.000ms
-[23:10:01.071] Running "vercel build"
-[23:10:01.474] Vercel CLI 46.0.2
-[23:10:01.827] Installing dependencies...
-[23:10:26.463] 
-[23:10:26.464] added 435 packages in 24s
-[23:10:26.464] 
-[23:10:26.464] 143 packages are looking for funding
-[23:10:26.464]   run `npm fund` for details
-[23:10:26.558] Detected Next.js version: 15.4.6
-[23:10:26.564] Running "npm run build"
-[23:10:26.819] 
-[23:10:26.819] > controle-financeiro@0.1.0 build
-[23:10:26.819] > next build
-[23:10:26.819] 
-[23:10:28.291] Attention: Next.js now collects completely anonymous telemetry regarding usage.
-[23:10:28.291] This information is used to shape Next.js' roadmap and prioritize features.
-[23:10:28.291] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-[23:10:28.291] https://nextjs.org/telemetry
-[23:10:28.291] 
-[23:10:28.473]    ▲ Next.js 15.4.6
-[23:10:28.473] 
-[23:10:28.587]    Creating an optimized production build ...
-[23:10:50.676]  ✓ Compiled successfully in 18.0s
-[23:10:50.682]    Linting and checking validity of types ...
-[23:11:00.717] 
-[23:11:00.718] ./src/app/centros-custo/page.tsx
-[23:11:00.718] 42:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.718] 
-[23:11:00.718] ./src/app/configuracoes/metas/page.tsx
-[23:11:00.718] 15:18  Warning: 'recarregarDados' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.718] 
-[23:11:00.718] ./src/app/formas-pagamento/page.tsx
-[23:11:00.718] 42:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.718] 
-[23:11:00.718] ./src/app/relatorios/graficos/page.tsx
-[23:11:00.718] 29:11  Warning: 'toast' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.718] 136:51  Warning: 'index' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.718] 
-[23:11:00.720] ./src/app/subcategorias/nova/page.tsx
-[23:11:00.720] 31:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.720] 
-[23:11:00.720] ./src/app/subcategorias/page.tsx
-[23:11:00.720] 59:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.720] 
-[23:11:00.720] ./src/app/transacoes/page.tsx
-[23:11:00.720] 4:8  Warning: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.720] 11:10  Warning: 'Paginacao' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.720] 22:9  Warning: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.720] 28:10  Warning: 'parametrosPaginacao' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.720] 51:9  Warning: 'handleParametrosPaginacaoChange' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 
-[23:11:00.721] ./src/componentes/comum/error-boundary.tsx
-[23:11:00.721] 27:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.721] 
-[23:11:00.721] ./src/componentes/comum/filtros-transacoes.tsx
-[23:11:00.721] 3:20  Warning: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 12:15  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 12:26  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 32:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.721] 125:25  Warning: 'IconeComponente' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 285:29  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 286:33  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 
-[23:11:00.721] ./src/componentes/importacao/modal-importacao-csv.tsx
-[23:11:00.721] 30:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.721] 35:17  Warning: 'info' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.721] 
-[23:11:00.721] ./src/componentes/modais/modal-lancamento.tsx
-[23:11:00.722] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.722] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.722] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.722] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.722] 13:10  Warning: 'Icone' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.722] 259:57  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.723] 
-[23:11:00.723] ./src/componentes/modais/modal-transferencia.tsx
-[23:11:00.723] 9:10  Warning: 'Skeleton' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.723] 12:10  Warning: 'Icone' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.723] 
-[23:11:00.723] ./src/componentes/transacoes/campos-essenciais.tsx
-[23:11:00.725] 10:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.731] 21:3  Warning: 'carregando' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.731] 24:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.731] 94:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.731] 112:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.731] 112:77  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.731] 130:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.731] 
-[23:11:00.731] ./src/componentes/transacoes/formulario-parcelada.tsx
-[23:11:00.731] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.731] 11:10  Warning: 'validarTransacao' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.731] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.731] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 48:10  Warning: 'carregandoSubcategorias' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 50:19  Warning: 'setLoading' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 91:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 99:45  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 
-[23:11:00.732] ./src/componentes/transacoes/formulario-transacao.tsx
-[23:11:00.732] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 12:10  Warning: 'SecaoOpcoesAvancadas' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 13:10  Warning: 'SecaoRecorrencia' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 15:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 15:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 15:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 15:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 55:10  Warning: 'carregandoSubcategorias' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 155:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 171:45  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 
-[23:11:00.732] ./src/componentes/transacoes/item-parcela.tsx
-[23:11:00.732] 6:10  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 6:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 157:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 163:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 169:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 
-[23:11:00.732] ./src/componentes/transacoes/lista-recorrentes.tsx
-[23:11:00.732] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 4:58  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 175:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 
-[23:11:00.732] ./src/componentes/transacoes/lista-transacoes.tsx
-[23:11:00.732] 19:3  Warning: 'aoExcluir' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.732] 21:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.732] 226:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 227:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 229:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 239:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 240:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 242:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 
-[23:11:00.733] ./src/componentes/transacoes/secao-opcoes-avancadas.tsx
-[23:11:00.733] 11:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 46:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 64:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 81:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 
-[23:11:00.733] ./src/componentes/transacoes/secao-recorrencia.tsx
-[23:11:00.733] 11:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 
-[23:11:00.733] ./src/componentes/transacoes/upload-anexo.tsx
-[23:11:00.733] 184:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-[23:11:00.733] 
-[23:11:00.733] ./src/componentes/ui/toast.tsx
-[23:11:00.733] 3:10  Warning: 'useState' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.733] 
-[23:11:00.733] ./src/contextos/modais-contexto.tsx
-[23:11:00.733] 9:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.733] 10:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.734] 22:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.734] 24:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.734] 
-[23:11:00.734] ./src/contextos/transacoes-contexto.tsx
-[23:11:00.734] 97:6  Warning: React Hook useEffect has a missing dependency: 'carregarTransacoes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-[23:11:00.734] 
-[23:11:00.734] ./src/hooks/usar-formulario-transacao.ts
-[23:11:00.734] 105:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.734] 164:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.734] 
-[23:11:00.734] ./src/hooks/usar-metas-mensais.ts
-[23:11:00.734] 4:10  Warning: 'MetaMensal' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 192:6  Warning: React Hook useEffect has a missing dependency: 'carregarMetasDoMes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-[23:11:00.734] 
-[23:11:00.734] ./src/hooks/usar-transacoes.ts
-[23:11:00.734] 11:3  Warning: 'calcularSaldoConta' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 12:3  Warning: 'calcularSaldoTotal' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 14:3  Warning: 'excluirGrupoParcelamento' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 15:3  Warning: 'buscarParcelasPorGrupo' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 18:3  Warning: 'pararRecorrencia' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 
-[23:11:00.734] ./src/servicos/supabase/anexos.ts
-[23:11:00.734] 45:13  Warning: 'data' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 
-[23:11:00.734] ./src/servicos/supabase/contas.ts
-[23:11:00.734] 54:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.734] 72:16  Warning: 'calcularSaldoConta' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 
-[23:11:00.734] ./src/servicos/supabase/dashboard-queries.ts
-[23:11:00.734] 3:3  Warning: 'CardMetricaData' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.734] 5:3  Warning: 'CategoriaData' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.735] 6:3  Warning: 'CartaoData' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.735] 7:3  Warning: 'ContaData' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.735] 204:16  Warning: 'ano' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.735] 
-[23:11:00.735] ./src/servicos/supabase/metas-mensais.ts
-[23:11:00.735] 7:3  Warning: 'FiltrosMetas' is defined but never used.  @typescript-eslint/no-unused-vars
-[23:11:00.735] 
-[23:11:00.735] ./src/utilitarios/validacao.ts
-[23:11:00.735] 45:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.735] 59:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.735] 81:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.735] 170:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.735] 170:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-[23:11:00.735] 
-[23:11:00.735] info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
-[23:11:04.318] Failed to compile.
-[23:11:04.319] 
-[23:11:04.319] ./src/servicos/importacao/importador-transacoes.ts:45:28
-[23:11:04.319] Type error: Argument of type '{ data: string; descricao: string; valor: number; tipo: "receita" | "despesa"; conta_id: string; identificador_externo: string; status: string; }' is not assignable to parameter of type '{ id?: string | undefined; data: string; descricao: string; categoria_id?: string | null | undefined; subcategoria_id?: string | null | undefined; forma_pagamento_id?: string | null | undefined; ... 18 more ...; updated_at?: string | undefined; }'.
-[23:11:04.319]   Types of property 'status' are incompatible.
-[23:11:04.320]     Type 'string' is not assignable to type '"realizado" | "previsto" | undefined'.
-[23:11:04.320] 
-[23:11:04.320] [0m [90m 43 |[39m       console[33m.[39mlog([32m'🔍 DEBUG - Dados enviados para criarTransacao:'[39m[33m,[39m dadosParaSalvar)
-[23:11:04.320]  [90m 44 |[39m       
-[23:11:04.320] [31m[1m>[22m[39m[90m 45 |[39m       [36mawait[39m criarTransacao(dadosParaSalvar)
-[23:11:04.320]  [90m    |[39m                            [31m[1m^[22m[39m
-[23:11:04.320]  [90m 46 |[39m       resultado[33m.[39mimportadas[33m++[39m
-[23:11:04.320]  [90m 47 |[39m     } [36mcatch[39m (error) {
-[23:11:04.320]  [90m 48 |[39m       [36mconst[39m mensagem [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [33mString[39m(error)[0m
-[23:11:04.346] Next.js build worker exited with code: 1 and signal: null
-[23:11:04.369] Error: Command "npm run build" exited with 1
+[23:14:32.245] Running build in Washington, D.C., USA (East) – iad1
+[23:14:32.254] Build machine configuration: 2 cores, 8 GB
+[23:14:32.295] Cloning github.com/Rica-VibeCoding/controle_financeiro (Branch: main, Commit: dbaef26)
+[23:14:32.599] Previous build caches not available
+[23:14:32.798] Cloning completed: 502.000ms
+[23:14:33.138] Running "vercel build"
+[23:14:33.535] Vercel CLI 46.0.2
+[23:14:33.877] Installing dependencies...
+[23:14:58.821] 
+[23:14:58.821] added 435 packages in 25s
+[23:14:58.822] 
+[23:14:58.822] 143 packages are looking for funding
+[23:14:58.822]   run `npm fund` for details
+[23:14:59.047] Detected Next.js version: 15.4.6
+[23:14:59.051] Running "npm run build"
+[23:14:59.294] 
+[23:14:59.295] > controle-financeiro@0.1.0 build
+[23:14:59.295] > next build
+[23:14:59.296] 
+[23:15:00.820] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[23:15:00.822] This information is used to shape Next.js' roadmap and prioritize features.
+[23:15:00.822] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[23:15:00.823] https://nextjs.org/telemetry
+[23:15:00.823] 
+[23:15:01.114]    ▲ Next.js 15.4.6
+[23:15:01.114] 
+[23:15:01.224]    Creating an optimized production build ...
+[23:15:23.136]  ✓ Compiled successfully in 18.0s
+[23:15:23.145]    Linting and checking validity of types ...
+[23:15:32.417] 
+[23:15:32.418] ./src/app/centros-custo/page.tsx
+[23:15:32.418] 42:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.418] 
+[23:15:32.419] ./src/app/configuracoes/metas/page.tsx
+[23:15:32.419] 15:18  Warning: 'recarregarDados' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.419] 
+[23:15:32.419] ./src/app/formas-pagamento/page.tsx
+[23:15:32.419] 42:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.420] 
+[23:15:32.420] ./src/app/relatorios/graficos/page.tsx
+[23:15:32.420] 29:11  Warning: 'toast' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.420] 136:51  Warning: 'index' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.420] 
+[23:15:32.421] ./src/app/subcategorias/nova/page.tsx
+[23:15:32.421] 31:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.421] 
+[23:15:32.421] ./src/app/subcategorias/page.tsx
+[23:15:32.421] 59:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.422] 
+[23:15:32.422] ./src/app/transacoes/page.tsx
+[23:15:32.422] 4:8  Warning: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.423] 11:10  Warning: 'Paginacao' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.423] 22:9  Warning: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.423] 28:10  Warning: 'parametrosPaginacao' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.423] 51:9  Warning: 'handleParametrosPaginacaoChange' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.424] 
+[23:15:32.424] ./src/componentes/comum/error-boundary.tsx
+[23:15:32.424] 27:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.424] 
+[23:15:32.425] ./src/componentes/comum/filtros-transacoes.tsx
+[23:15:32.425] 3:20  Warning: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.425] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.425] 12:15  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.425] 12:26  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.426] 32:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.426] 125:25  Warning: 'IconeComponente' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.426] 285:29  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.426] 286:33  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.427] 
+[23:15:32.427] ./src/componentes/importacao/modal-importacao-csv.tsx
+[23:15:32.427] 30:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.427] 35:17  Warning: 'info' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.427] 
+[23:15:32.428] ./src/componentes/modais/modal-lancamento.tsx
+[23:15:32.428] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.428] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.428] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.434] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.434] 13:10  Warning: 'Icone' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.435] 259:57  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.438] 
+[23:15:32.438] ./src/componentes/modais/modal-transferencia.tsx
+[23:15:32.438] 9:10  Warning: 'Skeleton' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.439] 12:10  Warning: 'Icone' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.439] 
+[23:15:32.439] ./src/componentes/transacoes/campos-essenciais.tsx
+[23:15:32.442] 10:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.448] 21:3  Warning: 'carregando' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.448] 24:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.449] 94:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.449] 112:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.451] 112:77  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.454] 130:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.454] 
+[23:15:32.454] ./src/componentes/transacoes/formulario-parcelada.tsx
+[23:15:32.455] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.455] 11:10  Warning: 'validarTransacao' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.455] 12:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.457] 12:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.457] 12:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.457] 12:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.458] 48:10  Warning: 'carregandoSubcategorias' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.458] 50:19  Warning: 'setLoading' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.458] 91:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.458] 99:45  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.458] 
+[23:15:32.458] ./src/componentes/transacoes/formulario-transacao.tsx
+[23:15:32.459] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.459] 12:10  Warning: 'SecaoOpcoesAvancadas' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.459] 13:10  Warning: 'SecaoRecorrencia' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.459] 15:25  Warning: 'Conta' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.463] 15:32  Warning: 'Categoria' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.463] 15:57  Warning: 'FormaPagamento' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.470] 15:73  Warning: 'CentroCusto' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.471] 55:10  Warning: 'carregandoSubcategorias' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.471] 155:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.471] 171:45  Warning: 'fileName' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.472] 
+[23:15:32.472] ./src/componentes/transacoes/item-parcela.tsx
+[23:15:32.472] 6:10  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.472] 6:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.472] 157:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.473] 163:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.473] 169:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.473] 
+[23:15:32.473] ./src/componentes/transacoes/lista-recorrentes.tsx
+[23:15:32.473] 4:29  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.474] 4:58  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.474] 175:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.474] 
+[23:15:32.474] ./src/componentes/transacoes/lista-transacoes.tsx
+[23:15:32.474] 19:3  Warning: 'aoExcluir' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.475] 21:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.475] 226:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.475] 227:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.476] 229:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.476] 239:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.476] 240:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.476] 242:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.476] 
+[23:15:32.477] ./src/componentes/transacoes/secao-opcoes-avancadas.tsx
+[23:15:32.477] 11:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.477] 46:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.477] 64:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.477] 81:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.478] 
+[23:15:32.478] ./src/componentes/transacoes/secao-recorrencia.tsx
+[23:15:32.478] 11:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.478] 
+[23:15:32.478] ./src/componentes/transacoes/upload-anexo.tsx
+[23:15:32.479] 184:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+[23:15:32.479] 
+[23:15:32.479] ./src/componentes/ui/toast.tsx
+[23:15:32.486] 3:10  Warning: 'useState' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.486] 
+[23:15:32.487] ./src/contextos/modais-contexto.tsx
+[23:15:32.487] 9:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.487] 10:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.487] 22:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.488] 24:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.488] 
+[23:15:32.488] ./src/contextos/transacoes-contexto.tsx
+[23:15:32.488] 97:6  Warning: React Hook useEffect has a missing dependency: 'carregarTransacoes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+[23:15:32.488] 
+[23:15:32.489] ./src/hooks/usar-formulario-transacao.ts
+[23:15:32.489] 105:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.489] 164:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.489] 
+[23:15:32.489] ./src/hooks/usar-metas-mensais.ts
+[23:15:32.490] 4:10  Warning: 'MetaMensal' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.490] 192:6  Warning: React Hook useEffect has a missing dependency: 'carregarMetasDoMes'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+[23:15:32.490] 
+[23:15:32.490] ./src/hooks/usar-transacoes.ts
+[23:15:32.490] 11:3  Warning: 'calcularSaldoConta' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.491] 12:3  Warning: 'calcularSaldoTotal' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.493] 14:3  Warning: 'excluirGrupoParcelamento' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.493] 15:3  Warning: 'buscarParcelasPorGrupo' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.493] 18:3  Warning: 'pararRecorrencia' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.494] 
+[23:15:32.503] ./src/servicos/supabase/anexos.ts
+[23:15:32.504] 45:13  Warning: 'data' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.504] 
+[23:15:32.505] ./src/servicos/supabase/contas.ts
+[23:15:32.505] 54:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.505] 72:16  Warning: 'calcularSaldoConta' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.506] 
+[23:15:32.506] ./src/servicos/supabase/dashboard-queries.ts
+[23:15:32.506] 3:3  Warning: 'CardMetricaData' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.507] 5:3  Warning: 'CategoriaData' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.507] 6:3  Warning: 'CartaoData' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.507] 7:3  Warning: 'ContaData' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.507] 204:16  Warning: 'ano' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.508] 
+[23:15:32.508] ./src/servicos/supabase/metas-mensais.ts
+[23:15:32.508] 7:3  Warning: 'FiltrosMetas' is defined but never used.  @typescript-eslint/no-unused-vars
+[23:15:32.509] 
+[23:15:32.509] ./src/utilitarios/validacao.ts
+[23:15:32.509] 45:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.510] 59:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.510] 81:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.510] 170:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.511] 170:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[23:15:32.511] 
+[23:15:32.511] info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[23:15:36.757]    Collecting page data ...
+[23:15:39.419]    Generating static pages (0/21) ...
+[23:15:40.214] Error occurred prerendering page "/_not-found". Read more: https://nextjs.org/docs/messages/prerender-error
+[23:15:40.214] Error: supabaseUrl is required.
+[23:15:40.215]     at new bA (.next/server/chunks/342.js:24:79321)
+[23:15:40.215]     at bB (.next/server/chunks/342.js:24:84226)
+[23:15:40.215]     at 71133 (.next/server/chunks/390.js:4:1563)
+[23:15:40.215]     at c (.next/server/webpack-runtime.js:1:128)
+[23:15:40.215]     at 58539 (.next/server/chunks/390.js:1:5234)
+[23:15:40.215]     at c (.next/server/webpack-runtime.js:1:128)
+[23:15:40.215]     at 97647 (.next/server/chunks/390.js:27:254)
+[23:15:40.215]     at Object.c [as require] (.next/server/webpack-runtime.js:1:128) {
+[23:15:40.215]   digest: '2406552'
+[23:15:40.215] }
+[23:15:40.215] Export encountered an error on /_not-found/page: /_not-found, exiting the build.
+[23:15:40.238]  ⨯ Next.js build worker exited with code: 1 and signal: null
+[23:15:40.278] Error: Command "npm run build" exited with 1

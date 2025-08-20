@@ -228,3 +228,17 @@ body {
 .card-h-2 {
   min-height: calc(var(--card-height) * 2);
 }
+
+/* Utilitários de multi-line clamp (mantém altura uniforme nas tabelas) */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

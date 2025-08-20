@@ -198,14 +198,17 @@ export function ListaTransacoes({
               ) : (
                 transacoes.map((transacao) => (
                   <TableRow key={transacao.id} className="hover:bg-gray-50/50">
-                    <TableCell className="font-mono text-sm whitespace-nowrap">
+                    <TableCell className="text-sm whitespace-nowrap">
                       {new Date(transacao.data).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{transacao.descricao}</div>
+                      <div className="text-sm">
+                        {/* Descrição com truncamento em 2 linhas e tooltip para texto completo */}
+                        <div className="line-clamp-2" title={transacao.descricao}>
+                          {transacao.descricao}
+                        </div>
                         {transacao.observacoes && (
-                          <div className="text-xs text-muted-foreground truncate">
+                          <div className="text-xs text-muted-foreground line-clamp-1" title={transacao.observacoes}>
                             {transacao.observacoes}
                           </div>
                         )}

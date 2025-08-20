@@ -1,4 +1,5 @@
 import { criarTransacao } from '@/servicos/supabase/transacoes'
+import type { NovaTransacao } from '@/tipos/database'
 import { TransacaoImportada, ResultadoImportacao } from '@/tipos/importacao'
 
 export async function importarTransacoes(
@@ -30,7 +31,7 @@ export async function importarTransacoes(
         throw new Error('Valor deve ser maior que zero')
       }
 
-      const dadosParaSalvar = {
+      const dadosParaSalvar: NovaTransacao = {
         data: transacao.data,
         descricao: transacao.descricao.trim(),
         valor: transacao.valor,

@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   return (
     <LayoutPrincipal>
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-2 sm:px-3 lg:px-4 py-8">
         
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
@@ -21,41 +21,54 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <CardMetrica
-            titulo="Receitas"
-            valor={cards?.receitas.atual}
-            icone="receitas"
-            percentual={cards?.receitas.percentual || 0}
-            cor="green"
-            loading={isLoading}
-          />
+          <div style={{ animationDelay: '0.1s' }} className="h-full">
+            <CardMetrica
+              titulo="Receitas"
+              valor={cards?.receitas.atual}
+              valorAnterior={cards?.receitas.anterior}
+              icone="receitas"
+              percentual={cards?.receitas.percentual || 0}
+              cor="green"
+              loading={isLoading}
+            />
+          </div>
           
-          <CardMetrica
-            titulo="Despesas"
-            valor={cards?.despesas.atual}
-            icone="despesas"
-            percentual={cards?.despesas.percentual || 0}
-            cor="red"
-            loading={isLoading}
-          />
+          <div style={{ animationDelay: '0.2s' }} className="h-full">
+            <CardMetrica
+              titulo="Despesas"
+              valor={cards?.despesas.atual}
+              valorAnterior={cards?.despesas.anterior}
+              icone="despesas"
+              percentual={cards?.despesas.percentual || 0}
+              cor="red"
+              loading={isLoading}
+            />
+          </div>
           
-          <CardMetrica
-            titulo="Saldo"
-            valor={cards?.saldo.atual}
-            icone="saldo"
-            percentual={cards?.saldo.percentual || 0}
-            cor="blue"
-            loading={isLoading}
-          />
+          <div style={{ animationDelay: '0.3s' }} className="h-full">
+            <CardMetrica
+              titulo="Saldo"
+              valor={cards?.saldo.atual}
+              valorAnterior={cards?.saldo.anterior}
+              icone="saldo"
+              percentual={cards?.saldo.percentual || 0}
+              cor="blue"
+              loading={isLoading}
+            />
+          </div>
           
-          <CardMetrica
-            titulo="Cartões"
-            valor={cards?.gastosCartao.atual}
-            icone="cartoes"
-            percentual={cards?.gastosCartao.percentual || 0}
-            cor="purple"
-            loading={isLoading}
-          />
+          <div style={{ animationDelay: '0.4s' }} className="h-full">
+            <CardMetrica
+              titulo="Cartões"
+              valor={cards?.gastosCartao.atual}
+              valorLimite={cards?.gastosCartao.limite}
+              mostrarBarraProgresso={true}
+              icone="cartoes"
+              percentual={cards?.gastosCartao.percentual || 0}
+              cor="purple"
+              loading={isLoading}
+            />
+          </div>
         </div>
 
         {error && (

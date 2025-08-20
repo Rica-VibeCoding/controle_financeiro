@@ -264,6 +264,20 @@ const swrConfig = {
 
 ---
 
+### **FASE 2.1: Ajustes Visuais Cards (25 min) 🎨 EM ANDAMENTO**
+**Objetivo:** Finalizar ajustes visuais para ficar idêntico ao dashboard.html
+
+**Progresso:**
+- ✅ **FASE 1:** Texto "vs mês anterior" implementado nos cards 1-3
+- ⏳ **FASE 2:** Barra de progresso no card Cartões
+- ⏳ **FASE 3:** Gradientes CSS e animações com delay
+
+**Documentação:** Ver `docs/PLANO-VISUAL-CARDS-CONTINUACAO.md` para detalhes completos
+
+**✅ Entregável:** Cards 100% idênticos ao dashboard.html de referência
+
+---
+
 ### **FASE 3: Gráficos + Cards Secundários (1.5 horas)**
 **Objetivo:** Todos os gráficos + cards menores
 

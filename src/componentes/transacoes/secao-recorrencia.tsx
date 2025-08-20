@@ -3,6 +3,7 @@
 import { Input } from '@/componentes/ui/input'
 import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
+import { Icone } from '@/componentes/ui/icone'
 import { NovaTransacao } from '@/tipos/database'
 
 interface SecaoRecorrenciaProps {
@@ -16,7 +17,10 @@ export function SecaoRecorrencia({
 }: SecaoRecorrenciaProps) {
   return (
     <div className="space-y-4 border-t pt-4">
-      <h3 className="text-lg font-medium">Recorrência</h3>
+      <h3 className="text-lg font-medium flex items-center gap-2">
+        <Icone name="tags" className="w-4 h-4" aria-hidden="true" />
+        Recorrência
+      </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Transação Recorrente */}
@@ -76,7 +80,10 @@ export function SecaoRecorrencia({
 
       {dados.recorrente && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">ℹ️ Como funciona a recorrência?</h4>
+          <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+            <Icone name="info" className="w-4 h-4" aria-hidden="true" />
+            Como funciona a recorrência?
+          </h4>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• A transação atual será salva normalmente</li>
             <li>• Na data especificada, uma nova transação será criada automaticamente</li>

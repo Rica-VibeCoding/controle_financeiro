@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { obterContasComSaldo, excluirConta } from '@/servicos/supabase/contas'
 import type { Conta } from '@/tipos/database'
@@ -62,7 +63,8 @@ export default function ContasPage() {
           </div>
           
           <Button onClick={() => router.push('/contas/nova')}>
-            + Nova Conta
+            <Icone name="plus-circle" className="w-4 h-4 mr-1" aria-hidden="true" />
+            Nova Conta
           </Button>
         </div>
 
@@ -115,10 +117,16 @@ export default function ContasPage() {
                     <TableRow key={conta.id} className="hover:bg-gray-50/50">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">
-                            {conta.tipo === 'conta_corrente' ? '🏦' : 
-                             conta.tipo === 'poupanca' ? '🏛️' :
-                             conta.tipo === 'cartao_credito' ? '💳' : '💰'}
+                          <span className="text-2xl" aria-hidden="true">
+                            {conta.tipo === 'conta_corrente' ? (
+                              <Icone name="building" className="w-5 h-5" />
+                            ) : conta.tipo === 'poupanca' ? (
+                              <Icone name="wallet" className="w-5 h-5" />
+                            ) : conta.tipo === 'cartao_credito' ? (
+                              <Icone name="credit-card" className="w-5 h-5" />
+                            ) : (
+                              <Icone name="folder" className="w-5 h-5" />
+                            )}
                           </span>
                           <div className="font-medium">{conta.nome}</div>
                         </div>
@@ -161,7 +169,7 @@ export default function ContasPage() {
                             title="Editar conta"
                             className="h-8 w-8 p-0"
                           >
-                            ✏️
+                            <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -170,7 +178,7 @@ export default function ContasPage() {
                             className="text-destructive hover:text-destructive h-8 w-8 p-0"
                             title="Excluir conta"
                           >
-                            🗑️
+                            <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>
@@ -184,7 +192,10 @@ export default function ContasPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>📊 Resumo</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="line-chart" className="w-4 h-4" aria-hidden="true" />
+              Resumo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

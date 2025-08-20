@@ -3,6 +3,7 @@
 import { Input } from '@/componentes/ui/input'
 import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
+import { Icone } from '@/componentes/ui/icone'
 import { NovaTransacao, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
 
 interface SecaoOpcoesAvancadasProps {
@@ -24,7 +25,10 @@ export function SecaoOpcoesAvancadas({
 }: SecaoOpcoesAvancadasProps) {
   return (
     <div className="space-y-4 border-t pt-4">
-      <h3 className="text-lg font-medium">Opções Avançadas</h3>
+      <h3 className="text-lg font-medium flex items-center gap-2">
+        <Icone name="settings" className="w-4 h-4" aria-hidden="true" />
+        Opções Avançadas
+      </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Subcategoria */}

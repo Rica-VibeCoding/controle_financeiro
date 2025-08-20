@@ -10,6 +10,7 @@ import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { FiltrosTransacao } from '@/tipos/filtros'
 import type { Categoria, Conta } from '@/tipos/database'
+import { Icone } from '@/componentes/ui/icone'
 
 interface FiltrosTransacoesProps {
   filtros: FiltrosTransacao
@@ -41,8 +42,9 @@ export function FiltrosTransacoes({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg">🔍 Filtros</CardTitle>
+          <div className="flex items-center gap-2">
+            <Icone name="filter" className="w-4 h-4" aria-hidden="true" />
+            <CardTitle className="text-lg">Filtros</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             {filtrosAtivos && (
@@ -90,9 +92,9 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               >
                 <option value="">Todos os tipos</option>
-                <option value="receita">💰 Receita</option>
-                <option value="despesa">💸 Despesa</option>
-                <option value="transferencia">🔄 Transferência</option>
+                <option value="receita">Receita</option>
+                <option value="despesa">Despesa</option>
+                <option value="transferencia">Transferência</option>
               </Select>
             </div>
 
@@ -105,8 +107,8 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               >
                 <option value="">Todos os status</option>
-                <option value="previsto">🟡 Previsto</option>
-                <option value="realizado">✅ Realizado</option>
+                <option value="previsto">Previsto</option>
+                <option value="realizado">Realizado</option>
               </Select>
             </div>
 
@@ -156,8 +158,8 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               >
                 <option value="">Todas</option>
-                <option value="true">🔄 Apenas recorrentes</option>
-                <option value="false">🔲 Apenas únicas</option>
+                <option value="true">Apenas recorrentes</option>
+                <option value="false">Apenas únicas</option>
               </Select>
             </div>
           </div>

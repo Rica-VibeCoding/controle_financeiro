@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Input } from '@/componentes/ui/input'
 import { Label } from '@/componentes/ui/label'
@@ -61,7 +62,8 @@ export default function NovaFormaPagamentoPage() {
             variant="outline"
             onClick={() => router.back()}
           >
-            ← Voltar
+            <Icone name="chevron-left" className="w-4 h-4 mr-1" aria-hidden="true" />
+            Voltar
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
@@ -105,9 +107,9 @@ export default function NovaFormaPagamentoPage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value as 'vista' | 'credito' | 'debito' }))}
                   disabled={carregando}
                 >
-                  <option value="vista">💵 À Vista</option>
-                  <option value="credito">💳 Crédito</option>
-                  <option value="debito">💳 Débito</option>
+                  <option value="vista">À Vista</option>
+                  <option value="credito">Crédito</option>
+                  <option value="debito">Débito</option>
                 </Select>
               </div>
 
@@ -163,7 +165,10 @@ export default function NovaFormaPagamentoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>💡 Dicas</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="info" className="w-4 h-4" aria-hidden="true" />
+              Dicas
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">

@@ -3,6 +3,7 @@
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 
 export default function ConfiguracoesPage() {
   return (
@@ -16,7 +17,10 @@ export default function ConfiguracoesPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>🎯 Metas e Orçamento</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="list" className="w-4 h-4" aria-hidden="true" />
+              Metas e Orçamento
+            </CardTitle>
             <CardDescription>
               Configure suas metas mensais de gastos por categoria
             </CardDescription>
@@ -27,14 +31,18 @@ export default function ConfiguracoesPage() {
               className="w-full"
               onClick={() => window.location.href = '/configuracoes/metas'}
             >
-              🎯 Configurar Metas Mensais
+              <span className="mr-1" aria-hidden="true"><Icone name="list" className="w-4 h-4" /></span>
+              Configurar Metas Mensais
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>💾 Backup e Dados</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="folder" className="w-4 h-4" aria-hidden="true" />
+              Backup e Dados
+            </CardTitle>
             <CardDescription>
               Gerencie seus dados e configurações
             </CardDescription>
@@ -42,13 +50,16 @@ export default function ConfiguracoesPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button variant="outline" className="w-full">
-                📥 Exportar Dados
+                <Icone name="file-text" className="w-4 h-4 mr-1" aria-hidden="true" />
+                Exportar Dados
               </Button>
               <Button variant="outline" className="w-full">
-                📤 Importar Dados
+                <Icone name="file-up" className="w-4 h-4 mr-1" aria-hidden="true" />
+                Importar Dados
               </Button>
               <Button variant="outline" className="w-full">
-                🔄 Backup Automático
+                <Icone name="refresh-ccw" className="w-4 h-4 mr-1" aria-hidden="true" />
+                Backup Automático
               </Button>
             </div>
           </CardContent>

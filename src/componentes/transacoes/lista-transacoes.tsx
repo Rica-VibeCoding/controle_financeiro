@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { LoadingPage } from '@/componentes/comum/loading'
 import { Transacao } from '@/tipos/database'
@@ -68,14 +69,15 @@ export function ListaTransacoes({
       'realizado': 'text-green-600'
     }
 
-    const icones = {
-      'previsto': '🟡',
-      'realizado': '✅'
-    }
-
     return (
       <span className={`text-sm flex items-center gap-1 ${cores[status as keyof typeof cores]}`}>
-        <span>{icones[status as keyof typeof icones]}</span>
+        <span aria-hidden="true">
+          {status === 'realizado' ? (
+            <Icone name="check-circle-2" className="w-3.5 h-3.5" />
+          ) : (
+            <Icone name="clock" className="w-3.5 h-3.5" />
+          )}
+        </span>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     )
@@ -255,7 +257,7 @@ export function ListaTransacoes({
                             title="Editar transação"
                             className="h-8 w-8 p-0"
                           >
-                            ✏️
+                            <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                           </Button>
                         )}
                         <Button
@@ -269,7 +271,7 @@ export function ListaTransacoes({
                               : "Excluir transação"
                           }
                         >
-                          🗑️
+                          <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                         {/* Botão para excluir todas as parcelas */}
                         {transacao.total_parcelas > 1 && transacao.grupo_parcelamento && (
@@ -280,7 +282,7 @@ export function ListaTransacoes({
                             className="text-destructive hover:text-destructive h-8 w-8 p-0"
                             title={`Excluir TODAS as ${transacao.total_parcelas} parcelas`}
                           >
-                            🗑️📦
+                            <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                           </Button>
                         )}
                       </div>

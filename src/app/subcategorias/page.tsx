@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { obterSubcategorias, excluirSubcategoria } from '@/servicos/supabase/subcategorias'
@@ -87,7 +88,8 @@ export default function SubcategoriasPage() {
           </div>
           
           <Button onClick={() => router.push('/subcategorias/nova')}>
-            + Nova Subcategoria
+            <Icone name="plus-circle" className="w-4 h-4 mr-1" aria-hidden="true" />
+            Nova Subcategoria
           </Button>
         </div>
 
@@ -113,7 +115,7 @@ export default function SubcategoriasPage() {
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     <div className="space-y-2">
-                      <div className="text-4xl">🏷️</div>
+                      <div className="text-4xl" aria-hidden="true"><Icone name="tags" className="w-6 h-6" /></div>
                       <p>Nenhuma subcategoria cadastrada</p>
                       <p className="text-sm">Crie subcategorias para detalhar suas categorias</p>
                     </div>
@@ -155,7 +157,7 @@ export default function SubcategoriasPage() {
                           title="Editar subcategoria"
                           className="h-8 w-8 p-0"
                         >
-                          ✏️
+                          <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -164,7 +166,7 @@ export default function SubcategoriasPage() {
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
                           title="Excluir subcategoria"
                         >
-                          🗑️
+                          <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>
@@ -177,7 +179,10 @@ export default function SubcategoriasPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>📊 Resumo</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="line-chart" className="w-4 h-4" aria-hidden="true" />
+              Resumo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

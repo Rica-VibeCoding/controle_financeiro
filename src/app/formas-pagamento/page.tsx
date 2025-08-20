@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { obterFormasPagamento, excluirFormaPagamento } from '@/servicos/supabase/formas-pagamento'
@@ -46,9 +47,9 @@ export default function FormasPagamentoPage() {
 
   const getTipoLabel = (tipo: string) => {
     switch (tipo) {
-      case 'vista': return '💵 À Vista'
-      case 'credito': return '💳 Crédito'
-      case 'debito': return '💳 Débito'
+      case 'vista': return 'À Vista'
+      case 'credito': return 'Crédito'
+      case 'debito': return 'Débito'
       default: return tipo
     }
   }
@@ -79,7 +80,8 @@ export default function FormasPagamentoPage() {
           </div>
           
           <Button onClick={() => router.push('/formas-pagamento/nova')}>
-            + Nova Forma de Pagamento
+            <Icone name="plus-circle" className="w-4 h-4 mr-1" aria-hidden="true" />
+            Nova Forma de Pagamento
           </Button>
         </div>
 
@@ -106,7 +108,7 @@ export default function FormasPagamentoPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     <div className="space-y-2">
-                      <div className="text-4xl">💳</div>
+                      <div className="text-4xl" aria-hidden="true"><Icone name="credit-card" className="w-6 h-6" /></div>
                       <p>Nenhuma forma de pagamento cadastrada</p>
                       <p className="text-sm">Crie formas de pagamento para suas transações</p>
                     </div>
@@ -150,7 +152,7 @@ export default function FormasPagamentoPage() {
                           title="Editar forma de pagamento"
                           className="h-8 w-8 p-0"
                         >
-                          ✏️
+                          <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -159,7 +161,7 @@ export default function FormasPagamentoPage() {
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
                           title="Excluir forma de pagamento"
                         >
-                          🗑️
+                          <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>
@@ -172,7 +174,10 @@ export default function FormasPagamentoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>📊 Resumo</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="line-chart" className="w-4 h-4" aria-hidden="true" />
+              Resumo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

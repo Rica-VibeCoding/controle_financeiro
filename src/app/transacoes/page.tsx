@@ -16,6 +16,7 @@ import { ModalImportacaoCSV } from '@/componentes/importacao/modal-importacao-cs
 import { useModais } from '@/contextos/modais-contexto'
 import { Transacao } from '@/tipos/database'
 import type { FiltrosTransacao, ParametrosPaginacao } from '@/tipos/filtros'
+import { Icone } from '@/componentes/ui/icone'
 
 export default function TransacoesPage() {
   const router = useRouter()
@@ -63,25 +64,29 @@ export default function TransacoesPage() {
           
           <div className="flex gap-2">
             <Button onClick={() => abrirModal('lancamento')}>
-              📝 Lançar
+              <span className="mr-1" aria-hidden="true"><Icone name="tag" className="w-4 h-4" /></span>
+              Lançar
             </Button>
             <Button 
               variant="outline"
               onClick={() => abrirModal('parcelamento')}
             >
-              💳 Parcelar
+              <span className="mr-1" aria-hidden="true"><Icone name="credit-card" className="w-4 h-4" /></span>
+              Parcelar
             </Button>
             <Button 
               variant="outline"
               onClick={() => abrirModal('transferencia')}
             >
-              🔄 Transferir
+              <span className="mr-1" aria-hidden="true"><Icone name="line-chart" className="w-4 h-4" /></span>
+              Transferir
             </Button>
             <Button 
               variant="outline"
               onClick={() => abrirModal('importacao')}
             >
-              📂 Importar CSV
+              <span className="mr-1" aria-hidden="true"><Icone name="folder" className="w-4 h-4" /></span>
+              Importar CSV
             </Button>
           </div>
         </div>
@@ -96,7 +101,7 @@ export default function TransacoesPage() {
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            📋 Todas as Transações
+            Todas as Transações
           </button>
           <button
             onClick={() => setAbaAtiva('recorrentes')}
@@ -106,7 +111,7 @@ export default function TransacoesPage() {
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            🔄 Recorrentes
+            Recorrentes
           </button>
         </div>
 

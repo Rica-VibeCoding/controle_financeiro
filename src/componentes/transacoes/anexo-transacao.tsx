@@ -1,6 +1,7 @@
 'use client'
 
 import { AnexosService } from '@/servicos/supabase/anexos'
+import { Icone } from '@/componentes/ui/icone'
 
 interface AnexoTransacaoProps {
   anexoUrl: string | null
@@ -26,8 +27,12 @@ export function AnexoTransacao({ anexoUrl, tamanho = 'sm' }: AnexoTransacaoProps
         className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-1 rounded transition-colors"
         title={`Ver anexo: ${fileName}`}
       >
-        <span className="text-sm">
-          {isPdf ? '📄' : '🖼️'}
+        <span className="text-sm" aria-hidden="true">
+          {isPdf ? (
+            <Icone name="folder" className="w-4 h-4" />
+          ) : (
+            <Icone name="image" className="w-4 h-4" />
+          )}
         </span>
         <span>Anexo</span>
       </button>
@@ -42,8 +47,12 @@ export function AnexoTransacao({ anexoUrl, tamanho = 'sm' }: AnexoTransacaoProps
           <div className={`w-12 h-12 rounded flex items-center justify-center ${
             isPdf ? 'bg-red-100' : 'bg-blue-100'
           }`}>
-            <span className="text-xl">
-              {isPdf ? '📄' : '🖼️'}
+            <span className="text-xl" aria-hidden="true">
+              {isPdf ? (
+                <Icone name="folder" className="w-5 h-5" />
+              ) : (
+                <Icone name="image" className="w-5 h-5" />
+              )}
             </span>
           </div>
         </div>
@@ -61,7 +70,10 @@ export function AnexoTransacao({ anexoUrl, tamanho = 'sm' }: AnexoTransacaoProps
           onClick={handleClick}
           className="flex-shrink-0 text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded transition-colors"
         >
-          👁️ Ver
+          <span aria-hidden="true" className="mr-1">
+            <Icone name="line-chart" className="w-4 h-4" />
+          </span>
+          Ver
         </button>
       </div>
     </div>

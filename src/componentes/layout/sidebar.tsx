@@ -4,22 +4,23 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/utilitarios/cn'
+import { Icone } from '@/componentes/ui/icone'
 
 const menuItems = [
   {
     title: 'Dashboard',
     href: '/',
-    icon: '📊'
+    icon: 'layout-dashboard' as const
   },
   {
     title: 'Transações',
     href: '/transacoes',
-    icon: '💳'
+    icon: 'credit-card' as const
   },
   {
     title: 'Relatórios',
     href: '/relatorios',
-    icon: '📈'
+    icon: 'line-chart' as const
   }
 ]
 
@@ -27,27 +28,27 @@ const cadastroItems = [
   {
     title: 'Contas',
     href: '/contas',
-    icon: '🏦'
+    icon: 'building' as const
   },
   {
     title: 'Categorias',
     href: '/categorias',
-    icon: '🏷️'
+    icon: 'tag' as const
   },
   {
     title: 'Subcategorias',
     href: '/subcategorias',
-    icon: '🏷️'
+    icon: 'tags' as const
   },
   {
     title: 'Formas de Pagamento',
     href: '/formas-pagamento',
-    icon: '💳'
+    icon: 'credit-card' as const
   },
   {
     title: 'Centros de Custo',
     href: '/centros-custo',
-    icon: '📂'
+    icon: 'folder' as const
   }
 ]
 
@@ -81,7 +82,7 @@ export function Sidebar() {
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
-            <span className="text-base">{item.icon}</span>
+            <Icone name={item.icon} className="w-4 h-4" aria-hidden="true" />
             {item.title}
           </Link>
         ))}
@@ -100,7 +101,7 @@ export function Sidebar() {
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           )}
         >
-          <span className="text-base">⚙️</span>
+          <Icone name="settings" className="w-4 h-4" aria-hidden="true" />
           Configurações
         </Link>
 
@@ -115,7 +116,7 @@ export function Sidebar() {
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
-            <span className="text-base">📝</span>
+            <Icone name="tags" className="w-4 h-4" aria-hidden="true" />
             <span className="flex-1">Cadastramento</span>
             <span className={cn(
               "text-xs transition-transform",
@@ -139,7 +140,7 @@ export function Sidebar() {
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
-                  <span className="text-sm">{item.icon}</span>
+                  <Icone name={item.icon} className="w-4 h-4" aria-hidden="true" />
                   {item.title}
                 </Link>
               ))}

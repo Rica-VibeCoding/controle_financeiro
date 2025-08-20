@@ -10,6 +10,7 @@ import { Skeleton, SkeletonInput, SkeletonLabel, SkeletonButton } from '@/compon
 import { UploadAnexo } from '@/componentes/transacoes/upload-anexo'
 import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
+import { Icone } from '@/componentes/ui/icone'
 import { obterTransacaoPorId, criarTransacao, atualizarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
@@ -387,9 +388,9 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   onChange={(e) => atualizarCampo('tipo', e.target.value as 'despesa' | 'receita' | 'transferencia')}
                   required
                 >
-                  <option value="receita">💰 Receita</option>
-                  <option value="despesa">💸 Despesa</option>
-                  <option value="transferencia">🔄 Transferência</option>
+                  <option value="receita">Receita</option>
+                  <option value="despesa">Despesa</option>
+                  <option value="transferencia">Transferência</option>
                 </Select>
               </div>
 
@@ -480,8 +481,8 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   value={dados.status}
                   onChange={(e) => atualizarCampo('status', e.target.value as 'previsto' | 'realizado')}
                 >
-                  <option value="previsto">🟡 Previsto</option>
-                  <option value="realizado">✅ Realizado</option>
+                  <option value="previsto">Previsto</option>
+                  <option value="realizado">Realizado</option>
                 </Select>
               </div>
             </div>
@@ -662,7 +663,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
     <ModalBase 
       isOpen={isOpen} 
       onClose={onClose} 
-      title={isEdicao ? "✏️ Editar Transação" : "📝 Lançar Transação"} 
+      title={isEdicao ? "Editar Transação" : "Lançar Transação"} 
       fixedWidth="600px"
     >
       <div className="h-[550px] flex flex-col">
@@ -673,19 +674,19 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
               ativa={abaAtiva === 'essencial'} 
               onClick={() => setAbaAtiva('essencial')}
             >
-              💳 Essencial
+              Essencial
             </AbaButton>
             <AbaButton 
               ativa={abaAtiva === 'categorizacao'} 
               onClick={() => setAbaAtiva('categorizacao')}
             >
-              📊 Categorização
+              Categorização
             </AbaButton>
             <AbaButton 
               ativa={abaAtiva === 'anexos'} 
               onClick={() => setAbaAtiva('anexos')}
             >
-              📎 Anexos
+              Anexos
             </AbaButton>
           </nav>
         </div>
@@ -701,7 +702,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
             role="alert"
             aria-live="polite"
           >
-            {mensagem.tipo === 'erro' ? '❌' : '✅'} {mensagem.texto}
+            {mensagem.texto}
           </div>
         )}
 

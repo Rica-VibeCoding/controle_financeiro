@@ -9,6 +9,7 @@ import { Label } from '@/componentes/ui/label'
 import { Skeleton, SkeletonInput, SkeletonLabel, SkeletonButton } from '@/componentes/ui/skeleton'
 import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao } from '@/tipos/database'
+import { Icone } from '@/componentes/ui/icone'
 import { criarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
@@ -346,8 +347,8 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
               value={dados.status}
               onChange={(e) => atualizarCampo('status', e.target.value as 'previsto' | 'realizado')}
             >
-              <option value="previsto">🟡 Previsto</option>
-              <option value="realizado">✅ Realizado</option>
+              <option value="previsto">Previsto</option>
+              <option value="realizado">Realizado</option>
             </Select>
           </div>
 
@@ -418,10 +419,10 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
                   }}
                 >
                   <option value="">Selecione...</option>
-                  <option value="diario">📅 Diário</option>
-                  <option value="semanal">📆 Semanal</option>
-                  <option value="mensal">🗓️ Mensal</option>
-                  <option value="anual">📊 Anual</option>
+                  <option value="diario">Diário</option>
+                  <option value="semanal">Semanal</option>
+                  <option value="mensal">Mensal</option>
+                  <option value="anual">Anual</option>
                 </Select>
               </div>
 
@@ -445,7 +446,7 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
     <ModalBase 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="🔄 Transferencia Entre Contas" 
+      title="Transferência Entre Contas" 
       fixedWidth="600px"
     >
       <div className="h-[450px] flex flex-col">
@@ -460,7 +461,7 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
             role="alert"
             aria-live="polite"
           >
-            {mensagem.tipo === 'erro' ? '❌' : '✅'} {mensagem.texto}
+            {mensagem.texto}
           </div>
         )}
 

@@ -5,6 +5,7 @@ import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'
 import { Label } from '@/componentes/ui/label'
 import { LoadingText } from '@/componentes/comum/loading'
+import { Icone } from '@/componentes/ui/icone'
 import { AnexosService } from '@/servicos/supabase/anexos'
 
 interface UploadAnexoProps {
@@ -117,8 +118,12 @@ export function UploadAnexo({
         <div className="border rounded-lg p-3 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-lg">
-                {anexoAtual.toLowerCase().includes('.pdf') ? '📄' : '🖼️'}
+              <span className="text-lg" aria-hidden="true">
+                {anexoAtual.toLowerCase().includes('.pdf') ? (
+                  <Icone name="folder" className="w-5 h-5" />
+                ) : (
+                  <Icone name="image" className="w-5 h-5" />
+                )}
               </span>
               <div>
                 <p className="text-sm font-medium">Anexo atual</p>
@@ -159,7 +164,9 @@ export function UploadAnexo({
                 disabled ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
               }`}
             >
-              <div className="text-4xl mb-2">📎</div>
+              <div className="text-4xl mb-2" aria-hidden="true">
+                <Icone name="credit-card" className="w-6 h-6" />
+              </div>
               <p className="text-sm font-medium mb-1">
                 Clique para selecionar arquivo
               </p>
@@ -185,7 +192,7 @@ export function UploadAnexo({
                 {!preview && (
                   <div className="flex-shrink-0">
                     <div className="w-16 h-16 bg-red-100 rounded flex items-center justify-center">
-                      <span className="text-2xl">📄</span>
+                      <Icone name="folder" className="w-6 h-6" />
                     </div>
                   </div>
                 )}

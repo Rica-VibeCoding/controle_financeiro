@@ -279,8 +279,8 @@ export function FormularioTransacao({
                 value={dados.status}
                 onChange={(e) => atualizarCampo('status', e.target.value)}
               >
-                <option value="previsto">🟡 Previsto</option>
-                <option value="realizado">✅ Realizado</option>
+                <option value="previsto">Previsto</option>
+                <option value="realizado">Realizado</option>
               </Select>
             </div>
 
@@ -383,7 +383,7 @@ export function FormularioTransacao({
                   className="rounded border-gray-300"
                 />
                 <Label htmlFor="recorrente" className="text-sm font-medium">
-                  🔄 Transação Recorrente
+                  Transação Recorrente
                 </Label>
               </div>
 
@@ -404,10 +404,10 @@ export function FormularioTransacao({
                         }
                       }}
                     >
-                      <option value="diario">📅 Diário</option>
-                      <option value="semanal">📅 Semanal</option>
-                      <option value="mensal">📅 Mensal</option>
-                      <option value="anual">📅 Anual</option>
+                      <option value="diario">Diário</option>
+                      <option value="semanal">Semanal</option>
+                      <option value="mensal">Mensal</option>
+                      <option value="anual">Anual</option>
                     </Select>
                   </div>
 
@@ -427,7 +427,7 @@ export function FormularioTransacao({
 
               {dados.recorrente && (
                 <div className="bg-blue-50 p-3 rounded text-sm text-blue-800">
-                  <p className="font-medium">ℹ️ Como funciona a recorrência:</p>
+                  <p className="font-medium">Como funciona a recorrência:</p>
                   <ul className="mt-1 space-y-1 text-xs">
                     <li>• Transações recorrentes sempre nascem como "previsto"</li>
                     <li>• Marque como "realizado" quando efetuar o pagamento</li>

@@ -33,7 +33,13 @@
       "WebFetch(domain:gist.github.com)",
       "WebFetch(domain:github.com)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(timeout 15 npm run dev)"
+      "Bash(timeout 15 npm run dev)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "WebFetch(domain:recharts.org)",
+      "WebFetch(domain:refine.dev)",
+      "WebFetch(domain:swr.vercel.app)",
+      "WebFetch(domain:supabase.com)",
+      "Bash(npx next dev:*)"
     ],
     "deny": []
   },

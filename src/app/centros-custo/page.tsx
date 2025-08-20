@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { obterCentrosCusto, excluirCentroCusto } from '@/servicos/supabase/centros-custo'
@@ -70,7 +71,8 @@ export default function CentrosCustoPage() {
           </div>
           
           <Button onClick={() => router.push('/centros-custo/nova')}>
-            + Novo Centro de Custo
+            <Icone name="plus-circle" className="w-4 h-4 mr-1" aria-hidden="true" />
+            Novo Centro de Custo
           </Button>
         </div>
 
@@ -97,7 +99,7 @@ export default function CentrosCustoPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     <div className="space-y-2">
-                      <div className="text-4xl">📂</div>
+                      <div className="text-4xl" aria-hidden="true"><Icone name="folder" className="w-6 h-6" /></div>
                       <p>Nenhum centro de custo cadastrado</p>
                       <p className="text-sm">Crie centros para organizar suas transações por projeto ou área</p>
                     </div>
@@ -139,7 +141,7 @@ export default function CentrosCustoPage() {
                           title="Editar centro de custo"
                           className="h-8 w-8 p-0"
                         >
-                          ✏️
+                          <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -148,7 +150,7 @@ export default function CentrosCustoPage() {
                           className="text-destructive hover:text-destructive h-8 w-8 p-0"
                           title="Excluir centro de custo"
                         >
-                          🗑️
+                          <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>
@@ -161,7 +163,10 @@ export default function CentrosCustoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>📊 Resumo</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="line-chart" className="w-4 h-4" aria-hidden="true" />
+              Resumo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -189,7 +194,10 @@ export default function CentrosCustoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>💡 Exemplos de Uso</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="info" className="w-4 h-4" aria-hidden="true" />
+              Exemplos de Uso
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">

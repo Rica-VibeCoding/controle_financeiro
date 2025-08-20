@@ -9,6 +9,7 @@ import { Label } from '@/componentes/ui/label'
 import { Skeleton, SkeletonInput, SkeletonLabel, SkeletonButton } from '@/componentes/ui/skeleton'
 import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Subcategoria } from '@/tipos/database'
+import { Icone } from '@/componentes/ui/icone'
 import { criarTransacaoParcelada } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
@@ -411,8 +412,8 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
                 value={dados.status}
                 onChange={(e) => atualizarCampo('status', e.target.value as 'previsto' | 'realizado')}
               >
-                <option value="previsto">🟡 Previsto</option>
-                <option value="realizado">✅ Realizado</option>
+                <option value="previsto">Previsto</option>
+                <option value="realizado">Realizado</option>
               </Select>
             </div>
           </div>
@@ -507,7 +508,10 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
           <div className="space-y-4">
             {dados.valor && numeroParcelas > 1 && dados.data ? (
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-3">📋 Resumo do Parcelamento</h4>
+                <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                  <Icone name="file-text" className="w-4 h-4" aria-hidden="true" />
+                  Resumo do Parcelamento
+                </h4>
                 <div className="space-y-2 text-sm text-blue-800">
                   <p><strong>Descricao:</strong> {dados.descricao || 'Compra parcelada'}</p>
                   <p><strong>Valor total:</strong> R$ {dados.valor.toFixed(2).replace('.', ',')}</p>
@@ -524,7 +528,10 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
 
             {datasParcelas.length > 0 && (dados.valor ?? 0) > 0 && (
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <h5 className="font-medium text-gray-900 mb-3">📅 Cronograma das Parcelas</h5>
+                <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Icone name="list" className="w-4 h-4" aria-hidden="true" />
+                  Cronograma das Parcelas
+                </h5>
                 <div className="max-h-40 overflow-y-auto space-y-1 text-sm">
                   {datasParcelas.slice(0, 12).map((data, index) => (
                     <div key={index} className="flex justify-between py-1 border-b border-gray-200 last:border-0">
@@ -553,7 +560,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
     <ModalBase 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="💳 Criar Parcelamento" 
+      title="Criar Parcelamento" 
       fixedWidth="600px"
     >
       <div className="h-[550px] flex flex-col">
@@ -564,19 +571,19 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
               ativa={abaAtiva === 'essencial'} 
               onClick={() => setAbaAtiva('essencial')}
             >
-              💳 Essencial
+              Essencial
             </AbaButton>
             <AbaButton 
               ativa={abaAtiva === 'categorizacao'} 
               onClick={() => setAbaAtiva('categorizacao')}
             >
-              📊 Categorizacao
+              Categorização
             </AbaButton>
             <AbaButton 
               ativa={abaAtiva === 'resumo'} 
               onClick={() => setAbaAtiva('resumo')}
             >
-              📋 Resumo
+              Resumo
             </AbaButton>
           </nav>
         </div>
@@ -592,7 +599,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
             role="alert"
             aria-live="polite"
           >
-            {mensagem.tipo === 'erro' ? '❌' : '✅'} {mensagem.texto}
+            {mensagem.texto}
           </div>
         )}
 

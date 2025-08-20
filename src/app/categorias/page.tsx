@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { obterCategoriasComSubcategorias, excluirCategoria } from '@/servicos/supabase/categorias'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
@@ -68,7 +69,8 @@ export default function CategoriasPage() {
           </div>
           
           <Button onClick={() => router.push('/categorias/nova')}>
-            + Nova Categoria
+            <Icone name="plus-circle" className="w-4 h-4 mr-1" aria-hidden="true" />
+            Nova Categoria
           </Button>
         </div>
 
@@ -109,7 +111,7 @@ export default function CategoriasPage() {
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       <div className="space-y-2">
-                        <div className="text-4xl">🏷️</div>
+                        <div className="text-4xl" aria-hidden="true"><Icone name="tag" className="w-6 h-6" /></div>
                         <p>Nenhuma categoria cadastrada</p>
                         <p className="text-sm">Adicione categorias para organizar suas transações</p>
                       </div>
@@ -161,7 +163,7 @@ export default function CategoriasPage() {
                             title="Editar categoria"
                             className="h-8 w-8 p-0"
                           >
-                            ✏️
+                            <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -170,7 +172,7 @@ export default function CategoriasPage() {
                             className="text-destructive hover:text-destructive h-8 w-8 p-0"
                             title="Excluir categoria"
                           >
-                            🗑️
+                            <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>
@@ -184,7 +186,10 @@ export default function CategoriasPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>📊 Resumo</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Icone name="line-chart" className="w-4 h-4" aria-hidden="true" />
+              Resumo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/componentes/ui/button'
+import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent } from '@/componentes/ui/card'
 import { Transacao } from '@/tipos/database'
 import { usarTransacoes } from '@/hooks/usar-transacoes'
@@ -104,6 +105,7 @@ export function ItemParcela({
                   onClick={handleVerParcelas}
                   className="text-xs h-7"
                 >
+                  <span className="mr-1" aria-hidden="true"><Icone name="tags" className="w-3.5 h-3.5" /></span>
                   Ver Todas
                 </Button>
                 <Button
@@ -112,7 +114,7 @@ export function ItemParcela({
                   onClick={() => setExpandido(!expandido)}
                   className="text-xs h-7"
                 >
-                  {expandido ? '▼' : '▶'}
+                  <span aria-hidden="true"><Icone name="line-chart" className="w-3.5 h-3.5" /></span>
                 </Button>
               </>
             )}
@@ -122,6 +124,7 @@ export function ItemParcela({
               onClick={() => aoEditar?.(transacao)}
               className="text-xs h-7"
             >
+              <span className="mr-1" aria-hidden="true"><Icone name="tag" className="w-3.5 h-3.5" /></span>
               Editar
             </Button>
             {isPrimeiraParcela && (
@@ -131,6 +134,7 @@ export function ItemParcela({
                 onClick={handleExcluirGrupo}
                 className="text-xs h-7 text-red-600 hover:text-red-700"
               >
+                <span className="mr-1" aria-hidden="true"><Icone name="folder" className="w-3.5 h-3.5" /></span>
                 Excluir Grupo
               </Button>
             )}

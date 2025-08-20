@@ -4,6 +4,7 @@ import "./globals.css";
 import { TransacoesProvider } from '@/contextos/transacoes-contexto'
 import { ModaisProvider } from '@/contextos/modais-contexto'
 import { DadosAuxiliaresProvider } from '@/contextos/dados-auxiliares-contexto'
+import { SWRConfig } from 'swr'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +31,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DadosAuxiliaresProvider>
-          <ModaisProvider>
-            <TransacoesProvider>
-              {children}
-            </TransacoesProvider>
-          </ModaisProvider>
-        </DadosAuxiliaresProvider>
+        <SWRConfig
+          value={{
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            refreshInterval: 60000, // 1 minuto para dados financeiros
+            dedupingInterval: 10000, // evita requests duplicados
+            errorRetryCount: 3,
+            errorRetryInterval: 5000
+          }}
+        >
+          <DadosAuxiliaresProvider>
+            <ModaisProvider>
+              <TransacoesProvider>
+                {children}
+              </TransacoesProvider>
+            </ModaisProvider>
+          </DadosAuxiliaresProvider>
+        </SWRConfig>
       </body>
     </html>
   );

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Animações customizadas */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse-soft {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+        }
+        
+        .animate-pulse-soft {
+            animation: pulse-soft 2s ease-in-out infinite;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        /* Gradient backgrounds */
+        .gradient-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .gradient-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .gradient-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .gradient-purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+        
+        /* Hover effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Sistema modular de alturas de cards */
+        :root {
+            --card-height: 160px;
+        }
+        .card-h-1-2 {
+            min-height: calc(var(--card-height) / 2);
+        }
+        .card-h-1 {
+            min-height: var(--card-height);
+        }
+        .card-h-2 {
+            min-height: calc(var(--card-height) * 2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script>
+        // Configuração inicial de dados mockados
+        const mockData = {
+            periodo: { 
+                mes: 'Agosto', 
+                ano: 2025,
+                inicio: '2025-08-01',
+                fim: '2025-08-31'
+            },
+            cards: {
+                receitas: {
+                    atual: 8500.00,
+                    anterior: 7200.00,
+                    percentual: 18.05,
+                    tendencia: [7200, 6800, 7500, 8200, 7900, 8100, 8500]
+                },
+                despesas: {
+                    atual: 5234.67,
+                    anterior: 6100.00,
+                    percentual: -14.19,
+                    tendencia: [6100, 5800, 5900, 6200, 5500, 5400, 5234]
+                },
+                saldo: {
+                    atual: 3265.33,
+                    anterior: 1100.00,
+                    percentual: 196.85,
+                    tendencia: [1100, 1000, 1600, 2000, 2400, 2700, 3265]
+                },
+                gastosCartao: {
+                    atual: 2150.00,
+                    limite: 5000.00,
+                    percentual: 43,
+                    tendencia: [1800, 1900, 2000, 2100, 1950, 2050, 2150]
+                }
+            },
+            proximasContas: [
+                { nome: 'Conta de Luz', valor: 185.40, dias: 3, urgencia: 'alta' },
+                { nome: 'Internet', valor: 99.90, dias: 5, urgencia: 'media' },
+                { nome: 'Água', valor: 74.30, dias: 8, urgencia: 'baixa' },
+                { nome: 'Cartão Nubank', valor: 1200.00, dias: 10, urgencia: 'baixa' }
+            ],
+            categorias: [
+                { nome: 'Alimentação', gasto: 1200, meta: 1500, cor: '#ef4444', percentual: 80 },
+                { nome: 'Transporte', gasto: 450, meta: 600, cor: '#f97316', percentual: 75 },
+                { nome: 'Moradia', gasto: 2100, meta: 2200, cor: '#8b5cf6', percentual: 95 },
+                { nome: 'Lazer', gasto: 280, meta: 500, cor: '#6366f1', percentual: 56 },
+                { nome: 'Saúde', gasto: 350, meta: 400, cor: '#ec4899', percentual: 87 },
+                { nome: 'Educação', gasto: 854.67, meta: 1000, cor: '#3b82f6', percentual: 85 }
+            ],
+            cartoes: [
+                { nome: 'Nubank', usado: 1200, limite: 3000, vencimento: '10/09', percentual: 40 },
+                { nome: 'Itaú', usado: 950, limite: 2000, vencimento: '15/09', percentual: 47.5 },
+                { nome: 'Inter', usado: 0, limite: 1500, vencimento: '05/09', percentual: 0 },
+                { nome: 'C6 Bank', usado: 450, limite: 1000, vencimento: '20/09', percentual: 45 },
+                { nome: 'Santander', usado: 780, limite: 2500, vencimento: '25/09', percentual: 31.2 }
+            ],
+            contas: [
+                { nome: 'Nubank', saldo: 3265.33, tipo: 'conta_corrente' },
+                { nome: 'Itaú', saldo: 1520.00, tipo: 'conta_corrente' },
+                { nome: 'Poupança', saldo: 5000.00, tipo: 'poupanca' },
+                { nome: 'Carteira', saldo: 150.00, tipo: 'dinheiro' },
+                { nome: 'Inter', saldo: -320.00, tipo: 'conta_corrente' }
+            ],
+            tendencia: [
+                { mes: 'Mar', saldo: 2100 },
+                { mes: 'Abr', saldo: 2800 },
+                { mes: 'Mai', saldo: 3200 },
+                { mes: 'Jun', saldo: 2900 },
+                { mes: 'Jul', saldo: 3500 },
+                { mes: 'Ago', saldo: 3265 }
+            ]
+        };
+
+        // Função para formatar moeda
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+
+        // Função para criar sparkline
+        function criarSparkline(canvasId, data, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min || 1;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            data.forEach((value, index) => {
+                const x = (index / (data.length - 1)) * width;
+                const y = height - ((value - min) / range) * height;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+
+        // Componente principal do Dashboard
+        function Dashboard() {
+            const data = mockData;
+            const maxGastoCalculado = data.categorias && data.categorias.length ? Math.max(...data.categorias.map(c => c.gasto)) : 0;
+            const maxGasto = maxGastoCalculado > 0 ? maxGastoCalculado : 0;
+            
+            // Criar o HTML do dashboard
+            const html = `
+                <!-- Header -->
+                <header class="glass sticky top-0 z-50 border-b border-gray-200">
+                    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex items-center justify-between h-16">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 gradient-blue rounded-lg flex items-center justify-center">
+                                        <i data-lucide="trending-up" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <h1 class="text-xl font-bold text-gray-900">Controle Financeiro</h1>
+                                </div>
+                            </div>
+                            
+                            <!-- Filtro de Período -->
+                            <div class="flex items-center space-x-2">
+                                <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Mês anterior">
+                                    <i data-lucide="chevron-left" class="w-5 h-5 text-gray-600"></i>
+                                </button>
+                                <div class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium">
+                                    ${data.periodo.mes} ${data.periodo.ano}
+                                </div>
+                                <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Próximo mês">
+                                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-600"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Main Content -->
+                <main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <!-- Cards de Métricas -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Card Receitas -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up" style="animation-delay: 0.1s">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="trending-up" class="w-5 h-5 text-green-600"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-600">Receitas</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                                    +${data.cards.receitas.percentual}%
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-900">${formatarMoeda(data.cards.receitas.atual)}</p>
+                                <p class="text-sm text-gray-500 mt-1">vs ${formatarMoeda(data.cards.receitas.anterior)} mês anterior</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Despesas -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up" style="animation-delay: 0.2s">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="trending-down" class="w-5 h-5 text-red-600"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-600">Despesas</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                    ${data.cards.despesas.percentual}%
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-900">${formatarMoeda(data.cards.despesas.atual)}</p>
+                                <p class="text-sm text-gray-500 mt-1">vs ${formatarMoeda(data.cards.despesas.anterior)} mês anterior</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Saldo -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up" style="animation-delay: 0.3s">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="wallet" class="w-5 h-5 text-blue-600"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-600">Saldo</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                    +${data.cards.saldo.percentual}%
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-900">${formatarMoeda(data.cards.saldo.atual)}</p>
+                                <p class="text-sm text-gray-500 mt-1">vs ${formatarMoeda(data.cards.saldo.anterior)} mês anterior</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Gastos Cartão -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up" style="animation-delay: 0.4s">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="credit-card" class="w-5 h-5 text-purple-600"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-600">Cartões</span>
+                                </div>
+                                <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                                    ${data.cards.gastosCartao.percentual}%
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <p class="text-2xl font-bold text-gray-900">${formatarMoeda(data.cards.gastosCartao.atual)}</p>
+                                <p class="text-sm text-gray-500 mt-1">de ${formatarMoeda(data.cards.gastosCartao.limite)} limite</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="gradient-purple h-2 rounded-full transition-all duration-500" style="width: ${data.cards.gastosCartao.percentual}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Próximas Contas, Cartões e Gráfico Categorias -->
+                    <div class="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-slide-up" style="animation-delay: 0.5s">
+                        <!-- Gráfico de Tendência -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-slide-up lg:col-span-2" style="animation-delay: 0.9s">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">Evolução do Saldo</h3>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">Últimos 6 meses</span>
+                                </div>
+                            </div>
+                            <div class="h-48">
+                                <canvas id="chart-tendencia"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico Categorias vs Metas - Expandido em altura -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-slide-up lg:col-span-2 lg:row-span-3" style="animation-delay: 0.6s;">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">Categorias vs Metas</h3>
+                                <button class="text-sm text-gray-500 hover:text-gray-700 transition-colors" aria-label="Ver todas as categorias">
+                                    Ver todas →
+                                </button>
+                            </div>
+                            <div class="space-y-3 overflow-y-auto" style="height: 680px;">
+                                ${data.categorias.slice().sort((a,b) => b.gasto - a.gasto).map(cat => `
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-[0.2rem]">
+                                            <div class="w-40 shrink-0">
+                                                <span class="text-sm font-medium text-gray-700 whitespace-nowrap truncate">${cat.nome}</span>
+                                            </div>
+                                            <div class="relative flex-1">
+                                                <div class="w-full rounded-full h-6">
+                                                    <div class="h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-500 bg-green-500" style="width: ${maxGasto > 0 ? Math.min(100, Math.round((cat.gasto / maxGasto) * 100 * 1.85)) : 0}%">
+                                                        <span class="text-xs text-white font-medium">${cat.percentual}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="w-36 shrink-0 text-right">
+                                                <span class="text-sm text-gray-600 whitespace-nowrap">${formatarMoeda(cat.gasto)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Saldos das Contas - Reposicionado abaixo do gráfico -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-h-1 lg:col-span-1">
+                            <div class="flex items-center mb-2">
+                                <h3 class="text-sm font-semibold text-gray-900">Saldos das Contas</h3>
+                            </div>
+                            <div class="space-y-2">
+                                ${data.contas
+                                    .slice()
+                                    .sort((a,b) => b.saldo - a.saldo)
+                                    .slice(0,3)
+                                    .map(conta => `
+                                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-10 h-10 ${conta.saldo >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center">
+                                                    <i data-lucide="${conta.tipo === 'poupanca' ? 'piggy-bank' : conta.tipo === 'dinheiro' ? 'banknote' : 'building'}" 
+                                                       class="w-5 h-5 ${conta.saldo >= 0 ? 'text-green-600' : 'text-red-600'}"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">${conta.nome}</p>
+                                                    <p class="text-xs text-gray-500">${conta.tipo.replaceAll('_', ' ')}</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-sm font-semibold ${conta.saldo >= 0 ? 'text-green-600' : 'text-red-600'}">${formatarMoeda(conta.saldo)}</span>
+                                        </div>
+                                    `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Próximas Contas -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-h-1 lg:col-span-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                                    <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-gray-600"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold text-gray-900">Próximas contas</h3>
+                            </div>
+                            <div class="space-y-2">
+                                ${data.proximasContas
+                                    .slice()
+                                    .sort((a,b) => a.dias - b.dias)
+                                    .slice(0,3)
+                                    .map(c => `
+                                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <div class="w-10 h-10 rounded-lg flex items-center justify-center ${c.dias <= 3 ? 'bg-red-100' : c.dias <= 7 ? 'bg-orange-100' : 'bg-gray-100'}">
+                                                    <i data-lucide="calendar" class="w-4 h-4 ${c.dias <= 3 ? 'text-red-600' : c.dias <= 7 ? 'text-orange-600' : 'text-gray-600'}"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-900 truncate">${c.nome}</p>
+                                                    <p class="text-xs text-gray-500">Vence em ${c.dias} dias</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-sm font-semibold text-gray-900 whitespace-nowrap">${formatarMoeda(c.valor)}</span>
+                                        </div>
+                                    `).join('')}
+                            </div>
+                        </div>
+                        <!-- Cartões de Crédito (barras verticais) abaixo de Saldos e Próximas contas -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-h-1 lg:col-span-2">
+                            <div class="flex items-center mb-2">
+                                <h3 class="text-sm font-semibold text-gray-900">Cartões de Crédito</h3>
+                            </div>
+                            <div class="grid grid-cols-3 gap-6 items-end">
+                                ${data.cartoes
+                                    .slice()
+                                    .sort((a,b) => b.usado - a.usado)
+                                    .slice(0, 3)
+                                    .map(cartao => `
+                                        <div class="flex flex-col items-center">
+                                            <div class="text-xs text-gray-600 mb-1">${formatarMoeda(cartao.usado)}</div>
+                                            <div class="relative h-36 w-10 bg-gray-100 rounded-none overflow-hidden flex items-end">
+                                                <div class="w-full bg-gray-700 transition-all duration-500 rounded-none" style="height: ${Math.round(cartao.percentual)}%">
+                                                    <div class="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] text-white font-medium">${Math.round(cartao.percentual)}%</div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 flex items-center gap-2">
+                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-100">
+                                                    <i data-lucide="credit-card" class="w-4 h-4 text-purple-600"></i>
+                                                </div>
+                                                <div class="text-center">
+                                                    <p class="text-sm font-medium text-gray-900">${cartao.nome}</p>
+                                                    <p class="text-[11px] text-gray-500">Vence ${cartao.vencimento}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- Footer -->
+                <footer class="mt-12 py-6 border-t border-gray-200">
+                    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-gray-500">
+                                Última atualização: ${new Date().toLocaleString('pt-BR')}
+                            </p>
+                            <button class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors" aria-label="Atualizar dados">
+                                Atualizar dados →
+                            </button>
+                        </div>
+                    </div>
+                </footer>
+            `;
+            
+            return html;
+        }
+
+        // Renderizar o dashboard
+        document.getElementById('root').innerHTML = Dashboard();
+        
+        // Inicializar ícones Lucide
+        lucide.createIcons();
+        
+        // Criar gráficos após renderização
+        setTimeout(() => {
+            
+            // Criar gráfico de tendência
+            const ctx = document.getElementById('chart-tendencia');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: mockData.tendencia.map(t => t.mes),
+                        datasets: [{
+                            label: 'Saldo',
+                            data: mockData.tendencia.map(t => t.saldo),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#333',
+                                borderWidth: 1,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Saldo: ' + formatarMoeda(context.raw);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatarMoeda(value);
+                                    },
+                                    font: {
+                                        size: 11
+                                    },
+                                    color: '#6b7280'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    color: '#6b7280'
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        elements: {
+                            line: {
+                                borderJoinStyle: 'round'
+                            }
+                        }
+                    }
+                });
+            }
+        }, 0);
+    </script>
+</body>
+</html>

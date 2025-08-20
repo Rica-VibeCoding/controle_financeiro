@@ -1,33 +1,15 @@
-usar-filtro-temporal.ts:35 Erro ao carregar anos disponíveis: TypeError: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$servicos$2f$supabase$2f$dashboard$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__.DashboardService.obterAnosDisponiveis is not a function
-    at usarFiltroTemporal.useCallback[carregarAnosDisponiveis] (usar-filtro-temporal.ts:25:43)
-    at inicializar (usar-filtro-temporal.ts:119:15)
-    at usarFiltroTemporal.useEffect (usar-filtro-temporal.ts:133:5)
-usarFiltroTemporal.useCallback[carregarAnosDisponiveis]	@	usar-filtro-temporal.ts:35
-inicializar	@	usar-filtro-temporal.ts:119
-usarFiltroTemporal.useEffect	@	usar-filtro-temporal.ts:133
-<FiltroTemporal>		
-Home	@	page.tsx:44
-
-usar-filtro-temporal.ts:35 Erro ao carregar anos disponíveis: TypeError: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$servicos$2f$supabase$2f$dashboard$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__.DashboardService.obterAnosDisponiveis is not a function
-    at usarFiltroTemporal.useCallback[carregarAnosDisponiveis] (usar-filtro-temporal.ts:25:43)
-    at inicializar (usar-filtro-temporal.ts:119:15)
-    at usarFiltroTemporal.useEffect (usar-filtro-temporal.ts:133:5)
-usarFiltroTemporal.useCallback[carregarAnosDisponiveis]	@	usar-filtro-temporal.ts:35
-inicializar	@	usar-filtro-temporal.ts:119
-usarFiltroTemporal.useEffect	@	usar-filtro-temporal.ts:133
-usar-filtro-temporal.ts:55 Erro ao carregar meses com dados: TypeError: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$servicos$2f$supabase$2f$dashboard$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__.DashboardService.obterMesesComDados is not a function
-    at usarFiltroTemporal.useCallback[carregarMesesComDados] (usar-filtro-temporal.ts:45:44)
-    at inicializar (usar-filtro-temporal.ts:123:15)
-usarFiltroTemporal.useCallback[carregarMesesComDados]	@	usar-filtro-temporal.ts:55
-inicializar	@	usar-filtro-temporal.ts:123
-await in inicializar		
-usarFiltroTemporal.useEffect	@	usar-filtro-temporal.ts:133
-<FiltroTemporal>		
-Home	@	page.tsx:44
-usar-filtro-temporal.ts:55 Erro ao carregar meses com dados: TypeError: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$servicos$2f$supabase$2f$dashboard$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__.DashboardService.obterMesesComDados is not a function
-    at usarFiltroTemporal.useCallback[carregarMesesComDados] (usar-filtro-temporal.ts:45:44)
-    at inicializar (usar-filtro-temporal.ts:123:15)
-usarFiltroTemporal.useCallback[carregarMesesComDados]	@	usar-filtro-temporal.ts:55
-inicializar	@	usar-filtro-temporal.ts:123
-await in inicializar		
-usarFiltroTemporal.useEffect	@	usar-filtro-temporal.ts:133
+[Page.tsx] Renderizando com período: {mes: 8, ano: 2025}
+page.tsx:28 [Page.tsx] Renderizando com período: {mes: 8, ano: 2025}
+dashboard.ts:16 [DashboardService] Buscando dados para o período: {mes: 8, ano: 2025}
+report-hmr-latency.ts:26 [Fast Refresh] done in NaNms
+usar-dados-dashboard.ts:18 [usarDadosDashboard] Dados recebidos do serviço: {receitas: 1174, despesas: 6000, saldo: -4826, gastosCartao: 6000}
+page.tsx:28 [Page.tsx] Renderizando com período: {mes: 8, ano: 2025}
+page.tsx:28 [Page.tsx] Renderizando com período: {mes: 8, ano: 2025}
+page.tsx:28 [Page.tsx] Renderizando com período: {mes: 8, ano: 2025}
+page.tsx:28 [Page.tsx] Renderizando com período: {mes: 8, ano: 2025}
+usar-filtro-temporal.ts:49 [usarFiltroTemporal] Tentando alterar o mês para: 9
+usar-filtro-temporal.ts:49 [usarFiltroTemporal] Tentando alterar o mês para: 8
+usar-filtro-temporal.ts:42 [usarFiltroTemporal] Tentando alterar o ano para: 2024
+usar-filtro-temporal.ts:42 [usarFiltroTemporal] Tentando alterar o ano para: 2023
+usar-filtro-temporal.ts:42 [usarFiltroTemporal] Tentando alterar o ano para: 2025
+usar-filtro-temporal.ts:42 [usarFiltroTemporal] Tentando alterar o ano para: 2024

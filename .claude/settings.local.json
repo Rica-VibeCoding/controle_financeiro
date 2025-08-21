@@ -1,12 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)"
+      "Bash(claude doctor)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/home/ricar/.claude"
+    ]
   },
-  "enableAllProjectMcpServers": true,
+  "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [
     "supabase"
   ],

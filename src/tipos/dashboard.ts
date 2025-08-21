@@ -111,11 +111,19 @@ export interface CartaoData {
   percentual: number
 }
 
-// Interface para contas
+// Interface para contas bancárias (excluindo cartões)
 export interface ContaData {
+  id: string
   nome: string
   saldo: number
   tipo: string
+  icone: string
+  ultimasMovimentacoes?: Array<{
+    descricao: string
+    valor: number
+    data: string
+    tipo: 'receita' | 'despesa'
+  }>
 }
 
 // Interface para tendência

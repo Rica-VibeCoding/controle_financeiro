@@ -74,7 +74,7 @@ export function CardProximaConta({ limite = 3 }: CardProximaContaProps) {
 
       {contasLimitadas.length === 0 ? (
         <div className="flex items-center justify-center py-8 text-gray-500">
-          <span className="text-sm">Nenhuma conta pendente</span>
+          <span className="text-sm">Nenhuma conta prevista</span>
         </div>
       ) : (
         <div className="space-y-3">

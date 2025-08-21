@@ -98,7 +98,7 @@ export default function NovaContaPage() {
         nome: dados.nome.trim(),
         tipo: dados.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
         banco: dados.banco.trim() || null,
-        limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || 0 : null,
+        limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || null : null,
         ativo: dados.ativo
       })
 

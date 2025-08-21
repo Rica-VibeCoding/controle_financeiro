@@ -58,10 +58,10 @@ export async function obterDadosCards(periodo: Periodo) {
       .gte('data', periodoAnteriorInicio.toISOString().split('T')[0])
       .lte('data', periodoAnteriorFim.toISOString().split('T')[0])
 
-    // Cartões: buscar limites dos cartões
+    // Cartões: buscar informações dos cartões com limite
     const { data: cartoesInfo } = await supabase
       .from('fp_contas')
-      .select('id, limite')
+      .select('id, nome, limite')
       .eq('tipo', 'cartao_credito')
 
     const cartoesIds = cartoesInfo?.map(c => c.id) || []
@@ -82,7 +82,17 @@ export async function obterDadosCards(periodo: Periodo) {
     const totalReceitasAnterior = receitasAnterior?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0
     const totalDespesasAnterior = despesasAnterior?.reduce((sum, d) => sum + Number(d.valor || 0), 0) || 0
     const totalCartoesUsado = cartoesGastos?.reduce((sum, c) => sum + Number(c.valor || 0), 0) || 0
-    const totalCartoesLimite = cartoesInfo?.reduce((sum, c) => sum + Number(c.limite || 0), 0) || 0
+    console.log('🔍 Debug cartões ATUAL:', { 
+      cartoesInfo, 
+      quantidadeCartoes: cartoesInfo?.length,
+      limites: cartoesInfo?.map(c => ({ nome: c.nome, limite: c.limite }))
+    })
+    const totalCartoesLimite = cartoesInfo?.reduce((sum, c) => {
+      const limite = Number(c.limite || 0)
+      console.log(`💳 Cartão ${c.nome}: limite=${c.limite} -> convertido=${limite}`)
+      return sum + limite
+    }, 0) || 0
+    console.log('💰 TOTAL LIMITES FINAL:', totalCartoesLimite)
 
     const saldoAtual = totalReceitas - totalDespesas
     const saldoAnterior = totalReceitasAnterior - totalDespesasAnterior
@@ -131,17 +141,17 @@ export async function obterProximasContas(): Promise<ProximaConta[]> {
   try {
     console.log('🔍 Iniciando busca por próximas contas...')
     
-    // Primeiro, verificar se existem transações pendentes
-    const { data: todasPendentes, error: errorTodasPendentes } = await supabase
+    // Primeiro, verificar se existem transações previstas
+    const { data: todasPrevistas, error: errorTodasPrevistas } = await supabase
       .from('fp_transacoes')
       .select('id, status, data_vencimento, descricao, valor')
       .eq('status', 'previsto')
     
-    console.log('📊 Total de transações pendentes:', todasPendentes?.length || 0)
-    console.log('📋 Amostra de transações pendentes:', todasPendentes?.slice(0, 3))
+    console.log('📊 Total de transações previstas:', todasPrevistas?.length || 0)
+    console.log('📋 Amostra de transações previstas:', todasPrevistas?.slice(0, 3))
     
-    if (errorTodasPendentes) {
-      console.error('❌ Erro ao buscar todas pendentes:', errorTodasPendentes)
+    if (errorTodasPrevistas) {
+      console.error('❌ Erro ao buscar todas previstas:', errorTodasPrevistas)
     }
 
     // Query principal com categorias
@@ -375,5 +385,97 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
   } catch (error) {
     console.error('Erro ao obter categorias vs metas:', error)
     return []
+  }
+}
+
+// Função para obter saldos das contas bancárias (excluindo cartões)
+export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalSaldo: number }> {
+  try {
+    console.log('🏦 [V2-FIXED] Iniciando busca por saldos das contas...')
+    
+    // Buscar todas as contas exceto cartões de crédito (campos corretos da tabela)
+    const { data: contas, error: contasError } = await supabase
+      .from('fp_contas')
+      .select('id, nome, tipo, banco')
+      .neq('tipo', 'cartao_credito')
+      .eq('ativo', true)
+      .order('nome', { ascending: true })
+
+    if (contasError) {
+      console.error('❌ Erro ao buscar contas:', contasError)
+      throw contasError
+    }
+
+    console.log('📊 Contas encontradas:', contas?.length || 0)
+
+    // Para cada conta, calcular saldo e buscar últimas 5 movimentações
+    const contasComMovimentacoes = await Promise.all(
+      (contas || []).map(async (conta) => {
+        // Buscar todas as transações da conta para calcular saldo
+        const { data: todasTransacoes } = await supabase
+          .from('fp_transacoes')
+          .select('valor, tipo')
+          .eq('conta_id', conta.id)
+          .eq('status', 'realizado')
+
+        // Calcular saldo: receitas (+) - despesas (-)
+        const saldo = todasTransacoes?.reduce((acc, transacao) => {
+          if (transacao.tipo === 'receita') {
+            return acc + Number(transacao.valor || 0)
+          } else if (transacao.tipo === 'despesa') {
+            return acc - Number(transacao.valor || 0)
+          }
+          return acc
+        }, 0) || 0
+
+        // Buscar últimas 5 movimentações para o hover
+        const { data: movimentacoes } = await supabase
+          .from('fp_transacoes')
+          .select('descricao, valor, data, tipo')
+          .eq('conta_id', conta.id)
+          .eq('status', 'realizado')
+          .order('data', { ascending: false })
+          .limit(5)
+
+        // Definir ícone baseado no tipo da conta
+        const obterIcone = (tipo: string, banco?: string) => {
+          if (tipo === 'dinheiro') return 'banknote'
+          if (tipo === 'poupanca') return 'piggy-bank'
+          if (banco?.toLowerCase().includes('nubank')) return 'credit-card'
+          return 'building-2'
+        }
+
+        return {
+          id: conta.id.toString(),
+          nome: conta.nome || 'Conta sem nome',
+          saldo: saldo,
+          tipo: conta.tipo || 'outros',
+          icone: obterIcone(conta.tipo, conta.banco),
+          ultimasMovimentacoes: movimentacoes?.map(mov => ({
+            descricao: mov.descricao || 'Movimentação',
+            valor: Number(mov.valor || 0),
+            data: mov.data,
+            tipo: mov.tipo as 'receita' | 'despesa'
+          })) || []
+        }
+      })
+    )
+
+    // Calcular total de saldos
+    const totalSaldo = contasComMovimentacoes.reduce((total, conta) => total + conta.saldo, 0)
+
+    console.log('✅ Processamento concluído:', {
+      totalContas: contasComMovimentacoes.length,
+      totalSaldo: totalSaldo
+    })
+
+    return {
+      contas: contasComMovimentacoes,
+      totalSaldo
+    }
+
+  } catch (error) {
+    console.error('💥 Erro ao obter saldos das contas:', error)
+    return { contas: [], totalSaldo: 0 }
   }
 }

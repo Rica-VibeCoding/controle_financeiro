@@ -185,12 +185,12 @@ const swrConfig = {
 - **Top 3:** Ordenar por saldo (maior primeiro)
 
 ### **Próximas Contas:**
-- **Fonte:** Transações pendentes (`status='pendente'`)
+- **Fonte:** Transações previstas (`status='previsto'`)
 - **Ordenação:** Por data_vencimento (mais próxima primeiro)
-- **Urgência:** 
-  - Alta: ≤ 3 dias (vermelho)
-  - Média: 4-7 dias (laranja)  
-  - Baixa: > 7 dias (cinza)
+- **Visual:** 
+  - Normal: Texto cinza padrão
+  - Vencida: Texto laranja (`text-orange-500`)
+- **Interação:** Click abre modal de edição
 
 ### **Categorias vs Metas:**
 - **Gastos:** Soma despesas por categoria no período
@@ -334,12 +334,59 @@ const swrConfig = {
 - ✅ Dados reais verificados (20 categorias, 8 metas)
 - ✅ UX/UI otimizada para densidade máxima
 
-#### **FASE 3-C: Cards Secundários ⏳ PENDENTE**
+#### **FASE 3-C: Cards Secundários 🚧 EM ANDAMENTO**
 **Objetivo:** Cards menores (contas, próximas contas)
-**Tarefas:**
-- ⏳ `src/componentes/dashboard/card-proxima-conta.tsx`
-- ⏳ `src/hooks/usar-proximas-contas.ts`
-- ⏳ Cards saldos contas bancárias
+
+**PRÓXIMAS CONTAS ✅ CONCLUÍDA (21/08/2025)**
+**Especificações Implementadas:**
+- ✅ **Layout compacto:** Card 1 coluna com máximo 3 contas
+- ✅ **Dados reais:** Query com join em categorias (nome, cor, ícone)
+- ✅ **Status correto:** Busca transações com `status='previsto'` (não 'pendente')
+- ✅ **Cálculo de dias:** Positivo (futuro) e negativo (vencido)
+- ✅ **Cores dinâmicas:** Categorias + texto laranja para vencidas
+- ✅ **Interação:** Click abre modal de edição via contexto
+- ✅ **Error handling:** Loading skeleton + tratamento de erros
+
+**Arquivos Criados:**
+- ✅ `src/componentes/dashboard/card-proxima-conta.tsx` - Componente principal
+- ✅ `src/hooks/usar-proximas-contas.ts` - Hook SWR especializado
+- ✅ Query `obterProximasContas()` com join em fp_categorias
+- ✅ Interface `ProximaConta` atualizada (id, categoria, vencida)
+
+**Correções Aplicadas:**
+- ✅ **Status:** 'pendente' → 'previsto' (padrão do sistema)
+- ✅ **Join categorias:** Tipagem corrigida com casting
+- ✅ **Modal integration:** useModais (não useModaisContexto)
+- ✅ **Componente Icone:** Props 'name' (não 'nome')
+
+**Validações:**
+- ✅ TypeScript sem erros
+- ✅ Dados reais testados (transações previstas)
+- ✅ Integração no dashboard funcionando
+
+**SALDOS CONTAS BANCÁRIAS ✅ CONCLUÍDA (21/08/2025)**
+**Especificações Implementadas:**
+- ✅ **Grid 2x2:** Layout desktop conforme especificado
+- ✅ **Header "Contas | total":** Soma dinâmica dos saldos
+- ✅ **Filtro correto:** `neq('tipo', 'cartao_credito')`
+- ✅ **Saldo calculado:** Receitas - despesas por conta
+- ✅ **Hover interativo:** Últimas 5 movimentações
+- ✅ **Ícones inteligentes:** Baseados no tipo/banco
+- ✅ **Loading states:** Skeletons durante carregamento
+- ✅ **Format valores:** "1000,00" sem símbolo R$
+
+**Arquivos Criados:**
+- ✅ `src/componentes/dashboard/card-saldos-contas.tsx` - Componente principal
+- ✅ `src/hooks/usar-contas-dados.ts` - Hook SWR especializado
+- ✅ Query `obterSaldosContas()` com cálculo de saldo dinâmico
+- ✅ Interface `ContaData` atualizada com movimentações
+
+**Validações:**
+- ✅ TypeScript sem erros
+- ✅ Build funcional para deploy
+- ✅ Integração no dashboard funcionando
+
+**Tarefas Restantes:**
 - ⏳ Cards saldos cartões individuais
 
 **✅ Entregável FASE 3:** Dashboard visual completo
@@ -441,11 +488,13 @@ GROUP BY c.id, c.nome, c.limite
 
 ### **Próximas Contas:**
 ```sql
--- Transações pendentes
-SELECT descricao, valor, data_vencimento
-FROM fp_transacoes
-WHERE status='pendente' AND data_vencimento >= CURRENT_DATE
-ORDER BY data_vencimento ASC
+-- Transações previstas com categorias
+SELECT t.id, t.descricao, t.valor, t.data_vencimento,
+       c.nome as categoria_nome, c.cor as categoria_cor, c.icone as categoria_icone
+FROM fp_transacoes t
+LEFT JOIN fp_categorias c ON t.categoria_id = c.id
+WHERE t.status='previsto'
+ORDER BY t.data_vencimento ASC
 LIMIT 10
 ```
 
@@ -671,19 +720,32 @@ export default function DashboardPage() {
 - **FASES 1, 2, 2.1:** Estrutura completa + 4 cards funcionando
 - **FASE 3-A:** Gráfico tendência com dados reais (linhas receitas/despesas)
 - **FASE 3-B:** Gráfico categorias vs metas (layout compacto otimizado)
+- **FASE 3-C (Parcial):** Card Próximas Contas implementado e funcionando
 - **Validações:** TypeScript + Build + Dados reais confirmados
 - **Qualidade:** Edge cases, acessibilidade, constantes configuráveis
 - **Cache:** SWR otimizado para performance
 
+### **✅ CONCLUÍDO (21/08/2025 - SESSÃO ATUAL):**
+- **FASE 3-C (Completa):** Card Saldos Contas Bancárias implementado e funcionando
+- **Grid 2x2:** Layout conforme especificado
+- **Header dinâmico:** "Contas | total" com soma dos saldos
+- **Filtro correto:** Exclui cartões de crédito
+- **Hover tooltip:** Últimas 5 movimentações por conta
+- **Saldo calculado:** A partir das transações (receitas - despesas)
+- **Ícones inteligentes:** Baseados no tipo/banco da conta
+- **Loading skeletons:** Animações elegantes
+- **TypeScript:** 100% tipado e validado
+- **Build:** Funcional para deploy no Vercel
+
 ### **⏳ PRÓXIMOS PASSOS:**
-1. **FASE 3-C:** Cards secundários (próximas contas + saldos)
+1. **FASE 3-C:** Implementar cards de cartões individuais (última parte)
 2. **FASE 4:** Filtro período + polimentos finais
 
 ### **🎯 PARA NOVO CHAT:**
 - Dashboard acessível: `http://localhost:3000/dashboard`
 - Servidor rodando: `npm run dev` (porta 3000)
-- Última implementação: Gráfico categorias vs metas (FASE 3-B completa)
-- Próximo passo: Implementar FASE 3-C (cards secundários)
+- **Última implementação:** Card Saldos Contas Bancárias (FASE 3-C)
+- **Próximo passo:** Cards de cartões individuais
 
 ---
 

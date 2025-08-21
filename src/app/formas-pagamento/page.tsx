@@ -71,12 +71,7 @@ export default function FormasPagamentoPage() {
       <div className="max-w-full mx-auto px-4 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Formas de Pagamento
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie as formas de pagamento disponíveis em suas transações
-            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Formas de Pagamento</h1>
           </div>
           
           <Button onClick={() => router.push('/formas-pagamento/nova')}>

@@ -4,6 +4,7 @@ import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { CardMetrica } from '@/componentes/dashboard/card-metrica'
 import { GraficoTendencia } from '@/componentes/dashboard/grafico-tendencia'
 import { GraficoCategorias } from '@/componentes/dashboard/grafico-categorias'
+import { CardProximaConta } from '@/componentes/dashboard/card-proxima-conta'
 import { useCardsData } from '@/hooks/usar-cards-dados'
 import { usePeriodo } from '@/hooks/usar-periodo'
 
@@ -62,7 +63,6 @@ export default function DashboardPage() {
               titulo="Cartões"
               valor={cards?.gastosCartao.atual}
               valorLimite={cards?.gastosCartao.limite}
-              mostrarBarraProgresso={true}
               icone="cartoes"
               percentual={cards?.gastosCartao.percentual || 0}
               cor="purple"
@@ -77,13 +77,26 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div style={{ animationDelay: '0.5s' }}>
             <GraficoTendencia />
           </div>
           
           <div style={{ animationDelay: '0.6s' }}>
             <GraficoCategorias periodo={periodo} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div style={{ animationDelay: '0.7s' }}>
+            <CardProximaConta limite={3} />
+          </div>
+          
+          <div style={{ animationDelay: '0.8s' }} className="lg:col-span-2">
+            {/* TODO: Saldos das Contas + Cartões */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-center h-32">
+              <span className="text-gray-500 text-sm">Saldos das Contas + Cartões (TODO)</span>
+            </div>
           </div>
         </div>
       </div>

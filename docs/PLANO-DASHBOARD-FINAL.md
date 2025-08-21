@@ -305,13 +305,34 @@ const swrConfig = {
 - ✅ Dados reais verificados (76+ transações nos últimos 6 meses)
 - ✅ Cache SWR otimizado (5min para dados históricos)
 
-#### **FASE 3-B: Gráfico Categorias ⏳ PENDENTE**
-**Objetivo:** Gráfico barras horizontais (categorias vs metas)
-**Tarefas:**
-- ⏳ `src/hooks/usar-categorias-dados.ts`
-- ⏳ `src/componentes/dashboard/grafico-categorias.tsx`
-- ⏳ Query categorias vs metas mensais
-- ⏳ Integração no dashboard
+#### **FASE 3-B: Gráfico Categorias ✅ CONCLUÍDA (21/08/2025)**
+**Especificações Implementadas:**
+- ✅ **Layout compacto:** Nome | ████████ | R$ 1.234 (densidade otimizada)
+- ✅ **Escala absoluta:** Barras baseadas no maior gasto (não percentual da meta)
+- ✅ **Toggle de metas:** Switch iOS para mostrar/ocultar percentuais
+- ✅ **Cores inteligentes:** Verde padrão + verde escuro para metas ultrapassadas
+- ✅ **Filtro dinâmico:** Só mostra categorias com gasto > 0
+- ✅ **Gap responsivo:** Largura dos nomes baseada no texto mais longo
+- ✅ **Percentuais adaptativos:** Dentro ou fora da barra conforme espaço
+
+**Arquivos Criados:**
+- ✅ `src/hooks/usar-categorias-dados.ts` - Hook SWR especializado
+- ✅ `src/componentes/dashboard/grafico-categorias.tsx` - Layout compacto otimizado
+- ✅ Query `obterCategoriasMetas()` com busca em fp_metas_mensais
+- ✅ Interface `CategoriaData` com suporte a meta null
+
+**Melhorias de Qualidade:**
+- ✅ **Edge cases:** Proteção contra arrays vazios (-Infinity)
+- ✅ **Constantes:** Magic numbers extraídos para configuração
+- ✅ **Acessibilidade:** aria-label e aria-pressed no toggle
+- ✅ **TypeScript:** 100% tipado sem erros
+- ✅ **Performance:** SWR cache otimizado (1min refresh)
+
+**Validações:**
+- ✅ TypeScript sem erros (`npx tsc --noEmit`)
+- ✅ Build funcional para deploy
+- ✅ Dados reais verificados (20 categorias, 8 metas)
+- ✅ UX/UI otimizada para densidade máxima
 
 #### **FASE 3-C: Cards Secundários ⏳ PENDENTE**
 **Objetivo:** Cards menores (contas, próximas contas)
@@ -646,22 +667,23 @@ export default function DashboardPage() {
 
 ## 📋 STATUS ATUAL E PRÓXIMOS PASSOS
 
-### **✅ CONCLUÍDO (20/08/2025):**
+### **✅ CONCLUÍDO (21/08/2025):**
 - **FASES 1, 2, 2.1:** Estrutura completa + 4 cards funcionando
 - **FASE 3-A:** Gráfico tendência com dados reais (linhas receitas/despesas)
+- **FASE 3-B:** Gráfico categorias vs metas (layout compacto otimizado)
 - **Validações:** TypeScript + Build + Dados reais confirmados
+- **Qualidade:** Edge cases, acessibilidade, constantes configuráveis
 - **Cache:** SWR otimizado para performance
 
 ### **⏳ PRÓXIMOS PASSOS:**
-1. **FASE 3-B:** Gráfico categorias vs metas (barras horizontais)
-2. **FASE 3-C:** Cards secundários (próximas contas + saldos)
-3. **FASE 4:** Filtro período + polimentos finais
+1. **FASE 3-C:** Cards secundários (próximas contas + saldos)
+2. **FASE 4:** Filtro período + polimentos finais
 
 ### **🎯 PARA NOVO CHAT:**
 - Dashboard acessível: `http://localhost:3000/dashboard`
 - Servidor rodando: `npm run dev` (porta 3000)
-- Última implementação: Gráfico tendência funcional
-- Próximo passo: Implementar FASE 3-B (gráfico categorias)
+- Última implementação: Gráfico categorias vs metas (FASE 3-B completa)
+- Próximo passo: Implementar FASE 3-C (cards secundários)
 
 ---
 

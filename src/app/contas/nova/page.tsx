@@ -139,12 +139,7 @@ export default function NovaContaPage() {
             ← Voltar
           </Button>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Nova Conta
-            </h1>
-            <p className="text-muted-foreground">
-              Adicione uma nova conta para gerenciar suas transações
-            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Nova Conta</h1>
           </div>
         </div>
 

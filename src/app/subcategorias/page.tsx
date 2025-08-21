@@ -79,12 +79,7 @@ export default function SubcategoriasPage() {
       <div className="max-w-full mx-auto px-4 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Subcategorias
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie as subcategorias para detalhar suas transações
-            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Subcategorias</h1>
           </div>
           
           <Button onClick={() => router.push('/subcategorias/nova')}>

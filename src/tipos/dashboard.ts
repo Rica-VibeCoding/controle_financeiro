@@ -81,10 +81,16 @@ export interface CardMetricaData {
 
 // Interface para próximas contas
 export interface ProximaConta {
-  nome: string
+  id: string
+  descricao: string
   valor: number
   dias: number
-  urgencia: 'alta' | 'media' | 'baixa'
+  categoria: {
+    nome: string
+    cor: string
+    icone: string
+  }
+  vencida: boolean
 }
 
 // Interface para categorias

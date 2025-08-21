@@ -60,12 +60,7 @@ export default function CategoriasPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Categorias
-            </h1>
-            <p className="text-muted-foreground">
-              Organize suas receitas e despesas por categorias
-            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Categorias</h1>
           </div>
           
           <Button onClick={() => router.push('/categorias/nova')}>

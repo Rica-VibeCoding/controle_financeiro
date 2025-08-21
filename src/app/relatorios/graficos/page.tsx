@@ -176,14 +176,14 @@ export default function GraficosPage() {
                             {item.label}
                           </span>
                           <span className="font-medium">
-                            {item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       ))}
                       <div className="flex justify-between items-center p-3 border-t-2 border-gray-300 font-bold">
                         <span>Total</span>
                         <span>
-                          {totalDespesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>
@@ -211,17 +211,17 @@ export default function GraficosPage() {
                       const maxValor = Math.max(mes.receitas, mes.despesas)
                       return (
                         <div key={mes.mes} className="space-y-2">
-                          <div className="flex justify-between text-sm font-medium">
+                          <div className="flex justify-between text-sm font-medium opacity-90">
                             <span>{mes.mes}</span>
-                            <span className={mes.saldo >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              Saldo: {mes.saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            <span className={(mes.saldo >= 0 ? 'text-green-600' : 'text-red-600') + ' opacity-90'}>
+                              Saldo: {mes.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             {/* Receitas */}
                             <div className="space-y-1">
-                              <div className="text-xs text-green-600">
-                                Receitas: {mes.receitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              <div className="text-xs text-green-600 opacity-90">
+                                Receitas: {mes.receitas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               <div className="w-full bg-gray-200 rounded h-4">
                                 <div 
@@ -232,8 +232,8 @@ export default function GraficosPage() {
                             </div>
                             {/* Despesas */}
                             <div className="space-y-1">
-                              <div className="text-xs text-red-600">
-                                Despesas: {mes.despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              <div className="text-xs text-red-600 opacity-90">
+                                Despesas: {mes.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               <div className="w-full bg-gray-200 rounded h-4">
                                 <div 
@@ -252,20 +252,20 @@ export default function GraficosPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground">Média de Receitas</div>
-                      <div className="text-lg font-bold text-green-600">
-                        {(resumoMensal.reduce((acc, m) => acc + m.receitas, 0) / resumoMensal.length).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      <div className="text-lg font-bold text-green-600 opacity-90">
+                        {(resumoMensal.reduce((acc, m) => acc + m.receitas, 0) / resumoMensal.length).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground">Média de Despesas</div>
-                      <div className="text-lg font-bold text-red-600">
-                        {(resumoMensal.reduce((acc, m) => acc + m.despesas, 0) / resumoMensal.length).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      <div className="text-lg font-bold text-red-600 opacity-90">
+                        {(resumoMensal.reduce((acc, m) => acc + m.despesas, 0) / resumoMensal.length).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-muted-foreground">Saldo Médio</div>
-                      <div className="text-lg font-bold text-blue-600">
-                        {(resumoMensal.reduce((acc, m) => acc + m.saldo, 0) / resumoMensal.length).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      <div className="text-lg font-bold text-blue-600 opacity-90">
+                        {(resumoMensal.reduce((acc, m) => acc + m.saldo, 0) / resumoMensal.length).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                   </div>

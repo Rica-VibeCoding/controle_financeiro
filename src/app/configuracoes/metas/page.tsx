@@ -120,12 +120,7 @@ export default function ConfiguracaoMetasPage() {
     <LayoutPrincipal>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-            🎯 Configurar Metas
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {formatarMesReferencia(mesAtual)}
-          </p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">🎯 Configurar Metas</h1>
         </div>
 
         <Card>

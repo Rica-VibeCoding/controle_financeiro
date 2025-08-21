@@ -10,7 +10,6 @@ interface CardMetricaProps {
   percentual: number
   cor: 'green' | 'red' | 'blue' | 'purple'
   loading?: boolean
-  mostrarBarraProgresso?: boolean
   valorLimite?: number
 }
 
@@ -44,47 +43,44 @@ const colorClasses = {
   }
 }
 
-export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, cor, loading, mostrarBarraProgresso, valorLimite }: CardMetricaProps) {
+export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, cor, loading, valorLimite }: CardMetricaProps) {
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 animate-pulse">
+        <div className="flex items-center justify-between mb-1 opacity-90">
           <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+            <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
             <div className="h-4 bg-gray-200 rounded w-20"></div>
           </div>
           <div className="h-6 bg-gray-200 rounded-full w-12"></div>
         </div>
-        <div className="h-8 bg-gray-200 rounded w-28"></div>
+        <div className="h-5 bg-gray-200 rounded w-28"></div>
       </div>
     )
   }
 
   const IconeComponente = icones[icone]
   const classes = colorClasses[cor]
-  const valorFormatado = valor?.toLocaleString('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL' 
-  }) || 'R$ 0,00'
+  const valorFormatado = typeof valor === 'number'
+    ? valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '0,00'
   
-  const valorAnteriorFormatado = valorAnterior?.toLocaleString('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL' 
-  })
+  const valorAnteriorFormatado = typeof valorAnterior === 'number'
+    ? valorAnterior.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : undefined
 
-  const valorLimiteFormatado = valorLimite?.toLocaleString('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL' 
-  })
+  const valorLimiteFormatado = typeof valorLimite === 'number'
+    ? valorLimite.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : undefined
 
-  // Layout especial para card de cartões com barra de progresso
-  if (mostrarBarraProgresso && icone === 'cartoes') {
+  // Layout especial para card de cartões (sem barra de progresso)
+  if (icone === 'cartoes') {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up h-full">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 card-hover animate-slide-up h-full">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center space-x-2">
-            <div className={`w-7 h-7 ${classes.bg} rounded-lg flex items-center justify-center opacity-95`}>
-              <IconeComponente className={`w-2.5 h-2.5 ${classes.text} opacity-95`} />
+            <div className={`w-5 h-5 ${classes.bg} rounded-lg flex items-center justify-center opacity-95`}>
+              <IconeComponente className={`w-2 h-2 ${classes.text} opacity-95`} />
             </div>
             <span className="text-sm font-medium text-gray-600">{titulo}</span>
           </div>
@@ -92,21 +88,15 @@ export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, c
             {Math.round(percentual)}%
           </span>
         </div>
-        <div className="mb-3">
-          <p className="text-2xl font-bold text-gray-900">
+        <div className="mb-2 opacity-90">
+          <p className="text-lg leading-5 font-bold text-gray-900">
             {valorFormatado}
           </p>
           {valorLimiteFormatado && (
-            <p className="text-[12px] text-gray-500 mt-1">
+            <p className="text-[12px] text-gray-500 mt-0.5 opacity-90">
               de {valorLimiteFormatado} limite
             </p>
           )}
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="gradient-purple h-2 rounded-full transition-all duration-500" 
-            style={{ width: `${Math.min(percentual, 100)}%` }}
-          />
         </div>
       </div>
     )
@@ -114,11 +104,11 @@ export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, c
 
   // Layout padrão para outros cards
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up h-full">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 card-hover animate-slide-up h-full">
+      <div className="flex items-center justify-between mb-1 opacity-90">
         <div className="flex items-center space-x-2">
-          <div className={`w-7 h-7 ${classes.bg} rounded-lg flex items-center justify-center opacity-95`}>
-            <IconeComponente className={`w-2.5 h-2.5 ${classes.text} opacity-95`} />
+          <div className={`w-5 h-5 ${classes.bg} rounded-lg flex items-center justify-center opacity-95`}>
+            <IconeComponente className={`w-2 h-2 ${classes.text} opacity-95`} />
           </div>
           <span className="text-sm font-medium text-gray-600">{titulo}</span>
         </div>
@@ -126,12 +116,12 @@ export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, c
           {percentual > 0 ? '+' : ''}{Math.round(percentual)}%
         </span>
       </div>
-      <div>
-        <p className="text-2xl font-bold text-gray-900">
+      <div className="opacity-90">
+        <p className="text-lg leading-5 font-bold text-gray-900">
           {valorFormatado}
         </p>
         {valorAnteriorFormatado && (
-          <p className="text-[12px] text-gray-500 mt-1">{valorAnteriorFormatado} mês anterior</p>
+          <p className="text-[12px] text-gray-500 mt-0.5 opacity-90">{valorAnteriorFormatado} mês anterior</p>
         )}
       </div>
     </div>

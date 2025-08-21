@@ -223,12 +223,7 @@ export default function EditarContaPage() {
             ← Voltar
           </Button>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Editar Conta
-            </h1>
-            <p className="text-muted-foreground">
-              Atualize os dados da conta "{conta.nome}"
-            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Editar Conta</h1>
           </div>
         </div>
 

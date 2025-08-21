@@ -129,36 +129,88 @@ export async function obterDadosCards(periodo: Periodo) {
 // Função para obter próximas contas
 export async function obterProximasContas(): Promise<ProximaConta[]> {
   try {
+    console.log('🔍 Iniciando busca por próximas contas...')
+    
+    // Primeiro, verificar se existem transações pendentes
+    const { data: todasPendentes, error: errorTodasPendentes } = await supabase
+      .from('fp_transacoes')
+      .select('id, status, data_vencimento, descricao, valor')
+      .eq('status', 'previsto')
+    
+    console.log('📊 Total de transações pendentes:', todasPendentes?.length || 0)
+    console.log('📋 Amostra de transações pendentes:', todasPendentes?.slice(0, 3))
+    
+    if (errorTodasPendentes) {
+      console.error('❌ Erro ao buscar todas pendentes:', errorTodasPendentes)
+    }
+
+    // Query principal com categorias
     const { data, error } = await supabase
       .from('fp_transacoes')
-      .select('descricao, valor, data_vencimento')
-      .eq('status', 'pendente')
-      .gte('data_vencimento', new Date().toISOString().split('T')[0])
+      .select(`
+        id,
+        descricao,
+        valor,
+        data_vencimento,
+        status,
+        categoria_id,
+        fp_categorias (
+          nome,
+          cor,
+          icone
+        )
+      `)
+      .eq('status', 'previsto')
+      .not('data_vencimento', 'is', null)
       .order('data_vencimento', { ascending: true })
       .limit(10)
 
-    if (error) throw error
+    console.log('🎯 Resultado da query principal:', {
+      count: data?.length || 0,
+      error: error,
+      sample: data?.slice(0, 2)
+    })
 
-    return data?.map(item => {
-      const hoje = new Date()
+    if (error) {
+      console.error('❌ Erro na query principal:', error)
+      throw error
+    }
+
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    console.log('📅 Data de hoje para cálculo:', hoje.toISOString().split('T')[0])
+
+    const resultado = data?.map(item => {
+      console.log('🔧 Processando item:', {
+        id: item.id,
+        descricao: item.descricao,
+        data_vencimento: item.data_vencimento,
+        categoria: item.fp_categorias
+      })
+
       const vencimento = new Date(item.data_vencimento + 'T00:00:00')
       const diasRestantes = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
-      
-      let urgencia: 'alta' | 'media' | 'baixa'
-      if (diasRestantes <= 3) urgencia = 'alta'
-      else if (diasRestantes <= 7) urgencia = 'media'
-      else urgencia = 'baixa'
+      const vencida = diasRestantes < 0
 
       return {
-        nome: item.descricao || 'Sem descrição',
-        valor: item.valor || 0,
-        dias: diasRestantes,
-        urgencia
+        id: item.id?.toString() || '',
+        descricao: item.descricao || 'Sem descrição',
+        valor: Number(item.valor || 0),
+        dias: Math.abs(diasRestantes),
+        vencida,
+        categoria: {
+          nome: (item.fp_categorias as any)?.nome || 'Outros',
+          cor: (item.fp_categorias as any)?.cor || '#6B7280',
+          icone: (item.fp_categorias as any)?.icone || 'dollar-sign'
+        }
       }
     }) || []
 
+    console.log('✅ Resultado final processado:', resultado)
+    return resultado
+
   } catch (error) {
-    console.error('Erro ao obter próximas contas:', error)
+    console.error('💥 Erro ao obter próximas contas:', error)
     return []
   }
 }

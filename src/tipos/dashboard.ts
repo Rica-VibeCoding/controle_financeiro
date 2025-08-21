@@ -91,9 +91,9 @@ export interface ProximaConta {
 export interface CategoriaData {
   nome: string
   gasto: number
-  meta: number
+  meta: number | null  // null quando categoria não tem meta
   cor: string
-  percentual: number
+  percentual: number   // 0 quando meta é null
 }
 
 // Interface para cartões
@@ -115,5 +115,7 @@ export interface ContaData {
 // Interface para tendência
 export interface TendenciaData {
   mes: string
+  receitas: number
+  despesas: number
   saldo: number
 }

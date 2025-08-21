@@ -16,7 +16,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
   const { toasts, removerToast } = usarToast()
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex">
         {/* Sidebar Desktop */}

@@ -33,6 +33,7 @@ import {
   PlusCircle,
   Banknote,
   User,
+  PiggyBank,
 } from 'lucide-react'
 
 type IconName =
@@ -66,6 +67,7 @@ type IconName =
   | 'plus-circle'
   | 'banknote'
   | 'user'
+  | 'piggy-bank'
 
 const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'layout-dashboard': LayoutDashboard,
@@ -98,6 +100,7 @@ const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'plus-circle': PlusCircle,
   'banknote': Banknote,
   'user': User,
+  'piggy-bank': PiggyBank,
 }
 
 export interface IconeProps extends Omit<LucideProps, 'ref'> {

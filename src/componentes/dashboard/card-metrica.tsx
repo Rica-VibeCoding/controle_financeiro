@@ -80,11 +80,11 @@ export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, c
   // Layout especial para card de cartões com barra de progresso
   if (mostrarBarraProgresso && icone === 'cartoes') {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up h-full">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <div className={`w-10 h-10 ${classes.bg} rounded-lg flex items-center justify-center`}>
-              <IconeComponente className={`w-3.5 h-3.5 ${classes.text}`} />
+            <div className={`w-7 h-7 ${classes.bg} rounded-lg flex items-center justify-center opacity-95`}>
+              <IconeComponente className={`w-2.5 h-2.5 ${classes.text} opacity-95`} />
             </div>
             <span className="text-sm font-medium text-gray-600">{titulo}</span>
           </div>
@@ -114,11 +114,11 @@ export function CardMetrica({ titulo, valor, valorAnterior, icone, percentual, c
 
   // Layout padrão para outros cards
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover animate-slide-up h-full">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <div className={`w-10 h-10 ${classes.bg} rounded-lg flex items-center justify-center`}>
-            <IconeComponente className={`w-3.5 h-3.5 ${classes.text}`} />
+          <div className={`w-7 h-7 ${classes.bg} rounded-lg flex items-center justify-center opacity-95`}>
+            <IconeComponente className={`w-2.5 h-2.5 ${classes.text} opacity-95`} />
           </div>
           <span className="text-sm font-medium text-gray-600">{titulo}</span>
         </div>

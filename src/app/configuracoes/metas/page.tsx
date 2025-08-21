@@ -12,12 +12,13 @@ import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import { Loader2, Save, Check } from 'lucide-react'
 
 export default function ConfiguracaoMetasPage() {
-  const { dados, recarregarDados } = useDadosAuxiliares()
+  const { dados } = useDadosAuxiliares()
   const { categorias } = dados
   const { 
     metasDoMes, 
     loading, 
-    carregarMetasDoMes 
+    carregarMetasDoMes,
+    salvarMeta
   } = useMetasMensais()
   
   const [valoresEdicao, setValoresEdicao] = useState<Record<string, string>>({})
@@ -41,7 +42,7 @@ export default function ConfiguracaoMetasPage() {
   useEffect(() => {
     const novosValores: Record<string, string> = {}
     metasDoMes.forEach(meta => {
-      novosValores[meta.categoria_id] = meta.valor_meta.toString()
+      novosValores[meta.categoria_id] = meta.valor_meta.toFixed(2).replace('.', ',')
     })
     setValoresEdicao(novosValores)
   }, [metasDoMes])
@@ -51,23 +52,38 @@ export default function ConfiguracaoMetasPage() {
   }
 
   const atualizarValor = (categoriaId: string, valor: string) => {
-    const valorNumerico = valor.replace(/[^\d]/g, '')
+    // Permitir dígitos, vírgula e ponto
+    const valorLimpo = valor.replace(/[^\d,]/g, '')
+    
+    // Permitir apenas uma vírgula
+    const partesVirgula = valorLimpo.split(',')
+    if (partesVirgula.length > 2) {
+      return // Não permitir mais de uma vírgula
+    }
+    
+    // Limitar casas decimais a 2
+    if (partesVirgula.length === 2 && partesVirgula[1].length > 2) {
+      partesVirgula[1] = partesVirgula[1].substring(0, 2)
+    }
+    
+    const valorFinal = partesVirgula.join(',')
+    
     setValoresEdicao(prev => ({
       ...prev,
-      [categoriaId]: valorNumerico
+      [categoriaId]: valorFinal
     }))
   }
 
-  const salvarMetaLocal = async (categoriaId: string) => {
-    const valor = parseFloat(valoresEdicao[categoriaId] || '0')
+  const salvarMetaLocal = async (categoriaId: string): Promise<void> => {
+    const valorString = valoresEdicao[categoriaId] || '0'
+    const valor = parseFloat(valorString.replace(',', '.'))
     
-    if (valor < 0) return
+    if (valor < 0 || isNaN(valor)) return
 
     setSalvando(prev => ({ ...prev, [categoriaId]: true }))
     
     try {
-      // Simulação de salvamento por enquanto
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await salvarMeta(categoriaId, valor, mesAtual)
       
       setSalvos(prev => ({ ...prev, [categoriaId]: true }))
       setTimeout(() => {
@@ -87,10 +103,6 @@ export default function ConfiguracaoMetasPage() {
     }
   }
 
-  // Formatação simples de moeda
-  const formatarMoeda = (valor: number): string => {
-    return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }
 
   if (loading) {
     return (
@@ -149,7 +161,7 @@ export default function ConfiguracaoMetasPage() {
                     <span className="text-sm text-muted-foreground">R$</span>
                     <Input
                       type="text"
-                      value={formatarMoeda(parseFloat(obterValorMeta(categoria.id)) || 0)}
+                      value={obterValorMeta(categoria.id)}
                       onChange={(e) => atualizarValor(categoria.id, e.target.value)}
                       onKeyDown={(e) => handleEnterPress(categoria.id, e)}
                       className="w-32 text-right"

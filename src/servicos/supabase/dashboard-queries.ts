@@ -179,19 +179,19 @@ export async function obterTendencia(): Promise<TendenciaData[]> {
 
     if (error) throw error
 
-    // Agrupar por mês
-    const meses: { [key: string]: number } = {}
+    // Agrupar por mês separando receitas e despesas
+    const meses: { [key: string]: { receitas: number; despesas: number } } = {}
     
     data?.forEach(transacao => {
       const data = new Date(transacao.data)
       const chave = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`
       
-      if (!meses[chave]) meses[chave] = 0
+      if (!meses[chave]) meses[chave] = { receitas: 0, despesas: 0 }
       
       if (transacao.tipo === 'receita') {
-        meses[chave] += transacao.valor || 0
+        meses[chave].receitas += transacao.valor || 0
       } else if (transacao.tipo === 'despesa') {
-        meses[chave] -= transacao.valor || 0
+        meses[chave].despesas += transacao.valor || 0
       }
     })
 
@@ -200,17 +200,128 @@ export async function obterTendencia(): Promise<TendenciaData[]> {
     
     return Object.entries(meses)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([chave, saldo]) => {
+      .map(([chave, dados]) => {
         const [ano, mes] = chave.split('-')
         const mesIndex = parseInt(mes) - 1
         return {
           mes: mesesNomes[mesIndex],
-          saldo
+          receitas: dados.receitas,
+          despesas: dados.despesas,
+          saldo: dados.receitas - dados.despesas
         }
       })
 
   } catch (error) {
     console.error('Erro ao obter tendência:', error)
+    return []
+  }
+}
+
+// Função para obter categorias vs metas mensais
+export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaData[]> {
+  try {
+    // 1. Buscar todas as categorias cadastradas
+    const { data: categorias, error: categoriasError } = await supabase
+      .from('fp_categorias')
+      .select('id, nome, cor')
+      .eq('ativo', true)
+      .order('nome', { ascending: true })
+
+    if (categoriasError) {
+      console.error('Erro ao buscar categorias:', categoriasError)
+      throw categoriasError
+    }
+
+    console.log('📋 Categorias encontradas:', categorias?.length)
+
+    // 2. Buscar gastos por categoria no período (todos os status)
+    const { data: gastos, error: gastosError } = await supabase
+      .from('fp_transacoes')
+      .select('categoria_id, valor, status, data')
+      .eq('tipo', 'despesa')
+      .gte('data', periodo.inicio)
+      .lte('data', periodo.fim)
+
+    if (gastosError) {
+      console.error('Erro ao buscar gastos:', gastosError)
+      throw gastosError
+    }
+
+    console.log('💰 Gastos encontrados:', gastos?.length)
+
+    // 3. Processar dados: agrupar gastos por categoria
+    const gastosPorCategoria: { [key: string]: number } = {}
+    gastos?.forEach(gasto => {
+      const categoriaId = gasto.categoria_id?.toString() || ''
+      gastosPorCategoria[categoriaId] = (gastosPorCategoria[categoriaId] || 0) + Number(gasto.valor || 0)
+    })
+
+
+    // 4. Buscar metas mensais
+    let metas: any[] = []
+    
+    try {
+      // Parse da data para obter mês/ano
+      const [anoStr, mesStr] = periodo.inicio.split('-')
+      const ano = parseInt(anoStr)
+      const mes = parseInt(mesStr)
+      const mesReferencia = ano * 100 + mes // 202508 para agosto 2025
+      
+      const { data: metasMensais, error: metasMensaisError } = await supabase
+        .from('fp_metas_mensais')
+        .select('categoria_id, valor_meta')
+        .eq('mes_referencia', mesReferencia)
+
+      if (!metasMensaisError && metasMensais && metasMensais.length > 0) {
+        metas = metasMensais.map(m => ({ categoria_id: m.categoria_id, valor_limite: m.valor_meta }))
+        console.log('🎯 Metas (fp_metas_mensais) encontradas:', metas.length)
+      } else {
+        console.log('⚠️ fp_metas_mensais vazia ou com erro:', metasMensaisError)
+      }
+    } catch (error) {
+      console.log('❌ Erro ao buscar metas mensais:', error)
+    }
+
+    // 5. Processar dados: mapear metas por categoria
+    const metasPorCategoria: { [key: string]: number } = {}
+    metas?.forEach(meta => {
+      const categoriaId = meta.categoria_id?.toString() || ''
+      metasPorCategoria[categoriaId] = Number(meta.valor_limite || 0)
+    })
+    
+    // 6. Criar array final combinando todas as informações
+    const resultado: CategoriaData[] = categorias?.map(categoria => {
+      const categoriaId = categoria.id.toString()
+      const gasto = gastosPorCategoria[categoriaId] || 0
+      const meta = metasPorCategoria[categoriaId] || null
+      
+      // Calcular percentual
+      let percentual = 0
+      if (meta && meta > 0) {
+        percentual = Math.round((gasto / meta) * 100)
+      }
+
+      return {
+        nome: categoria.nome || 'Sem nome',
+        gasto,
+        meta,
+        cor: categoria.cor || '#6B7280', // cinza padrão
+        percentual
+      }
+    }) || []
+
+    // 6. Ordenar por relevância: primeiro com gastos (maior primeiro), depois por valor gasto
+    return resultado.sort((a, b) => {
+      // Priorizar categorias com gastos
+      if (a.gasto > 0 && b.gasto === 0) return -1
+      if (a.gasto === 0 && b.gasto > 0) return 1
+      
+      // Dentro do mesmo grupo, ordenar por valor gasto (maior primeiro)
+      return b.gasto - a.gasto
+    })
+
+  } catch (error) {
+    console.error('Erro ao obter categorias vs metas:', error)
     return []
   }
 }

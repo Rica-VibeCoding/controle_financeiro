@@ -2,6 +2,8 @@
 
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { CardMetrica } from '@/componentes/dashboard/card-metrica'
+import { GraficoTendencia } from '@/componentes/dashboard/grafico-tendencia'
+import { GraficoCategorias } from '@/componentes/dashboard/grafico-categorias'
 import { useCardsData } from '@/hooks/usar-cards-dados'
 import { usePeriodo } from '@/hooks/usar-periodo'
 
@@ -11,16 +13,14 @@ export default function DashboardPage() {
 
   return (
     <LayoutPrincipal>
-      <div className="max-w-[1440px] mx-auto px-2 sm:px-3 lg:px-4 py-8">
-        
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">
-            Período: {periodo.mes} {periodo.ano}
-          </p>
+      <div className="max-w-[1440px] mx-auto px-2 sm:px-3 lg:px-4 pt-0 pb-6">
+
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <span className="text-sm text-gray-500">{periodo.mes} {periodo.ano}</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div style={{ animationDelay: '0.1s' }} className="h-full">
             <CardMetrica
               titulo="Receitas"
@@ -77,45 +77,13 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            FASE 2 - Cards de Métricas ✅
-          </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div style={{ animationDelay: '0.5s' }}>
+            <GraficoTendencia />
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h3 className="font-medium text-gray-900">Cards Implementados:</h3>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Receitas com comparativo</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Despesas com comparativo</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Saldo calculado</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Cartões - gastos vs limite</span>
-                </div>
-              </div>
-            </div>
-            
-            {cards && (
-              <div className="space-y-3">
-                <h3 className="font-medium text-gray-900">Dados Atuais:</h3>
-                <div className="space-y-2 text-sm">
-                  <p>Receitas: {cards.receitas.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                  <p>Despesas: {cards.despesas.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                  <p>Saldo: {cards.saldo.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                  <p>Cartões: {cards.gastosCartao.atual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                </div>
-              </div>
-            )}
+          <div style={{ animationDelay: '0.6s' }}>
+            <GraficoCategorias periodo={periodo} />
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@ import { Icone } from '@/componentes/ui/icone'
 const menuItems = [
   {
     title: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: 'layout-dashboard' as const
   },
   {
@@ -69,7 +69,7 @@ export function Sidebar() {
   }, [isCadastroActive])
 
   return (
-    <aside className="w-64 bg-muted/50 border-r border-border min-h-screen p-4">
+    <aside className="w-64 bg-sidebar border-r border-border min-h-screen p-4 backdrop-blur-sm">
       <nav className="space-y-2">
         {menuItems.map((item) => (
           <Link

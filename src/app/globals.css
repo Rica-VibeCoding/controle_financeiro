@@ -4,6 +4,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Fundo com gradiente sutil (Opção A - Silver Mist) */
+  --background-gradient-start: #FAFAFB; /* A2 start */
+  --background-gradient-end: #E9EEF5;   /* A2 end */
+  --background-gradient-angle: 60deg;   /* A2 angle */
+  
+  /* Sidebar translúcida (S1) */
+  --sidebar: rgba(255, 255, 255, 0.85);
   
   /* Cores primárias - baseadas na documentação */
   --primary: #10B981; /* Verde das receitas */
@@ -44,6 +51,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sidebar: var(--sidebar);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -96,7 +104,12 @@
 }
 
 body {
-  background: var(--background);
+  /* Gradiente sutil sobre o fundo base */
+  background: linear-gradient(
+    var(--background-gradient-angle),
+    var(--background-gradient-start),
+    var(--background-gradient-end)
+  );
   color: var(--foreground);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }

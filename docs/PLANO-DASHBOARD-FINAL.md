@@ -92,6 +92,8 @@ interface DashboardData {
   }>
   tendencia: Array<{
     mes: string // 'Mar', 'Abr'
+    receitas: number
+    despesas: number
     saldo: number
   }>
 }
@@ -197,8 +199,9 @@ const swrConfig = {
 
 ### **Tendência:**
 - **Período:** Últimos 6 meses fechados
-- **Cálculo:** Saldo final de cada mês
-- **Visual:** LineChart suave (Recharts)
+- **Cálculo:** Receitas e despesas separadas por mês
+- **Visual:** LineChart duplo (verde=receitas, vermelho=despesas)
+- **Tooltip:** Valores formatados em R$ + área preenchida com gradientes
 
 ---
 
@@ -264,13 +267,13 @@ const swrConfig = {
 
 ---
 
-### **FASE 2.1: Ajustes Visuais Cards (25 min) 🎨 EM ANDAMENTO**
+### **FASE 2.1: Ajustes Visuais Cards (25 min) ✅ CONCLUÍDA**
 **Objetivo:** Finalizar ajustes visuais para ficar idêntico ao dashboard.html
 
 **Progresso:**
 - ✅ **FASE 1:** Texto "vs mês anterior" implementado nos cards 1-3
-- ⏳ **FASE 2:** Barra de progresso no card Cartões
-- ⏳ **FASE 3:** Gradientes CSS e animações com delay
+- ✅ **FASE 2:** Barra de progresso no card Cartões implementada
+- ✅ **FASE 3:** Gradientes CSS e animações com delay aplicados
 
 **Documentação:** Ver `docs/PLANO-VISUAL-CARDS-CONTINUACAO.md` para detalhes completos
 
@@ -278,23 +281,47 @@ const swrConfig = {
 
 ---
 
-### **FASE 3: Gráficos + Cards Secundários (1.5 horas)**
+### **FASE 3: Gráficos + Cards Secundários (1.5 horas) 🚧 EM ANDAMENTO**
 **Objetivo:** Todos os gráficos + cards menores
 
+#### **FASE 3-A: Gráfico Tendência ✅ CONCLUÍDA (20/08/2025)**
+**Especificações Implementadas:**
+- ✅ **Linhas separadas:** Verde (receitas) + Vermelho (despesas)
+- ✅ **Área preenchida:** Gradientes suaves nas linhas
+- ✅ **Tooltip interativo:** Valores formatados em R$
+- ✅ **Período:** Últimos 6 meses de dados reais
+- ✅ **Loading skeleton:** Animação durante carregamento
+- ✅ **Responsivo:** Funciona mobile/desktop
+
+**Arquivos Criados:**
+- ✅ `src/hooks/usar-tendencia-dados.ts` - Hook SWR especializado
+- ✅ `src/componentes/dashboard/grafico-tendencia.tsx` - Componente Recharts
+- ✅ Interface `TendenciaData` atualizada (receitas, despesas, saldo)
+- ✅ Query `obterTendencia()` refatorada para dados separados
+
+**Validações:**
+- ✅ TypeScript sem erros (`npx tsc --noEmit`)
+- ✅ Build funcional (`npm run build`)
+- ✅ Dados reais verificados (76+ transações nos últimos 6 meses)
+- ✅ Cache SWR otimizado (5min para dados históricos)
+
+#### **FASE 3-B: Gráfico Categorias ⏳ PENDENTE**
+**Objetivo:** Gráfico barras horizontais (categorias vs metas)
 **Tarefas:**
-1. **Gráfico Tendência:**
-   - `src/componentes/dashboard/grafico-tendencia.tsx`
-   - Recharts LineChart (últimos 6 meses)
+- ⏳ `src/hooks/usar-categorias-dados.ts`
+- ⏳ `src/componentes/dashboard/grafico-categorias.tsx`
+- ⏳ Query categorias vs metas mensais
+- ⏳ Integração no dashboard
 
-2. **Gráfico Categorias:**
-   - `src/componentes/dashboard/grafico-categorias.tsx` 
-   - Barras horizontais simples (sem meta inicialmente)
+#### **FASE 3-C: Cards Secundários ⏳ PENDENTE**
+**Objetivo:** Cards menores (contas, próximas contas)
+**Tarefas:**
+- ⏳ `src/componentes/dashboard/card-proxima-conta.tsx`
+- ⏳ `src/hooks/usar-proximas-contas.ts`
+- ⏳ Cards saldos contas bancárias
+- ⏳ Cards saldos cartões individuais
 
-3. **Cards secundários:**
-   - `src/componentes/dashboard/card-proxima-conta.tsx`
-   - Cards saldos contas + cartões (visual do HTML)
-
-**Entregável:** Dashboard visual completo
+**✅ Entregável FASE 3:** Dashboard visual completo
 
 ---
 
@@ -614,6 +641,27 @@ export default function DashboardPage() {
   )
 }
 ```
+
+---
+
+## 📋 STATUS ATUAL E PRÓXIMOS PASSOS
+
+### **✅ CONCLUÍDO (20/08/2025):**
+- **FASES 1, 2, 2.1:** Estrutura completa + 4 cards funcionando
+- **FASE 3-A:** Gráfico tendência com dados reais (linhas receitas/despesas)
+- **Validações:** TypeScript + Build + Dados reais confirmados
+- **Cache:** SWR otimizado para performance
+
+### **⏳ PRÓXIMOS PASSOS:**
+1. **FASE 3-B:** Gráfico categorias vs metas (barras horizontais)
+2. **FASE 3-C:** Cards secundários (próximas contas + saldos)
+3. **FASE 4:** Filtro período + polimentos finais
+
+### **🎯 PARA NOVO CHAT:**
+- Dashboard acessível: `http://localhost:3000/dashboard`
+- Servidor rodando: `npm run dev` (porta 3000)
+- Última implementação: Gráfico tendência funcional
+- Próximo passo: Implementar FASE 3-B (gráfico categorias)
 
 ---
 

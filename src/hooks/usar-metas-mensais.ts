@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { MetaMensal, MetaComProgresso, ResumoMetas, NovaMetaMensal } from '@/tipos/metas-mensais'
+import { MetaComProgresso, ResumoMetas, NovaMetaMensal } from '@/tipos/metas-mensais'
 import { MetasMensaisService } from '@/servicos/supabase/metas-mensais'
 import { gerarMesReferencia } from '@/utilitarios/metas-helpers'
 import { usarToast } from './usar-toast'
@@ -189,7 +189,7 @@ export function useMetasMensais() {
   // Carregar automaticamente na inicialização
   useEffect(() => {
     carregarMetasDoMes()
-  }, []) // Dependency array vazia para executar apenas uma vez
+  }, [carregarMetasDoMes])
 
   return {
     // Estado

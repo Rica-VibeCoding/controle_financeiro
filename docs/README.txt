@@ -93,6 +93,9 @@ NEXT_PUBLIC_SUPABASE_STORAGE_URL=https://nzgifjdewdfibcopolof.supabase.co/storag
 # Configurações da aplicação
 NEXT_PUBLIC_APP_NAME="Controle Financeiro"
 NEXT_PUBLIC_MAX_FILE_SIZE=5242880
+
+
+sbp_5c2f6d289467506608603e1983ac51c00eb8a708
 ```
 
 ### 4. Configurar Banco de Dados

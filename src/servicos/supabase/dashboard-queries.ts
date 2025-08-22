@@ -82,17 +82,10 @@ export async function obterDadosCards(periodo: Periodo) {
     const totalReceitasAnterior = receitasAnterior?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0
     const totalDespesasAnterior = despesasAnterior?.reduce((sum, d) => sum + Number(d.valor || 0), 0) || 0
     const totalCartoesUsado = cartoesGastos?.reduce((sum, c) => sum + Number(c.valor || 0), 0) || 0
-    console.log('🔍 Debug cartões ATUAL:', { 
-      cartoesInfo, 
-      quantidadeCartoes: cartoesInfo?.length,
-      limites: cartoesInfo?.map(c => ({ nome: c.nome, limite: c.limite }))
-    })
     const totalCartoesLimite = cartoesInfo?.reduce((sum, c) => {
       const limite = Number(c.limite || 0)
-      console.log(`💳 Cartão ${c.nome}: limite=${c.limite} -> convertido=${limite}`)
       return sum + limite
     }, 0) || 0
-    console.log('💰 TOTAL LIMITES FINAL:', totalCartoesLimite)
 
     const saldoAtual = totalReceitas - totalDespesas
     const saldoAnterior = totalReceitasAnterior - totalDespesasAnterior
@@ -139,16 +132,11 @@ export async function obterDadosCards(periodo: Periodo) {
 // Função para obter próximas contas
 export async function obterProximasContas(): Promise<ProximaConta[]> {
   try {
-    console.log('🔍 Iniciando busca por próximas contas...')
-    
-    // Primeiro, verificar se existem transações previstas
+    // Verificar se existem transações previstas
     const { data: todasPrevistas, error: errorTodasPrevistas } = await supabase
       .from('fp_transacoes')
       .select('id, status, data_vencimento, descricao, valor')
       .eq('status', 'previsto')
-    
-    console.log('📊 Total de transações previstas:', todasPrevistas?.length || 0)
-    console.log('📋 Amostra de transações previstas:', todasPrevistas?.slice(0, 3))
     
     if (errorTodasPrevistas) {
       console.error('❌ Erro ao buscar todas previstas:', errorTodasPrevistas)
@@ -175,11 +163,6 @@ export async function obterProximasContas(): Promise<ProximaConta[]> {
       .order('data_vencimento', { ascending: true })
       .limit(10)
 
-    console.log('🎯 Resultado da query principal:', {
-      count: data?.length || 0,
-      error: error,
-      sample: data?.slice(0, 2)
-    })
 
     if (error) {
       console.error('❌ Erro na query principal:', error)
@@ -188,15 +171,8 @@ export async function obterProximasContas(): Promise<ProximaConta[]> {
 
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
-    console.log('📅 Data de hoje para cálculo:', hoje.toISOString().split('T')[0])
 
     const resultado = data?.map(item => {
-      console.log('🔧 Processando item:', {
-        id: item.id,
-        descricao: item.descricao,
-        data_vencimento: item.data_vencimento,
-        categoria: item.fp_categorias
-      })
 
       const vencimento = new Date(item.data_vencimento + 'T00:00:00')
       const diasRestantes = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
@@ -216,7 +192,6 @@ export async function obterProximasContas(): Promise<ProximaConta[]> {
       }
     }) || []
 
-    console.log('✅ Resultado final processado:', resultado)
     return resultado
 
   } catch (error) {
@@ -294,7 +269,6 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
       throw categoriasError
     }
 
-    console.log('📋 Categorias encontradas:', categorias?.length)
 
     // 2. Buscar gastos por categoria no período (todos os status)
     const { data: gastos, error: gastosError } = await supabase
@@ -309,7 +283,6 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
       throw gastosError
     }
 
-    console.log('💰 Gastos encontrados:', gastos?.length)
 
     // 3. Processar dados: agrupar gastos por categoria
     const gastosPorCategoria: { [key: string]: number } = {}
@@ -336,12 +309,9 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
 
       if (!metasMensaisError && metasMensais && metasMensais.length > 0) {
         metas = metasMensais.map(m => ({ categoria_id: m.categoria_id, valor_limite: m.valor_meta }))
-        console.log('🎯 Metas (fp_metas_mensais) encontradas:', metas.length)
       } else {
-        console.log('⚠️ fp_metas_mensais vazia ou com erro:', metasMensaisError)
       }
     } catch (error) {
-      console.log('❌ Erro ao buscar metas mensais:', error)
     }
 
     // 5. Processar dados: mapear metas por categoria
@@ -391,7 +361,6 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
 // Função para obter saldos das contas bancárias (excluindo cartões)
 export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalSaldo: number }> {
   try {
-    console.log('🏦 [V2-FIXED] Iniciando busca por saldos das contas...')
     
     // Buscar todas as contas exceto cartões de crédito (campos corretos da tabela)
     const { data: contas, error: contasError } = await supabase
@@ -406,7 +375,6 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
       throw contasError
     }
 
-    console.log('📊 Contas encontradas:', contas?.length || 0)
 
     // Para cada conta, calcular saldo e buscar últimas 5 movimentações
     const contasComMovimentacoes = await Promise.all(
@@ -464,10 +432,6 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
     // Calcular total de saldos
     const totalSaldo = contasComMovimentacoes.reduce((total, conta) => total + conta.saldo, 0)
 
-    console.log('✅ Processamento concluído:', {
-      totalContas: contasComMovimentacoes.length,
-      totalSaldo: totalSaldo
-    })
 
     return {
       contas: contasComMovimentacoes,
@@ -477,5 +441,98 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
   } catch (error) {
     console.error('💥 Erro ao obter saldos das contas:', error)
     return { contas: [], totalSaldo: 0 }
+  }
+}
+
+// Função para obter cartões de crédito individuais
+export async function obterCartoesCredito(): Promise<{ cartoes: CartaoData[]; totalUsado: number; totalLimite: number }> {
+  try {
+    
+    // Buscar todos os cartões de crédito
+    const { data: cartoes, error: cartoesError } = await supabase
+      .from('fp_contas')
+      .select('id, nome, banco, limite, data_fechamento')
+      .eq('tipo', 'cartao_credito')
+      .eq('ativo', true)
+      .order('nome', { ascending: true })
+
+    if (cartoesError) {
+      console.error('❌ Erro ao buscar cartões:', cartoesError)
+      throw cartoesError
+    }
+
+    // Para cada cartão, calcular valor usado e buscar últimas transações
+    const cartoesComTransacoes = await Promise.all(
+      (cartoes || []).map(async (cartao) => {
+        // Buscar despesas do cartão (valor usado)
+        const { data: despesas } = await supabase
+          .from('fp_transacoes')
+          .select('valor')
+          .eq('conta_id', cartao.id)
+          .eq('tipo', 'despesa')
+          .eq('status', 'realizado')
+
+        // Calcular valor usado
+        const valorUsado = despesas?.reduce((acc, despesa) => {
+          return acc + Number(despesa.valor || 0)
+        }, 0) || 0
+
+        // Buscar últimas 5 transações para o hover
+        const { data: transacoes } = await supabase
+          .from('fp_transacoes')
+          .select('descricao, valor, data, tipo')
+          .eq('conta_id', cartao.id)
+          .eq('status', 'realizado')
+          .order('data', { ascending: false })
+          .limit(5)
+
+        const limite = Number(cartao.limite || 0)
+        const percentual = limite > 0 ? Math.round((valorUsado / limite) * 100) : 0
+
+        // Calcular próximo vencimento baseado no dia de fechamento
+        const calcularProximoVencimento = (dataFechamento: number) => {
+          const hoje = new Date()
+          const proximoVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), dataFechamento + 21) // 21 dias após fechamento
+          
+          // Se já passou, vai para o próximo mês
+          if (proximoVencimento < hoje) {
+            proximoVencimento.setMonth(proximoVencimento.getMonth() + 1)
+          }
+          
+          return proximoVencimento.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+        }
+
+        return {
+          id: cartao.id.toString(),
+          nome: cartao.nome || 'Cartão sem nome',
+          banco: cartao.banco || 'Banco',
+          usado: valorUsado,
+          limite: limite,
+          dataFechamento: cartao.data_fechamento || 1,
+          vencimento: calcularProximoVencimento(cartao.data_fechamento || 1),
+          percentual: percentual,
+          ultimasTransacoes: transacoes?.map(trans => ({
+            descricao: trans.descricao || 'Transação',
+            valor: Number(trans.valor || 0),
+            data: trans.data,
+            tipo: trans.tipo as 'receita' | 'despesa'
+          })) || []
+        }
+      })
+    )
+
+    // Calcular totais
+    const totalUsado = cartoesComTransacoes.reduce((total, cartao) => total + cartao.usado, 0)
+    const totalLimite = cartoesComTransacoes.reduce((total, cartao) => total + cartao.limite, 0)
+
+    return {
+      cartoes: cartoesComTransacoes,
+      totalUsado,
+      totalLimite
+    }
+
+  } catch (error) {
+    console.error('💥 Erro ao obter cartões de crédito:', error)
+    return { cartoes: [], totalUsado: 0, totalLimite: 0 }
   }
 }

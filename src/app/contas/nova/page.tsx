@@ -44,6 +44,7 @@ export default function NovaContaPage() {
     tipo: '' as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro' | '',
     banco: '',
     limite: '' as string | number | '',
+    data_fechamento: '' as string | number | '',
     ativo: true
   })
   const [erros, setErros] = useState<string[]>([])
@@ -67,6 +68,14 @@ export default function NovaContaPage() {
         novosErros.push('Limite é obrigatório para cartão de crédito')
       } else if (isNaN(valorLimite) || valorLimite < 0) {
         novosErros.push('Limite deve ser um número maior ou igual a 0')
+      }
+
+      // Data de fechamento obrigatória para cartão de crédito
+      const diaFechamento = dados.data_fechamento === '' ? '' : Number(dados.data_fechamento)
+      if (diaFechamento === '') {
+        novosErros.push('Data de fechamento é obrigatória para cartão de crédito')
+      } else if (isNaN(diaFechamento) || diaFechamento < 1 || diaFechamento > 31) {
+        novosErros.push('Data de fechamento deve ser entre 1 e 31')
       }
     }
 
@@ -99,6 +108,7 @@ export default function NovaContaPage() {
         tipo: dados.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
         banco: dados.banco.trim() || null,
         limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || null : null,
+        data_fechamento: dados.tipo === 'cartao_credito' ? Number(dados.data_fechamento) || null : null,
         ativo: dados.ativo
       })
 
@@ -230,22 +240,41 @@ export default function NovaContaPage() {
                 </div>
               )}
 
-              {/* Limite (apenas para cartão de crédito) */}
+              {/* Limite e Data de Fechamento (apenas para cartão de crédito) */}
               {dados.tipo === 'cartao_credito' && (
-                <div className="space-y-2">
-                  <Label htmlFor="limite">Limite do cartão (R$) *</Label>
-                  <Input
-                    id="limite"
-                    type="number"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="Ex: 5000.00"
-                    value={dados.limite}
-                    onChange={(e) => setDados(prev => ({ ...prev, limite: e.target.value }))}
-                    disabled={carregando}
-                    className={erros.some(e => e.toLowerCase().includes('limite')) ? 'border-destructive' : ''}
-                  />
-                  <p className="text-xs text-muted-foreground">Aceita centavos e permite 0.</p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="limite">Limite do cartão (R$) *</Label>
+                    <Input
+                      id="limite"
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="Ex: 5000.00"
+                      value={dados.limite}
+                      onChange={(e) => setDados(prev => ({ ...prev, limite: e.target.value }))}
+                      disabled={carregando}
+                      className={erros.some(e => e.toLowerCase().includes('limite')) ? 'border-destructive' : ''}
+                    />
+                    <p className="text-xs text-muted-foreground">Aceita centavos e permite 0.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="data_fechamento">Dia de fechamento da fatura *</Label>
+                    <Input
+                      id="data_fechamento"
+                      type="number"
+                      min="1"
+                      max="31"
+                      inputMode="numeric"
+                      placeholder="Ex: 15"
+                      value={dados.data_fechamento}
+                      onChange={(e) => setDados(prev => ({ ...prev, data_fechamento: e.target.value }))}
+                      disabled={carregando}
+                      className={erros.some(e => e.toLowerCase().includes('fechamento')) ? 'border-destructive' : ''}
+                    />
+                    <p className="text-xs text-muted-foreground">Dia do mês que a fatura fecha (1 a 31).</p>
+                  </div>
                 </div>
               )}
 

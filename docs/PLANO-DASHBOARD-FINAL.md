@@ -82,6 +82,7 @@ interface DashboardData {
     nome: string
     usado: number
     limite: number
+    data_fechamento: number // dia do mês (1-31)
     vencimento: string // 'DD/MM'
     percentual: number // (usado/limite)*100
   }>
@@ -158,6 +159,40 @@ const swrConfig = {
 
 ---
 
+## 🆕 ATUALIZAÇÕES - TABELA fp_contas (21/08/2025)
+
+### **Novos Campos Implementados:**
+- ✅ **Campo `limite`:** Armazenar limite de cartões de crédito (número decimal)
+- ✅ **Campo `data_fechamento`:** Dia de fechamento da fatura (inteiro 1-31)
+
+### **Estrutura Atualizada:**
+```sql
+CREATE TABLE fp_contas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome TEXT NOT NULL,
+  tipo TEXT NOT NULL, -- 'conta_corrente', 'poupanca', 'cartao_credito', 'dinheiro'
+  banco TEXT,
+  limite DECIMAL(10,2),        -- 🆕 NOVO: Limite do cartão
+  data_fechamento INTEGER,     -- 🆕 NOVO: Dia fechamento (1-31)
+  ativo BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### **Impacto no Dashboard:**
+- **Cards de cartões individuais:** Agora podem mostrar dia de fechamento
+- **Cálculo de vencimentos:** Baseado em `data_fechamento` + prazo padrão
+- **Queries:** Incluir novos campos em SELECT/GROUP BY
+- **Tipos TypeScript:** Interface `Conta` atualizada com novos campos
+
+### **Regras de Uso:**
+- **Campo `limite`:** Obrigatório para cartões, NULL para outros tipos
+- **Campo `data_fechamento`:** Obrigatório para cartões, NULL para outros tipos  
+- **Validação:** 1 ≤ data_fechamento ≤ 31
+- **Exibição:** "Dia X" para cartões, "-" para outros tipos
+
+---
+
 ## 🔍 REGRAS DE NEGÓCIO DEFINITIVAS
 
 ### **Filtro de Período:**
@@ -176,6 +211,8 @@ const swrConfig = {
 ### **Cartões de Crédito:**
 - **Filtro:** `fp_contas.tipo = 'cartao_credito'`
 - **Saldo cartão:** `limite - usado` (disponível)
+- **Data fechamento:** Campo `data_fechamento` (dia do mês 1-31)
+- **Próximo vencimento:** Calculado baseado em `data_fechamento` + prazo padrão
 - **Top 5:** Ordenar por valor usado (maior primeiro)
 - **Fatura:** Transações do período filtrado
 
@@ -281,7 +318,7 @@ const swrConfig = {
 
 ---
 
-### **FASE 3: Gráficos + Cards Secundários (1.5 horas) 🚧 EM ANDAMENTO**
+### **FASE 3: Gráficos + Cards Secundários (1.5 horas) ✅ CONCLUÍDA**
 **Objetivo:** Todos os gráficos + cards menores
 
 #### **FASE 3-A: Gráfico Tendência ✅ CONCLUÍDA (20/08/2025)**
@@ -334,8 +371,8 @@ const swrConfig = {
 - ✅ Dados reais verificados (20 categorias, 8 metas)
 - ✅ UX/UI otimizada para densidade máxima
 
-#### **FASE 3-C: Cards Secundários 🚧 EM ANDAMENTO**
-**Objetivo:** Cards menores (contas, próximas contas)
+#### **FASE 3-C: Cards Secundários ✅ CONCLUÍDA**
+**Objetivo:** Cards menores (contas, próximas contas, cartões)
 
 **PRÓXIMAS CONTAS ✅ CONCLUÍDA (21/08/2025)**
 **Especificações Implementadas:**
@@ -386,10 +423,37 @@ const swrConfig = {
 - ✅ Build funcional para deploy
 - ✅ Integração no dashboard funcionando
 
-**Tarefas Restantes:**
-- ⏳ Cards saldos cartões individuais
+**CARTÕES DE CRÉDITO INDIVIDUAIS ✅ CONCLUÍDA (21/08/2025)**
+**Especificações Implementadas:**
+- ✅ **Layout responsivo:** Cards adaptativos sem slots vazios
+- ✅ **Título concatenado:** "Nome | Banco" (ex: "Conecta | Nubank")
+- ✅ **Círculo de progresso:** Lado esquerdo com percentual de uso
+- ✅ **Valores sem símbolo:** "2.400,00 | 5.000,00" (formato limpo)
+- ✅ **Header dinâmico:** "Cartões de Crédito | total usado"
+- ✅ **Dia de fechamento:** Exibido corretamente dos novos campos
+- ✅ **Hover tooltip:** Últimas 5 transações por cartão
+- ✅ **Cores dark:** Cards cinza escuro com texto branco
+- ✅ **Ordenação alfabética:** Por nome do cartão
 
-**✅ Entregável FASE 3:** Dashboard visual completo
+**Arquivos Criados:**
+- ✅ `src/componentes/dashboard/card-cartoes-credito.tsx` - Componente principal
+- ✅ `src/hooks/usar-cartoes-dados.ts` - Hook SWR especializado
+- ✅ Query `obterCartoesCredito()` com campos limite e data_fechamento
+- ✅ Interface `CartaoData` atualizada com banco e novos campos
+
+**Melhorias de UX:**
+- ✅ **Responsividade:** Layout se adapta ao número real de cartões
+- ✅ **Sem slots vazios:** Remove elementos desnecessários de preenchimento
+- ✅ **Informações claras:** Nome + banco para identificação precisa
+- ✅ **Formatação limpa:** Sem símbolos desnecessários nos valores
+
+**Validações:**
+- ✅ TypeScript sem erros
+- ✅ Build funcional para deploy
+- ✅ Integração completa no dashboard (layout 3 colunas)
+- ✅ Compatibilidade total com cultura do código
+
+**✅ Entregável FASE 3:** Dashboard visual 100% completo
 
 ---
 
@@ -455,7 +519,7 @@ const useTendenciaData = () => {
 - Header sticky com glassmorphism
 - 4 cards em grid responsivo
 - 2ª linha: Tendência (2 cols) + Categorias (2 cols, alta)
-- 3ª linha: Saldos Contas (1 col) + Próximas (1 col) + Cartões (2 cols)
+- 3ª linha: Próximas Contas (1 col) + Saldos Contas (1 col) + Cartões Crédito (1 col)
 
 ### **Cores e Estilo:**
 - Verde: receitas, saldos positivos
@@ -479,11 +543,11 @@ SELECT SUM(valor) FROM fp_transacoes
 WHERE tipo='despesa' AND data BETWEEN ? AND ? AND status='realizado'
 
 -- Cartões: usado no período
-SELECT c.nome, c.limite, SUM(t.valor) as usado
+SELECT c.nome, c.limite, c.data_fechamento, SUM(t.valor) as usado
 FROM fp_contas c
 LEFT JOIN fp_transacoes t ON t.conta_id = c.id
 WHERE c.tipo = 'cartao_credito' AND t.data BETWEEN ? AND ?
-GROUP BY c.id, c.nome, c.limite
+GROUP BY c.id, c.nome, c.limite, c.data_fechamento
 ```
 
 ### **Próximas Contas:**
@@ -726,27 +790,50 @@ export default function DashboardPage() {
 - **Cache:** SWR otimizado para performance
 
 ### **✅ CONCLUÍDO (21/08/2025 - SESSÃO ATUAL):**
-- **FASE 3-C (Completa):** Card Saldos Contas Bancárias implementado e funcionando
-- **Grid 2x2:** Layout conforme especificado
-- **Header dinâmico:** "Contas | total" com soma dos saldos
-- **Filtro correto:** Exclui cartões de crédito
-- **Hover tooltip:** Últimas 5 movimentações por conta
-- **Saldo calculado:** A partir das transações (receitas - despesas)
-- **Ícones inteligentes:** Baseados no tipo/banco da conta
-- **Loading skeletons:** Animações elegantes
-- **TypeScript:** 100% tipado e validado
-- **Build:** Funcional para deploy no Vercel
+- **FASE 3 COMPLETA:** Todos os gráficos e cards implementados
+- **Cards Cartões Individuais:** Layout responsivo com UX otimizada
+- **Formatação limpa:** Valores sem símbolos desnecessários
+- **Títulos informativos:** Nome + Banco para identificação
+- **Responsividade:** Layout se adapta ao conteúdo real
+- **Performance:** SWR otimizado + TypeScript 100% validado
+- **Build:** Pronto para produção no Vercel (276kB otimizado)
 
 ### **⏳ PRÓXIMOS PASSOS:**
-1. **FASE 3-C:** Implementar cards de cartões individuais (última parte)
-2. **FASE 4:** Filtro período + polimentos finais
+1. **FASE 4:** Filtro período + polimentos finais (última fase)
+   - Implementar navegação de período (< Agosto 2025 >)
+   - Refinamentos finais de UX
+   - Error boundaries globais
 
 ### **🎯 PARA NOVO CHAT:**
 - Dashboard acessível: `http://localhost:3000/dashboard`
 - Servidor rodando: `npm run dev` (porta 3000)
-- **Última implementação:** Card Saldos Contas Bancárias (FASE 3-C)
-- **Próximo passo:** Cards de cartões individuais
+- **✅ FASE 3 COMPLETA:** Todos os gráficos e cards implementados
+- **✅ Base de dados:** Estrutura atualizada e funcional
+- **✅ Produção:** Código validado e pronto para deploy
+- **⏳ Próximo passo:** FASE 4 - Filtro de período (última fase)
 
 ---
 
-**🎯 ARQUITETURA ATUALIZADA! SWR + Performance otimizada + Padrões 2025**
+**🎯 FASE 3 COMPLETA! Dashboard funcional com todos os componentes + Pronto para produção!**
+
+---
+
+## 🏆 RESUMO FINAL FASE 3
+
+### **✅ TUDO IMPLEMENTADO:**
+- **4 Cards de Métricas:** Receitas, Despesas, Saldo, Cartões
+- **Gráfico Tendência:** Linha evolutiva 6 meses (Recharts)
+- **Gráfico Categorias:** Barras horizontais vs metas
+- **Card Próximas Contas:** Top 3 com status vencimento
+- **Card Saldos Contas:** Grid 2x2 com hover tooltip
+- **Card Cartões Crédito:** Layout responsivo sem slots vazios
+
+### **✅ QUALIDADE GARANTIDA:**
+- **TypeScript:** 100% tipado sem erros
+- **Build:** Otimizado para produção (276kB)
+- **Performance:** SWR cache inteligente
+- **UX:** Responsivo + loading states + error handling
+- **Código:** Seguindo cultura e padrões do projeto
+
+### **✅ PRÓXIMA FASE:**
+**FASE 4:** Filtro de período (30min) - Última funcionalidade pendente

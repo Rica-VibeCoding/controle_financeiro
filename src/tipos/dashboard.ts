@@ -104,11 +104,20 @@ export interface CategoriaData {
 
 // Interface para cartões
 export interface CartaoData {
+  id: string
   nome: string
+  banco: string
   usado: number
   limite: number
-  vencimento: string
+  dataFechamento: number  // dia do mês (1-31)
+  vencimento: string      // calculado: DD/MM
   percentual: number
+  ultimasTransacoes?: Array<{
+    descricao: string
+    valor: number
+    data: string
+    tipo: 'receita' | 'despesa'
+  }>
 }
 
 // Interface para contas bancárias (excluindo cartões)

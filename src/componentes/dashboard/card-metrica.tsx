@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Wallet, PiggyBank } from 'lucide-react'
+import { TrendingUp, TrendingDown, CreditCard, Wallet } from 'lucide-react'
 
 interface CardMetricaProps {
   titulo: string

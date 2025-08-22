@@ -62,6 +62,7 @@ export interface Database {
           tipo: string
           banco: string | null
           limite: number | null
+          data_fechamento: number | null
           ativo: boolean
           created_at: string
         }
@@ -71,6 +72,7 @@ export interface Database {
           tipo: string
           banco?: string | null
           limite?: number | null
+          data_fechamento?: number | null
           ativo?: boolean
           created_at?: string
         }
@@ -80,6 +82,7 @@ export interface Database {
           tipo?: string
           banco?: string | null
           limite?: number | null
+          data_fechamento?: number | null
           ativo?: boolean
           created_at?: string
         }
@@ -118,6 +121,11 @@ export interface Database {
           cor: string
           ativo: boolean
           created_at: string
+          valor_orcamento: number | null
+          data_inicio: string
+          data_fim: string
+          arquivado: boolean
+          data_arquivamento: string | null
         }
         Insert: {
           id?: string
@@ -126,6 +134,11 @@ export interface Database {
           cor?: string
           ativo?: boolean
           created_at?: string
+          valor_orcamento?: number | null
+          data_inicio?: string
+          data_fim?: string
+          arquivado?: boolean
+          data_arquivamento?: string | null
         }
         Update: {
           id?: string
@@ -134,6 +147,11 @@ export interface Database {
           cor?: string
           ativo?: boolean
           created_at?: string
+          valor_orcamento?: number | null
+          data_inicio?: string
+          data_fim?: string
+          arquivado?: boolean
+          data_arquivamento?: string | null
         }
       }
       fp_transacoes: {

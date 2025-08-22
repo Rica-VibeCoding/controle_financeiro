@@ -92,6 +92,7 @@ export default function ContasPage() {
                   <TableHead className="w-[150px] font-semibold">Tipo</TableHead>
                   <TableHead className="w-[120px] font-semibold">Banco</TableHead>
                   <TableHead className="w-[130px] font-semibold text-right">Limite</TableHead>
+                  <TableHead className="w-[100px] font-semibold text-center">Fechamento</TableHead>
                   <TableHead className="w-[130px] font-semibold text-right">Saldo</TableHead>
                   <TableHead className="w-[120px] font-semibold text-center">Status</TableHead>
                   <TableHead className="w-[130px] font-semibold text-center">Ações</TableHead>
@@ -100,7 +101,7 @@ export default function ContasPage() {
               <TableBody>
                 {contas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       <div className="space-y-2">
                         <div className="text-4xl">🏦</div>
                         <p>Nenhuma conta cadastrada</p>
@@ -144,6 +145,15 @@ export default function ContasPage() {
                         {conta.tipo === 'cartao_credito' && (conta as any).limite != null ? (
                           <span className="text-muted-foreground">
                             {(Number((conta as any).limite) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {conta.tipo === 'cartao_credito' && (conta as any).data_fechamento != null ? (
+                          <span className="text-muted-foreground">
+                            Dia {(conta as any).data_fechamento}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">-</span>

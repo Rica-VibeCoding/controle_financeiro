@@ -6,6 +6,8 @@ import { GraficoTendencia } from '@/componentes/dashboard/grafico-tendencia'
 import { GraficoCategorias } from '@/componentes/dashboard/grafico-categorias'
 import { CardProximaConta } from '@/componentes/dashboard/card-proxima-conta'
 import { CardSaldosContas } from '@/componentes/dashboard/card-saldos-contas'
+import { CardCartoesCredito } from '@/componentes/dashboard/card-cartoes-credito'
+import { CardProjetosPessoais } from '@/componentes/dashboard/card-projetos-pessoais-simples'
 import { useCardsData } from '@/hooks/usar-cards-dados'
 import { usePeriodo } from '@/hooks/usar-periodo'
 
@@ -88,13 +90,21 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           <div style={{ animationDelay: '0.7s' }}>
             <CardProximaConta limite={3} />
           </div>
           
           <div style={{ animationDelay: '0.8s' }}>
             <CardSaldosContas />
+          </div>
+          
+          <div style={{ animationDelay: '0.9s' }}>
+            <CardCartoesCredito />
+          </div>
+          
+          <div style={{ animationDelay: '1.0s' }}>
+            <CardProjetosPessoais limite={4} />
           </div>
         </div>
       </div>

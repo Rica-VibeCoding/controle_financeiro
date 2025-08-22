@@ -11,6 +11,12 @@ import {
 } from '@/tipos/projetos-pessoais'
 import { CentroCusto } from '@/tipos/database'
 
+// Interface para transações tipadas
+interface TransacaoFinanceira {
+  valor: number
+  tipo: 'receita' | 'despesa' | 'transferencia'
+}
+
 // Função principal: wrapper semântico sobre centros de custo
 export async function obterProjetosPessoais(
   filtros: FiltroProjetosPessoais = {}
@@ -39,8 +45,13 @@ export async function obterProjetosPessoais(
     }
 
     // 2. Converter cada centro em projeto com cálculos
-    const projetos = await Promise.all(
+    const projetosBrutos = await Promise.all(
       centrosCusto.map(centro => converterParaProjetoPessoal(centro, filtros))
+    )
+
+    // 3. Filtrar apenas projetos com movimentação (receitas OU despesas > 0)
+    const projetos = projetosBrutos.filter(projeto => 
+      projeto.total_receitas > 0 || projeto.total_despesas > 0
     )
 
     // 3. Gerar resumo geral
@@ -83,7 +94,7 @@ async function converterParaProjetoPessoal(
     percentual_principal: status.percentual,
     label_percentual: status.label,
     valor_restante_orcamento: modoCalculo === 'orcamento' 
-      ? (centro.valor_orcamento! - calculos.despesas) 
+      ? Math.max(0, centro.valor_orcamento! - calculos.despesas)
       : null,
     status_cor: status.cor,
     status_descricao: status.descricao,
@@ -117,14 +128,14 @@ async function calcularFinanceirosProjeto(
   if (error) throw error
   if (!transacoes) return { receitas: 0, despesas: 0, resultado: 0 }
 
-  // Somar por tipo
+  // Somar por tipo com tipagem adequada
   const receitas = transacoes
-    .filter((t: any) => t.tipo === 'receita')
-    .reduce((sum: number, t: any) => sum + Number(t.valor), 0)
+    .filter((t: TransacaoFinanceira) => t.tipo === 'receita')
+    .reduce((sum: number, t: TransacaoFinanceira) => sum + Number(t.valor), 0)
 
   const despesas = transacoes
-    .filter((t: any) => t.tipo === 'despesa')
-    .reduce((sum: number, t: any) => sum + Number(t.valor), 0)
+    .filter((t: TransacaoFinanceira) => t.tipo === 'despesa')
+    .reduce((sum: number, t: TransacaoFinanceira) => sum + Number(t.valor), 0)
 
   const resultado = receitas - despesas
 
@@ -165,7 +176,7 @@ function calcularStatusProjeto(
       }
     }
   } else {
-    // Modo ROI: % de retorno
+    // Modo ROI: % de retorno sobre investimento
     if (calculos.receitas === 0) {
       return {
         cor: 'cinza',
@@ -175,8 +186,10 @@ function calcularStatusProjeto(
       }
     }
 
+    // ROI correto: ((Receitas - Despesas) / Despesas) * 100
+    // Se não há despesas mas há receitas = 100% de retorno
     const roi = calculos.despesas > 0 
-      ? ((calculos.resultado / calculos.despesas) * 100)
+      ? ((calculos.receitas - calculos.despesas) / calculos.despesas) * 100
       : (calculos.receitas > 0 ? 100 : 0)
 
     if (roi >= 0) {

@@ -26,26 +26,13 @@ export function useProjetosData(filtros: FiltroProjetosPessoais = {}) {
 export function useProjetosDashboard() {
   return useSWR<ProjetosPessoaisData>(
     'projetos-pessoais-dashboard',
-    async () => {
-      console.log('🔄 Carregando projetos pessoais...')
-      try {
-        const result = await obterProjetosPessoais({ apenas_ativos: true })
-        console.log('✅ Projetos carregados:', result)
-        return result
-      } catch (error) {
-        console.error('❌ Erro ao carregar projetos:', error)
-        throw error
-      }
-    },
+    () => obterProjetosPessoais({ apenas_ativos: true }),
     {
       refreshInterval: 60000,
       revalidateOnFocus: false,
       dedupingInterval: 15000,
       // Prioridade alta para dados do dashboard
-      suspense: false,
-      onError: (error) => {
-        console.error('SWR Error:', error)
-      }
+      suspense: false
     }
   )
 }

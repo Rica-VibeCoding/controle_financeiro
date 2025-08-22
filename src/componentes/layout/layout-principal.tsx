@@ -16,9 +16,9 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
   const { toasts, removerToast } = usarToast()
 
   return (
-    <div className="min-h-screen">
+    <div className="h-screen flex flex-col">
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="flex">
+      <div className="flex-1 flex min-h-0">
         {/* Sidebar Desktop */}
         <div className="hidden lg:block">
           <Sidebar />
@@ -37,7 +37,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
           </>
         )}
         
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

@@ -7,7 +7,7 @@ import { GraficoCategorias } from '@/componentes/dashboard/grafico-categorias'
 import { CardProximaConta } from '@/componentes/dashboard/card-proxima-conta'
 import { CardSaldosContas } from '@/componentes/dashboard/card-saldos-contas'
 import { CardCartoesCredito } from '@/componentes/dashboard/card-cartoes-credito'
-import { CardProjetosPessoais } from '@/componentes/dashboard/card-projetos-pessoais-simples'
+import { CardProjetosPessoais } from '@/componentes/dashboard/card-projetos-melhorado'
 import { useCardsData } from '@/hooks/usar-cards-dados'
 import { usePeriodo } from '@/hooks/usar-periodo'
 

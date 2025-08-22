@@ -69,7 +69,7 @@ export function Sidebar() {
   }, [isCadastroActive])
 
   return (
-    <aside className="w-64 bg-sidebar border-r border-border min-h-screen p-4 backdrop-blur-sm">
+    <aside className="w-64 bg-sidebar border-r border-border lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] h-full overflow-y-auto p-4 backdrop-blur-sm">
       <nav className="space-y-2">
         {menuItems.map((item) => (
           <Link

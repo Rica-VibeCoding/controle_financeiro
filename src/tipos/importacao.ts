@@ -5,6 +5,12 @@ export interface LinhaCSV {
   Descrição: string
 }
 
+export interface LinhaCartao {
+  date: string
+  title: string
+  amount: string
+}
+
 export interface TransacaoImportada {
   data: string
   valor: number
@@ -13,6 +19,9 @@ export interface TransacaoImportada {
   conta_id: string
   tipo: 'receita' | 'despesa'
 }
+
+// Union type para suportar múltiplos formatos
+export type LinhaCSVUniversal = LinhaCSV | LinhaCartao
 
 export interface ResultadoImportacao {
   total: number

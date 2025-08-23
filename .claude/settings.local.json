@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl:*)"
+      "mcp__supabase__execute_sql"
     ],
     "deny": [],
     "ask": [],

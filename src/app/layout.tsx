@@ -19,6 +19,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Controle Financeiro",
   description: "Sistema de controle financeiro pessoal",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Controle Financeiro",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#059669",
 };
 
 export default function RootLayout({

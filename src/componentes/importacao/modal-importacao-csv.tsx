@@ -7,7 +7,7 @@ import { UploadCSV } from './upload-csv'
 import { SeletorConta } from './seletor-conta'
 import { usarToast } from '@/hooks/usar-toast'
 import { processarCSV } from '@/servicos/importacao/processador-csv'
-import { mapearLinhasNubank } from '@/servicos/importacao/mapeador-nubank'
+import { detectarFormato } from '@/servicos/importacao/detector-formato'
 import { verificarDuplicatas } from '@/servicos/importacao/validador-duplicatas'
 import { importarTransacoes } from '@/servicos/importacao/importador-transacoes'
 import { PreviewImportacao } from './preview-importacao'
@@ -32,21 +32,32 @@ export function ModalImportacaoCSV({
   const [transacoesMapeadas, setTransacoesMapeadas] = useState<TransacaoImportada[]>([])
   const [duplicadas, setDuplicadas] = useState<TransacaoImportada[]>([])
   const [mostrarPreview, setMostrarPreview] = useState(false)
+  const [formatoDetectado, setFormatoDetectado] = useState<any>(null)
   
   const { erro, info, sucesso } = usarToast()
 
   const handleArquivoSelecionado = async (file: File | null) => {
     setArquivo(file)
     setDadosProcessados([])
+    setFormatoDetectado(null)
     
     if (file) {
       setCarregando(true)
       try {
         const linhasCSV = await processarCSV(file)
-        sucesso(`Arquivo processado: ${linhasCSV.length} transações encontradas`)
+        
+        // Tentar detectar formato
+        const formato = detectarFormato(linhasCSV)
+        setFormatoDetectado(formato)
+        
+        sucesso(`${formato.icone} ${formato.nome} detectado: ${linhasCSV.length} transações`)
         setDadosProcessados(linhasCSV)
       } catch (error) {
-        erro('Erro ao processar arquivo CSV')
+        if (error instanceof Error && error.message.includes('formato não reconhecido')) {
+          erro('Formato CSV não reconhecido. Verifique se é um arquivo de banco suportado.')
+        } else {
+          erro('Erro ao processar arquivo CSV')
+        }
         logger.error(error)
       } finally {
         setCarregando(false)
@@ -62,8 +73,10 @@ export function ModalImportacaoCSV({
 
     setCarregando(true)
     try {
-      // Mapear dados
-      const transacoesMap = mapearLinhasNubank(dadosProcessados, contaSelecionada)
+      // Detectar formato e mapear dados
+      const formato = detectarFormato(dadosProcessados)
+      setFormatoDetectado(formato)
+      const transacoesMap = formato.mapeador(dadosProcessados, contaSelecionada)
       
       // Verificar duplicatas
       const { novas, duplicadas: dups } = await verificarDuplicatas(transacoesMap)
@@ -72,7 +85,7 @@ export function ModalImportacaoCSV({
       setDuplicadas(dups)
       setMostrarPreview(true)
       
-      sucesso(`${novas.length} transações prontas para importar. ${dups.length} duplicadas encontradas.`)
+      sucesso(`${formato.icone} ${formato.nome}: ${novas.length} transações prontas para importar. ${dups.length} duplicadas encontradas.`)
     } catch (error) {
       erro('Erro ao processar transações')
       logger.error(error)
@@ -116,6 +129,7 @@ export function ModalImportacaoCSV({
     setMostrarPreview(false)
     setTransacoesMapeadas([])
     setDuplicadas([])
+    setFormatoDetectado(null)
   }
 
   const handleFechar = () => {
@@ -125,6 +139,7 @@ export function ModalImportacaoCSV({
     setTransacoesMapeadas([])
     setDuplicadas([])
     setMostrarPreview(false)
+    setFormatoDetectado(null)
     onClose()
   }
 
@@ -135,7 +150,7 @@ export function ModalImportacaoCSV({
       title={mostrarPreview ? "📋 Preview da Importação" : "📂 Importar CSV"}
       maxWidth={mostrarPreview ? "xl" : "md"}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {mostrarPreview ? (
           <PreviewImportacao
             transacoes={transacoesMapeadas}
@@ -161,26 +176,56 @@ export function ModalImportacaoCSV({
         />
 
         {/* Preview dos Dados */}
-        {dadosProcessados.length > 0 && (
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h4 className="font-medium text-green-900 mb-2">
-              ✅ Arquivo Processado
-            </h4>
-            <p className="text-sm text-green-700">
-              {dadosProcessados.length} transações encontradas e validadas.
-              <br />Pronto para importar para a conta selecionada.
-            </p>
+        {dadosProcessados.length > 0 && formatoDetectado && (
+          <div className="space-y-3">
+            {/* Formato Detectado */}
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <h4 className="font-medium text-blue-900 mb-1 flex items-center gap-2">
+                🏦 Extrato | {formatoDetectado.nome}
+              </h4>
+              <p className="text-sm text-blue-700">
+                {dadosProcessados.length} transações encontradas e validadas
+              </p>
+            </div>
+
+            {/* Preview Rápido */}
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <h4 className="font-medium text-blue-900 mb-2">📄 Preview dos Dados</h4>
+              <div className="text-xs font-mono text-blue-700 space-y-1 max-h-10 overflow-y-auto">
+                {dadosProcessados.slice(0, 2).map((linha, idx) => (
+                  <div key={idx} className="truncate">
+                    {Object.values(linha as Record<string, unknown>).join(' | ')}
+                  </div>
+                ))}
+                {dadosProcessados.length > 2 && (
+                  <div className="text-blue-600">... e mais {dadosProcessados.length - 2} transações</div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Informações */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-2">Formato Suportado</h4>
-          <p className="text-sm text-blue-700">
-            • Formato Nubank: Data, Valor, Identificador, Descrição<br/>
-            • Evita automaticamente transações duplicadas<br/>
-            • Importa sem categoria (pode categorizar depois)
-          </p>
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <h4 className="font-medium text-blue-900 mb-2">🏦 Formatos Suportados</h4>
+          <div className="text-sm text-blue-700 space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-purple-600">🏦</span>
+              <strong>Nubank:</strong> Data, Valor, Identificador, Descrição
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-blue-600">💳</span>
+              <strong>Cartão de crédito:</strong> date, title, amount
+            </div>
+            <div className="flex items-center gap-2 text-xs text-blue-600 mt-2">
+              <span>⚡</span>
+              Detecção automática - apenas arraste o arquivo!
+            </div>
+            <div className="flex items-center gap-2 text-xs text-blue-600">
+              <span>🔒</span>
+              Evita automaticamente transações duplicadas
+            </div>
+          </div>
         </div>
 
         {/* Botões */}

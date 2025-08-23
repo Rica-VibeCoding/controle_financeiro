@@ -1,11 +1,12 @@
 import { LinhaCSV, TransacaoImportada } from '@/tipos/importacao'
 
 export function mapearLinhasNubank(
-  linhas: LinhaCSV[], 
+  linhas: unknown[], 
   contaId: string
 ): TransacaoImportada[] {
-  return linhas.map((linha, index) => {
+  return linhas.map((linhaRaw, index) => {
     try {
+      const linha = linhaRaw as LinhaCSV
       const valor = parseFloat(linha.Valor)
       if (isNaN(valor)) {
         throw new Error(`Valor inválido na linha ${index + 1}: ${linha.Valor}`)

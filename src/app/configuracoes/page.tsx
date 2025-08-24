@@ -7,10 +7,12 @@ import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { ModalExportar } from '@/componentes/backup/modal-exportar'
 import { ModalImportar } from '@/componentes/backup/modal-importar'
+import { ModalReset } from '@/componentes/backup/modal-reset'
 
 export default function ConfiguracoesPage() {
   const [modalExportarAberto, setModalExportarAberto] = useState(false)
   const [modalImportarAberto, setModalImportarAberto] = useState(false)
+  const [modalResetAberto, setModalResetAberto] = useState(false)
 
   return (
     <LayoutPrincipal>
@@ -71,9 +73,13 @@ export default function ConfiguracoesPage() {
                 <Icone name="file-up" className="w-4 h-4 mr-1" aria-hidden="true" />
                 Importar Dados
               </Button>
-              <Button variant="outline" className="w-full">
-                <Icone name="refresh-ccw" className="w-4 h-4 mr-1" aria-hidden="true" />
-                Backup Automático
+              <Button 
+                variant="outline" 
+                className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                onClick={() => setModalResetAberto(true)}
+              >
+                <Icone name="trash-2" className="w-4 h-4 mr-1" aria-hidden="true" />
+                Reset da Planilha
               </Button>
             </div>
           </CardContent>
@@ -89,6 +95,11 @@ export default function ConfiguracoesPage() {
       <ModalImportar
         isOpen={modalImportarAberto}
         onClose={() => setModalImportarAberto(false)}
+      />
+      
+      <ModalReset
+        isOpen={modalResetAberto}
+        onClose={() => setModalResetAberto(false)}
       />
     </LayoutPrincipal>
   )

@@ -54,6 +54,23 @@
 - `fp_centros_custo`
 - `fp_metas`
 
+### ⚠️ ALERTA - Mudanças no Schema
+**SEMPRE verificar impactos ao alterar/criar tabelas fp_:**
+
+**Funcionalidades que dependem do schema:**
+- 🔄 **Backup/Restore** (`src/servicos/backup/`)
+- 📊 **Dashboard** (queries e cards)  
+- 📈 **Relatórios** (gráficos e métricas)
+- 🎯 **Metas** (cálculos mensais)
+- 📋 **Importação CSV** (mapeamento de campos)
+
+**Arquivos críticos a revisar:**
+- `src/tipos/backup.ts` - Adicionar novos tipos de exportação
+- `src/servicos/backup/exportador-dados.ts` - Incluir nova tabela
+- `src/servicos/backup/importador-dados.ts` - Atualizar importação
+- `src/servicos/supabase/dashboard-queries.ts` - Verificar queries
+- `src/hooks/usar-*-dados.ts` - Atualizar hooks de dados
+
 
 ## ⚙️ Configuração Atual
 

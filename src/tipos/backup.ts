@@ -200,3 +200,46 @@ export interface ResultadoImportacao {
   advertencias: string[]
   tempoExecucao: number
 }
+
+// Tipos para Reset Personalizado
+export interface ConfiguracaoReset {
+  incluirTransacoes: boolean
+  incluirCategorias: boolean
+  incluirSubcategorias: boolean
+  incluirContas: boolean
+  incluirFormasPagamento: boolean
+  incluirCentrosCusto: boolean
+  incluirMetas: boolean
+  criarBackupAntes: boolean
+}
+
+export interface EstadoReset {
+  resetando: boolean
+  progresso: number
+  etapaAtual: string
+  erro: string | null
+  previewCarregado?: boolean
+  dadosParaReset?: PreviewReset
+}
+
+export interface PreviewReset {
+  totalRegistros: number
+  registrosPorTabela: {
+    [tabela: string]: number
+  }
+  tabelasSelecionadas: string[]
+  ultimoBackup?: string
+}
+
+export interface ResultadoReset {
+  sucesso: boolean
+  totalApagados: number
+  registrosPorTabela: {
+    [tabela: string]: number
+  }
+  backupCriado: boolean
+  nomeBackup?: string
+  erros: string[]
+  advertencias: string[]
+  tempoExecucao: number
+}

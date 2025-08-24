@@ -379,28 +379,57 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
     // Para cada conta, calcular saldo e buscar últimas 5 movimentações
     const contasComMovimentacoes = await Promise.all(
       (contas || []).map(async (conta) => {
-        // Buscar todas as transações da conta para calcular saldo
-        const { data: todasTransacoes } = await supabase
+        // Buscar receitas e despesas normais da conta
+        const { data: transacoesNormais } = await supabase
           .from('fp_transacoes')
           .select('valor, tipo')
           .eq('conta_id', conta.id)
           .eq('status', 'realizado')
+          .in('tipo', ['receita', 'despesa'])
 
-        // Calcular saldo: receitas (+) - despesas (-)
-        const saldo = todasTransacoes?.reduce((acc, transacao) => {
+        // Buscar transferências recebidas (conta como destino)
+        const { data: transferenciasRecebidas } = await supabase
+          .from('fp_transacoes')
+          .select('valor')
+          .eq('conta_destino_id', conta.id)
+          .eq('tipo', 'transferencia')
+          .eq('status', 'realizado')
+
+        // Buscar transferências enviadas (conta como origem)
+        const { data: transferenciasEnviadas } = await supabase
+          .from('fp_transacoes')
+          .select('valor')
+          .eq('conta_id', conta.id)
+          .eq('tipo', 'transferencia')
+          .eq('status', 'realizado')
+
+        // Calcular saldo completo: receitas - despesas + transferências_recebidas - transferências_enviadas
+        let saldo = 0
+        
+        // Receitas e despesas normais
+        transacoesNormais?.forEach(transacao => {
           if (transacao.tipo === 'receita') {
-            return acc + Number(transacao.valor || 0)
+            saldo += Number(transacao.valor || 0)
           } else if (transacao.tipo === 'despesa') {
-            return acc - Number(transacao.valor || 0)
+            saldo -= Number(transacao.valor || 0)
           }
-          return acc
-        }, 0) || 0
+        })
+        
+        // Transferências recebidas (+)
+        transferenciasRecebidas?.forEach(transferencia => {
+          saldo += Number(transferencia.valor || 0)
+        })
+        
+        // Transferências enviadas (-)
+        transferenciasEnviadas?.forEach(transferencia => {
+          saldo -= Number(transferencia.valor || 0)
+        })
 
-        // Buscar últimas 5 movimentações para o hover
+        // Buscar últimas 5 movimentações para o hover (incluindo transferências)
         const { data: movimentacoes } = await supabase
           .from('fp_transacoes')
-          .select('descricao, valor, data, tipo')
-          .eq('conta_id', conta.id)
+          .select('descricao, valor, data, tipo, conta_destino_id')
+          .or(`conta_id.eq.${conta.id},conta_destino_id.eq.${conta.id}`)
           .eq('status', 'realizado')
           .order('data', { ascending: false })
           .limit(5)
@@ -419,12 +448,25 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
           saldo: saldo,
           tipo: conta.tipo || 'outros',
           icone: obterIcone(conta.tipo, conta.banco),
-          ultimasMovimentacoes: movimentacoes?.map(mov => ({
-            descricao: mov.descricao || 'Movimentação',
-            valor: Number(mov.valor || 0),
-            data: mov.data,
-            tipo: mov.tipo as 'receita' | 'despesa'
-          })) || []
+          ultimasMovimentacoes: movimentacoes?.map(mov => {
+            // Para transferências, determinar se é entrada ou saída baseado na conta
+            if (mov.tipo === 'transferencia') {
+              const ehEntrada = mov.conta_destino_id === conta.id
+              return {
+                descricao: mov.descricao || (ehEntrada ? 'Transferência recebida' : 'Transferência enviada'),
+                valor: Number(mov.valor || 0),
+                data: mov.data,
+                tipo: ehEntrada ? 'receita' as const : 'despesa' as const
+              }
+            }
+            // Para receitas e despesas normais
+            return {
+              descricao: mov.descricao || 'Movimentação',
+              valor: Number(mov.valor || 0),
+              data: mov.data,
+              tipo: mov.tipo as 'receita' | 'despesa'
+            }
+          }) || []
         }
       })
     )

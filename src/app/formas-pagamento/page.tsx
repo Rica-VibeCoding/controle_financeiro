@@ -7,6 +7,7 @@ import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
+import { TableContainer } from '@/componentes/ui/table-container'
 import { obterFormasPagamento, excluirFormaPagamento } from '@/servicos/supabase/formas-pagamento'
 import type { FormaPagamento } from '@/tipos/database'
 
@@ -87,15 +88,15 @@ export default function FormasPagamentoPage() {
           </div>
         )}
 
-        <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+        <TableContainer>
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="border-b bg-gray-50/50">
-                <TableHead className="min-w-[200px] font-semibold">Nome</TableHead>
-                <TableHead className="w-[150px] font-semibold">Tipo</TableHead>
-                <TableHead className="w-[150px] font-semibold text-center">Parcelamento</TableHead>
-                <TableHead className="w-[120px] font-semibold text-center">Status</TableHead>
-                <TableHead className="w-[90px] font-semibold text-center">Ações</TableHead>
+                <TableHead className="w-[140px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
+                <TableHead className="w-[100px] font-semibold">Tipo</TableHead>
+                <TableHead className="w-[120px] font-semibold text-center hidden sm:table-cell">Parcelamento</TableHead>
+                <TableHead className="w-[100px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+                <TableHead className="w-[80px] font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -165,7 +166,7 @@ export default function FormasPagamentoPage() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </TableContainer>
 
         <Card>
           <CardHeader>

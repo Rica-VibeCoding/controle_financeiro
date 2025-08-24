@@ -1,14 +1,24 @@
 'use client'
 
-import { TransacaoImportada } from '@/tipos/importacao'
+import { useState } from 'react'
+import { TransacaoImportada, TransacaoClassificada, ResumoClassificacao, DadosClassificacao } from '@/tipos/importacao'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
+import { CardsResumoClassificacao } from './cards-resumo-classificacao'
+import { LinhaTransacaoClassificada } from './linha-transacao-classificada'
+import { ModalClassificacaoRapida } from './modal-classificacao-rapida'
 
 interface PreviewImportacaoProps {
+  // Props originais (manter compatibilidade)
   transacoes: TransacaoImportada[]
   duplicadas: TransacaoImportada[]
   onConfirmar: () => void
   onCancelar: () => void
   carregando?: boolean
+  
+  // Novas props para classificação
+  transacoesClassificadas?: TransacaoClassificada[]
+  resumoClassificacao?: ResumoClassificacao
+  onClassificarTransacao?: (transacao: TransacaoClassificada, dados: DadosClassificacao) => void
 }
 
 export function PreviewImportacao({
@@ -16,72 +26,115 @@ export function PreviewImportacao({
   duplicadas,
   onConfirmar,
   onCancelar,
-  carregando = false
+  carregando = false,
+  transacoesClassificadas,
+  resumoClassificacao,
+  onClassificarTransacao
 }: PreviewImportacaoProps) {
-  const novas = transacoes.filter(t => 
-    !duplicadas.some(d => d.identificador_externo === t.identificador_externo)
-  )
+  
+  const [transacaoParaClassificar, setTransacaoParaClassificar] = 
+    useState<TransacaoClassificada | null>(null)
+
+  // Usar dados classificados se disponíveis, senão fallback para original
+  const usandoClassificacao = transacoesClassificadas && resumoClassificacao
+  
+  // Separar por status para exibição
+  const novas = usandoClassificacao 
+    ? transacoesClassificadas.filter(t => t.status_classificacao !== 'duplicada')
+    : transacoes.filter(t => 
+        !duplicadas.some(d => d.identificador_externo === t.identificador_externo)
+      )
+
+  const duplicadasParaExibir = usandoClassificacao
+    ? transacoesClassificadas.filter(t => t.status_classificacao === 'duplicada')
+    : duplicadas
+
+  const handleClassificarTransacao = (transacao: TransacaoClassificada, dados: DadosClassificacao) => {
+    if (onClassificarTransacao) {
+      onClassificarTransacao(transacao, dados)
+    }
+    setTransacaoParaClassificar(null)
+  }
 
   return (
     <div className="space-y-4">
-      {/* Resumo */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">{novas.length}</div>
-            <div className="text-sm text-muted-foreground">Novas transações</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">{duplicadas.length}</div>
-            <div className="text-sm text-muted-foreground">Duplicadas (ignoradas)</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Cards de Resumo */}
+      {usandoClassificacao ? (
+        <CardsResumoClassificacao resumo={resumoClassificacao} />
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-green-600">{novas.length}</div>
+              <div className="text-sm text-muted-foreground">Novas transações</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-orange-600">{duplicadasParaExibir.length}</div>
+              <div className="text-sm text-muted-foreground">Duplicadas (ignoradas)</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {/* Lista de Transações */}
+      {/* Lista de Transações para Importar */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Transações a Importar</CardTitle>
+          <CardTitle className="text-lg">
+            {usandoClassificacao ? 'Transações Classificadas' : 'Transações a Importar'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="max-h-60 overflow-y-auto space-y-1">
+          <div className="max-h-60 overflow-y-auto space-y-2">
             {novas.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
                 Nenhuma transação nova para importar
               </p>
             ) : (
               novas.map((transacao, index) => (
-                <div 
-                  key={index}
-                  className="flex justify-between items-center p-2 border-b last:border-b-0 hover:bg-gray-50"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate pr-2">
-                      {transacao.descricao.replace(/- •••\.\d+\.\d+-•• - .+$/, '').trim()}
+                usandoClassificacao ? (
+                  <LinhaTransacaoClassificada
+                    key={index}
+                    transacao={transacao as TransacaoClassificada}
+                    onClick={() => {
+                      const transacaoClass = transacao as TransacaoClassificada
+                      if (transacaoClass.status_classificacao === 'pendente') {
+                        setTransacaoParaClassificar(transacaoClass)
+                      }
+                    }}
+                  />
+                ) : (
+                  // Fallback para layout original
+                  <div 
+                    key={index}
+                    className="flex justify-between items-center p-2 border-b last:border-b-0 hover:bg-gray-50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate pr-2">
+                        {transacao.descricao.replace(/- •••\.\d+\.\d+-•• - .+$/, '').trim()}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(transacao.data).toLocaleDateString('pt-BR')}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(transacao.data).toLocaleDateString('pt-BR')}
+                    <div className={`text-sm font-bold shrink-0 ${
+                      transacao.tipo === 'receita' 
+                        ? 'text-green-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {transacao.tipo === 'receita' ? '+' : '-'}R$ {transacao.valor.toFixed(2)}
                     </div>
                   </div>
-                  <div className={`text-sm font-bold shrink-0 ${
-                    transacao.tipo === 'receita' 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
-                  }`}>
-                    {transacao.tipo === 'receita' ? '+' : '-'}R$ {transacao.valor.toFixed(2)}
-                  </div>
-                </div>
+                )
               ))
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Duplicadas (se existirem) */}
-      {duplicadas.length > 0 && (
+      {/* Duplicadas */}
+      {duplicadasParaExibir.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg text-orange-600">
@@ -90,7 +143,7 @@ export function PreviewImportacao({
           </CardHeader>
           <CardContent>
             <div className="max-h-40 overflow-y-auto space-y-1">
-              {duplicadas.map((transacao, index) => (
+              {duplicadasParaExibir.map((transacao, index) => (
                 <div 
                   key={index}
                   className="flex justify-between items-center p-2 border-b last:border-b-0 bg-orange-50"
@@ -111,6 +164,16 @@ export function PreviewImportacao({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Modal de Classificação */}
+      {usandoClassificacao && onClassificarTransacao && (
+        <ModalClassificacaoRapida
+          isOpen={!!transacaoParaClassificar}
+          onClose={() => setTransacaoParaClassificar(null)}
+          transacao={transacaoParaClassificar}
+          onClassificar={handleClassificarTransacao}
+        />
       )}
 
       {/* Botões */}

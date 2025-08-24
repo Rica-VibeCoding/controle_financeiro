@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
+import { TableContainer } from '@/componentes/ui/table-container'
 import { obterCategoriasComSubcategorias, excluirCategoria } from '@/servicos/supabase/categorias'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { Categoria } from '@/tipos/database'
@@ -90,14 +91,14 @@ export default function CategoriasPage() {
         )}
 
         {!carregando && !erro && (
-          <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+          <TableContainer>
             <Table className="min-w-full">
               <TableHeader>
                 <TableRow className="border-b bg-gray-50/50">
-                  <TableHead className="min-w-[200px] font-semibold">Nome</TableHead>
+                  <TableHead className="min-w-[200px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
                   <TableHead className="w-[150px] font-semibold">Tipo</TableHead>
-                  <TableHead className="w-[130px] font-semibold text-center">Subcategorias</TableHead>
-                  <TableHead className="w-[120px] font-semibold text-center">Status</TableHead>
+                  <TableHead className="w-[130px] font-semibold text-center hidden sm:table-cell">Subcategorias</TableHead>
+                  <TableHead className="w-[120px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
                   <TableHead className="w-[130px] font-semibold text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -115,7 +116,8 @@ export default function CategoriasPage() {
                 ) : (
                   categorias.map((categoria) => (
                     <TableRow key={categoria.id} className="hover:bg-gray-50/50">
-                      <TableCell>
+                      {/* Nome - sempre visível e fixo na esquerda */}
+                      <TableCell className="sticky left-0 bg-white z-10">
                         <div className="flex items-center gap-3">
                           <span style={{ color: categoria.cor }} className="text-lg">●</span>
                           {(() => {
@@ -125,6 +127,8 @@ export default function CategoriasPage() {
                           <div className="font-medium">{categoria.nome}</div>
                         </div>
                       </TableCell>
+                      
+                      {/* Tipo - sempre visível */}
                       <TableCell>
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                           categoria.tipo === 'receita' ? 'bg-green-100 text-green-800' :
@@ -135,12 +139,16 @@ export default function CategoriasPage() {
                            categoria.tipo === 'despesa' ? 'Despesa' : 'Ambos'}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center">
+                      
+                      {/* Subcategorias - oculto em mobile */}
+                      <TableCell className="text-center hidden sm:table-cell">
                         <span className="font-semibold">
                           {categoria.subcategorias.length}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center">
+                      
+                      {/* Status - oculto em mobile */}
+                      <TableCell className="text-center hidden sm:table-cell">
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                           categoria.ativo
                             ? 'bg-green-100 text-green-800'
@@ -176,7 +184,7 @@ export default function CategoriasPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+          </TableContainer>
         )}
 
         <Card>

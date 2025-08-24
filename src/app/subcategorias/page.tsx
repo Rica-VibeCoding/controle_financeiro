@@ -7,6 +7,7 @@ import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
+import { TableContainer } from '@/componentes/ui/table-container'
 import { obterSubcategorias, excluirSubcategoria } from '@/servicos/supabase/subcategorias'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import type { Subcategoria, Categoria } from '@/tipos/database'
@@ -95,14 +96,14 @@ export default function SubcategoriasPage() {
           </div>
         )}
 
-        <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+        <TableContainer>
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="border-b bg-gray-50/50">
-                <TableHead className="min-w-[200px] font-semibold">Nome</TableHead>
-                <TableHead className="w-[200px] font-semibold">Categoria</TableHead>
-                <TableHead className="w-[120px] font-semibold text-center">Status</TableHead>
-                <TableHead className="w-[90px] font-semibold text-center">Ações</TableHead>
+                <TableHead className="w-[160px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
+                <TableHead className="w-[140px] font-semibold">Categoria</TableHead>
+                <TableHead className="w-[100px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+                <TableHead className="w-[80px] font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -119,9 +120,11 @@ export default function SubcategoriasPage() {
               ) : (
                 subcategorias.map((subcategoria) => (
                   <TableRow key={subcategoria.id} className="hover:bg-gray-50/50">
-                    <TableCell>
+                    {/* Nome - sempre visível e fixo na esquerda */}
+                    <TableCell className="sticky left-0 bg-white z-10">
                       <div className="font-medium">{subcategoria.nome}</div>
                     </TableCell>
+                    {/* Categoria - sempre visível */}
                     <TableCell>
                       <div className="text-sm">
                         {subcategoria.categoria ? (
@@ -134,7 +137,9 @@ export default function SubcategoriasPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
+                    
+                    {/* Status - oculto em mobile */}
+                    <TableCell className="text-center hidden sm:table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                         subcategoria.ativo 
                           ? 'bg-green-100 text-green-800' 
@@ -170,7 +175,7 @@ export default function SubcategoriasPage() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </TableContainer>
 
         <Card>
           <CardHeader>

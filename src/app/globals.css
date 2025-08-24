@@ -187,6 +187,154 @@ body {
   background: #94a3b8;
 }
 
+/* Scroll horizontal melhorado para Safari iOS */
+.table-container {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f1f1;
+}
+
+/* Indicadores de scroll para mobile */
+.table-container::before,
+.table-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+.table-container::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.8), transparent);
+  opacity: 0;
+}
+
+.table-container::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+}
+
+/* Indicador visual de scroll mais visível para iPhone */
+@media (max-width: 390px) {
+  .table-container::after {
+    width: 30px;
+    background: linear-gradient(to left, 
+      rgba(59, 130, 246, 0.1) 0%, 
+      rgba(59, 130, 246, 0.05) 50%, 
+      transparent 100%
+    );
+    border-left: 2px solid rgba(59, 130, 246, 0.3);
+  }
+  
+  .table-container::before {
+    width: 30px;
+    background: linear-gradient(to right, 
+      rgba(59, 130, 246, 0.1) 0%, 
+      rgba(59, 130, 246, 0.05) 50%, 
+      transparent 100%
+    );
+    border-right: 2px solid rgba(59, 130, 246, 0.3);
+  }
+}
+
+.table-container.scrollable-left::before {
+  opacity: 1;
+}
+
+.table-container.scrollable-right::after {
+  opacity: 1;
+}
+
+/* Safari iOS specific */
+@supports (-webkit-touch-callout: none) {
+  .table-container {
+    overflow: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Otimização específica para iPhone 12 (390px) */
+  @media (max-width: 390px) {
+    .table-container table {
+      min-width: 360px; /* mostra exatos 3.2 colunas */
+    }
+    
+    /* Headers mais compactos */
+    .table-container table th {
+      padding: 8px 6px !important;
+      font-size: 0.875rem !important;
+    }
+    
+    /* Células mais compactas */
+    .table-container table td {
+      padding: 8px 6px !important;
+    }
+  }
+  
+  .table-container::-webkit-scrollbar {
+    height: 4px;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .table-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+  }
+
+  /* Fix para textos com baixo contraste no Safari iOS */
+  .table-container table td,
+  .table-container table th {
+    color: #1f2937 !important; /* gray-800 forçado */
+    opacity: 1 !important;
+  }
+  
+  .table-container table .text-muted-foreground {
+    color: #4b5563 !important; /* gray-600 mais escuro */
+    opacity: 1 !important;
+  }
+  
+  .table-container table .text-sm {
+    color: #111827 !important; /* gray-900 mais escuro */
+    opacity: 1 !important;
+  }
+
+  /* Força contraste para data/descrição específicas */
+  .table-container table td:first-child,
+  .table-container table td:nth-child(2) {
+    color: #000000 !important; /* preto puro para data e descrição */
+    font-weight: 500 !important;
+  }
+
+  /* Força contraste para headers das tabelas */
+  .table-container table th {
+    color: #000000 !important; /* headers com cor preta pura */
+    font-weight: 600 !important;
+    opacity: 1 !important;
+  }
+
+  /* Touch targets otimizados para iPhone (44px mínimo) */
+  .table-container table button,
+  .table-container .touch-target {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Botões pequenos específicos das tabelas */
+  .table-container table .h-8.w-8 {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
 /* Glassmorphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.95);

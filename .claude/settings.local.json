@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Read(//mnt/c/Users/ricar/Downloads/Safare/**)"
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": [],

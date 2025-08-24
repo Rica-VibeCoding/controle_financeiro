@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
+import { TableContainer } from '@/componentes/ui/table-container'
 import { obterContasComSaldo, excluirConta } from '@/servicos/supabase/contas'
 import type { Conta } from '@/tipos/database'
 
@@ -84,18 +85,18 @@ export default function ContasPage() {
         )}
 
         {!carregando && !erro && (
-          <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+          <TableContainer>
             <Table className="min-w-full">
               <TableHeader>
                 <TableRow className="border-b bg-gray-50/50">
-                  <TableHead className="min-w-[200px] font-semibold">Nome</TableHead>
-                  <TableHead className="w-[150px] font-semibold">Tipo</TableHead>
-                  <TableHead className="w-[120px] font-semibold">Banco</TableHead>
-                  <TableHead className="w-[130px] font-semibold text-right">Limite</TableHead>
-                  <TableHead className="w-[100px] font-semibold text-center">Fechamento</TableHead>
-                  <TableHead className="w-[130px] font-semibold text-right">Saldo</TableHead>
-                  <TableHead className="w-[120px] font-semibold text-center">Status</TableHead>
-                  <TableHead className="w-[130px] font-semibold text-center">Ações</TableHead>
+                  <TableHead className="w-[140px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
+                  <TableHead className="w-[100px] font-semibold text-right">Saldo</TableHead>
+                  <TableHead className="w-[100px] font-semibold">Tipo</TableHead>
+                  <TableHead className="w-[100px] font-semibold hidden sm:table-cell">Banco</TableHead>
+                  <TableHead className="w-[110px] font-semibold text-right hidden md:table-cell">Limite</TableHead>
+                  <TableHead className="w-[90px] font-semibold text-center hidden md:table-cell">Fechamento</TableHead>
+                  <TableHead className="w-[80px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="w-[80px] font-semibold text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,7 +113,8 @@ export default function ContasPage() {
                 ) : (
                   contas.map((conta) => (
                     <TableRow key={conta.id} className="hover:bg-gray-50/50">
-                      <TableCell>
+                      {/* Nome - sempre visível e fixo na esquerda */}
+                      <TableCell className="sticky left-0 bg-white z-10">
                         <div className="flex items-center gap-3">
                           <span className="text-2xl" aria-hidden="true">
                             {conta.tipo === 'conta_corrente' ? (
@@ -128,6 +130,17 @@ export default function ContasPage() {
                           <div className="font-medium">{conta.nome}</div>
                         </div>
                       </TableCell>
+                      
+                      {/* Saldo - prioritário */}
+                      <TableCell className="text-right">
+                        <span className={`font-semibold ${
+                          conta.saldo >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {conta.saldo_formatado}
+                        </span>
+                      </TableCell>
+                      
+                      {/* Tipo - sempre visível */}
                       <TableCell>
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                           conta.tipo === 'conta_corrente' ? 'bg-blue-100 text-blue-800' :
@@ -138,10 +151,14 @@ export default function ContasPage() {
                           {conta.tipo.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      
+                      {/* Banco - oculto em mobile */}
+                      <TableCell className="hidden sm:table-cell">
                         <span className="text-sm">{conta.banco || '-'}</span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      
+                      {/* Limite - oculto em mobile/tablet */}
+                      <TableCell className="text-right hidden md:table-cell">
                         {conta.tipo === 'cartao_credito' && (conta as any).limite != null ? (
                           <span className="text-muted-foreground">
                             {(Number((conta as any).limite) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -150,7 +167,9 @@ export default function ContasPage() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-center">
+                      
+                      {/* Fechamento - oculto em mobile/tablet */}
+                      <TableCell className="text-center hidden md:table-cell">
                         {conta.tipo === 'cartao_credito' && (conta as any).data_fechamento != null ? (
                           <span className="text-muted-foreground">
                             Dia {(conta as any).data_fechamento}
@@ -159,14 +178,9 @@ export default function ContasPage() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <span className={`font-semibold ${
-                          conta.saldo >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {conta.saldo_formatado}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
+                      
+                      {/* Status - oculto em mobile */}
+                      <TableCell className="text-center hidden sm:table-cell">
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                           conta.ativo
                             ? 'bg-green-100 text-green-800'
@@ -175,6 +189,8 @@ export default function ContasPage() {
                           {conta.ativo ? 'Ativo' : 'Inativo'}
                         </span>
                       </TableCell>
+                      
+                      {/* Ações - sempre visível */}
                       <TableCell>
                         <div className="flex gap-1 justify-center">
                           <Button
@@ -202,7 +218,7 @@ export default function ContasPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+          </TableContainer>
         )}
 
         <Card>

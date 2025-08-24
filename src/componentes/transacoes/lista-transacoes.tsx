@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
+import { TableContainer } from '@/componentes/ui/table-container'
 import { LoadingPage } from '@/componentes/comum/loading'
 import { Transacao } from '@/tipos/database'
 import { obterTransacoesSimples } from '@/servicos/supabase/transacoes-simples'
@@ -171,17 +172,17 @@ export function ListaTransacoes({
       )}
 
       {/* Tabela */}
-      <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+      <TableContainer>
         <Table className="min-w-full">
           <TableHeader>
             <TableRow className="border-b bg-gray-50/50">
-              <TableHead className="w-[110px] font-semibold whitespace-nowrap">Data</TableHead>
-              <TableHead className="min-w-[250px] font-semibold">Descrição</TableHead>
-              <TableHead className="w-[180px] font-semibold">Categoria</TableHead>
-              <TableHead className="w-[130px] font-semibold text-right whitespace-nowrap">Valor</TableHead>
-              <TableHead className="w-[150px] font-semibold">Conta</TableHead>
-              <TableHead className="w-[110px] font-semibold text-center">Status</TableHead>
-              <TableHead className="w-[120px] font-semibold text-center">Ações</TableHead>
+              <TableHead className="w-[80px] font-semibold sticky left-0 bg-gray-50/50 z-20">Data</TableHead>
+              <TableHead className="w-[140px] font-semibold">Descrição</TableHead>
+              <TableHead className="w-[100px] font-semibold text-right whitespace-nowrap">Valor</TableHead>
+              <TableHead className="w-[160px] font-semibold hidden sm:table-cell">Categoria</TableHead>
+              <TableHead className="w-[130px] font-semibold hidden md:table-cell">Conta</TableHead>
+              <TableHead className="w-[90px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+              <TableHead className="w-[100px] font-semibold text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -198,12 +199,14 @@ export function ListaTransacoes({
               ) : (
                 transacoes.map((transacao) => (
                   <TableRow key={transacao.id} className="hover:bg-gray-50/50">
-                    <TableCell className="text-sm whitespace-nowrap">
+                    {/* Data - sempre visível e fixo na esquerda */}
+                    <TableCell className="text-sm whitespace-nowrap sticky left-0 bg-white z-10">
                       {new Date(transacao.data).toLocaleDateString('pt-BR')}
                     </TableCell>
+                    
+                    {/* Descrição - sempre visível */}
                     <TableCell>
                       <div className="text-sm">
-                        {/* Descrição com truncamento em 2 linhas e tooltip para texto completo */}
                         <div className="line-clamp-2" title={transacao.descricao}>
                           {transacao.descricao}
                         </div>
@@ -224,7 +227,14 @@ export function ListaTransacoes({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    
+                    {/* Valor - prioritário */}
+                    <TableCell className="text-right whitespace-nowrap">
+                      {formatarValor(transacao.valor, transacao.tipo)}
+                    </TableCell>
+                    
+                    {/* Categoria - oculta em mobile */}
+                    <TableCell className="hidden sm:table-cell">
                       <div className="text-sm">
                         <div className="truncate">{(transacao as any).categoria?.nome || '-'}</div>
                         {(transacao as any).subcategoria?.nome && (
@@ -234,10 +244,9 @@ export function ListaTransacoes({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      {formatarValor(transacao.valor, transacao.tipo)}
-                    </TableCell>
-                    <TableCell>
+                    
+                    {/* Conta - oculta em mobile/tablet */}
+                    <TableCell className="hidden md:table-cell">
                       <div className="text-sm">
                         <div className="truncate">{(transacao as any).conta?.nome || '-'}</div>
                         {transacao.tipo === 'transferencia' && (transacao as any).conta_destino && (
@@ -247,7 +256,9 @@ export function ListaTransacoes({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
+                    
+                    {/* Status - oculto em mobile */}
+                    <TableCell className="text-center hidden sm:table-cell">
                       {formatarStatus(transacao.status)}
                     </TableCell>
                     <TableCell>
@@ -295,7 +306,7 @@ export function ListaTransacoes({
               )}
             </TableBody>
           </Table>
-        </div>
+      </TableContainer>
     </div>
   )
 }

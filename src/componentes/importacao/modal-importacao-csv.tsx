@@ -11,7 +11,16 @@ import { detectarFormato } from '@/servicos/importacao/detector-formato'
 import { verificarDuplicatas } from '@/servicos/importacao/validador-duplicatas'
 import { importarTransacoes } from '@/servicos/importacao/importador-transacoes'
 import { PreviewImportacao } from './preview-importacao'
-import { TransacaoImportada } from '@/tipos/importacao'
+import {
+  TransacaoImportada,
+  TransacaoClassificada,
+  ResumoClassificacao,
+  DadosClassificacao
+} from '@/tipos/importacao'
+import {
+  buscarClassificacaoHistorica,
+  buscarClassificacoesEmLote
+} from '@/servicos/importacao/classificador-historico'
 import { logger } from '@/utilitarios/logger'
 
 interface ModalImportacaoCSVProps {
@@ -34,7 +43,15 @@ export function ModalImportacaoCSV({
   const [mostrarPreview, setMostrarPreview] = useState(false)
   const [formatoDetectado, setFormatoDetectado] = useState<any>(null)
   
-  const { erro, info, sucesso } = usarToast()
+  // Estados para classificação inteligente
+  const [transacoesClassificadas, setTransacoesClassificadas] = useState<TransacaoClassificada[]>([])
+  const [resumoClassificacao, setResumoClassificacao] = useState<ResumoClassificacao>({
+    reconhecidas: 0,
+    pendentes: 0,
+    duplicadas: 0
+  })
+  
+  const { erro, sucesso } = usarToast()
 
   const handleArquivoSelecionado = async (file: File | null) => {
     setArquivo(file)
@@ -73,19 +90,77 @@ export function ModalImportacaoCSV({
 
     setCarregando(true)
     try {
-      // Detectar formato e mapear dados
+      // 1. Detectar formato e mapear dados (código atual)
       const formato = detectarFormato(dadosProcessados)
       setFormatoDetectado(formato)
       const transacoesMap = formato.mapeador(dadosProcessados, contaSelecionada)
       
-      // Verificar duplicatas
-      const { novas, duplicadas: dups } = await verificarDuplicatas(transacoesMap)
+      // 2. NOVO: Classificação inteligente
+      const transacoesClassificadas: TransacaoClassificada[] = []
       
+      // Versão otimizada: buscar classificações em lote
+      const dadosParaBusca = transacoesMap.map(t => ({
+        descricao: t.descricao,
+        conta_id: t.conta_id
+      }))
+      
+      const classificacoesEncontradas = await buscarClassificacoesEmLote(dadosParaBusca)
+      
+      // Processar cada transação
+      for (const transacao of transacoesMap) {
+        const chave = `${transacao.descricao}|${transacao.conta_id}`
+        const classificacao = classificacoesEncontradas.get(chave)
+        
+        if (classificacao) {
+          // Transação reconhecida
+          transacoesClassificadas.push({
+            ...transacao,
+            classificacao_automatica: classificacao,
+            status_classificacao: 'reconhecida',
+            categoria_id: classificacao.categoria_id,
+            subcategoria_id: classificacao.subcategoria_id,
+            forma_pagamento_id: classificacao.forma_pagamento_id
+          })
+        } else {
+          // Transação pendente
+          transacoesClassificadas.push({
+            ...transacao,
+            status_classificacao: 'pendente'
+          })
+        }
+      }
+
+      // 3. Verificar duplicatas (código atual)
+      const { novas, duplicadas: dups } = await verificarDuplicatas(transacoesClassificadas)
+      
+      // Marcar duplicadas no status
+      const duplicadasComStatus = dups.map(t => ({
+        ...t,
+        status_classificacao: 'duplicada' as const
+      }))
+
+      // 4. Calcular resumo
+      const resumo: ResumoClassificacao = {
+        reconhecidas: novas.filter(t => 
+          (t as TransacaoClassificada).status_classificacao === 'reconhecida'
+        ).length,
+        pendentes: novas.filter(t => 
+          (t as TransacaoClassificada).status_classificacao === 'pendente'
+        ).length,
+        duplicadas: duplicadasComStatus.length
+      }
+
+      // 5. Atualizar estados
       setTransacoesMapeadas(novas)
-      setDuplicadas(dups)
+      setDuplicadas(duplicadasComStatus)
+      setTransacoesClassificadas([...novas as TransacaoClassificada[], ...duplicadasComStatus])
+      setResumoClassificacao(resumo)
       setMostrarPreview(true)
       
-      sucesso(`${formato.icone} ${formato.nome}: ${novas.length} transações prontas para importar. ${dups.length} duplicadas encontradas.`)
+      sucesso(
+        `🧠 ${formato.nome}: ${resumo.reconhecidas} reconhecidas, ` +
+        `${resumo.pendentes} pendentes, ${resumo.duplicadas} duplicadas`
+      )
     } catch (error) {
       erro('Erro ao processar transações')
       logger.error(error)
@@ -125,11 +200,44 @@ export function ModalImportacaoCSV({
     }
   }
 
+  const handleClassificarTransacao = (transacao: TransacaoClassificada, dados: DadosClassificacao) => {
+    // Atualizar transação com nova classificação
+    const transacaoAtualizada: TransacaoClassificada = {
+      ...transacao,
+      classificacao_automatica: dados,
+      status_classificacao: 'reconhecida',
+      categoria_id: dados.categoria_id,
+      subcategoria_id: dados.subcategoria_id,
+      forma_pagamento_id: dados.forma_pagamento_id
+    }
+    
+    // Atualizar array de transações
+    setTransacoesClassificadas(prev => 
+      prev.map(t => t === transacao ? transacaoAtualizada : t)
+    )
+    
+    // Atualizar transações mapeadas (para importação)
+    setTransacoesMapeadas(prev => 
+      prev.map(t => t === transacao ? transacaoAtualizada : t)
+    )
+    
+    // Atualizar resumo
+    setResumoClassificacao(prev => ({
+      ...prev,
+      reconhecidas: prev.reconhecidas + 1,
+      pendentes: prev.pendentes - 1
+    }))
+    
+    sucesso('✅ Transação classificada com sucesso!')
+  }
+
   const handleVoltarUpload = () => {
     setMostrarPreview(false)
     setTransacoesMapeadas([])
     setDuplicadas([])
     setFormatoDetectado(null)
+    setTransacoesClassificadas([])
+    setResumoClassificacao({ reconhecidas: 0, pendentes: 0, duplicadas: 0 })
   }
 
   const handleFechar = () => {
@@ -140,6 +248,8 @@ export function ModalImportacaoCSV({
     setDuplicadas([])
     setMostrarPreview(false)
     setFormatoDetectado(null)
+    setTransacoesClassificadas([])
+    setResumoClassificacao({ reconhecidas: 0, pendentes: 0, duplicadas: 0 })
     onClose()
   }
 
@@ -158,6 +268,10 @@ export function ModalImportacaoCSV({
             onConfirmar={handleConfirmarImportacao}
             onCancelar={handleVoltarUpload}
             carregando={carregando}
+            // Novas props para classificação
+            transacoesClassificadas={transacoesClassificadas}
+            resumoClassificacao={resumoClassificacao}
+            onClassificarTransacao={handleClassificarTransacao}
           />
         ) : (
           <>

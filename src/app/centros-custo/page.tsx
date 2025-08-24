@@ -7,6 +7,7 @@ import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
+import { TableContainer } from '@/componentes/ui/table-container'
 import { obterCentrosCusto, excluirCentroCusto } from '@/servicos/supabase/centros-custo'
 import type { CentroCusto } from '@/tipos/database'
 

@@ -19,6 +19,7 @@ interface PreviewImportacaoProps {
   transacoesClassificadas?: TransacaoClassificada[]
   resumoClassificacao?: ResumoClassificacao
   onClassificarTransacao?: (transacao: TransacaoClassificada, dados: DadosClassificacao) => void
+  onToggleSelecaoTransacao?: (transacao: TransacaoClassificada, selecionada: boolean) => void
 }
 
 export function PreviewImportacao({
@@ -29,7 +30,8 @@ export function PreviewImportacao({
   carregando = false,
   transacoesClassificadas,
   resumoClassificacao,
-  onClassificarTransacao
+  onClassificarTransacao,
+  onToggleSelecaoTransacao
 }: PreviewImportacaoProps) {
   
   const [transacaoParaClassificar, setTransacaoParaClassificar] = 
@@ -44,6 +46,13 @@ export function PreviewImportacao({
     : transacoes.filter(t => 
         !duplicadas.some(d => d.identificador_externo === t.identificador_externo)
       )
+      
+  // Contar transações selecionadas
+  const transacoesSelecionadas = usandoClassificacao 
+    ? (transacoesClassificadas || []).filter(t => 
+        t.status_classificacao !== 'duplicada' && (t.selecionada ?? true)
+      )
+    : novas
 
   const duplicadasParaExibir = usandoClassificacao
     ? transacoesClassificadas.filter(t => t.status_classificacao === 'duplicada')
@@ -103,6 +112,7 @@ export function PreviewImportacao({
                         setTransacaoParaClassificar(transacaoClass)
                       }
                     }}
+                    onToggleSelecao={onToggleSelecaoTransacao}
                   />
                 ) : (
                   // Fallback para layout original
@@ -172,7 +182,7 @@ export function PreviewImportacao({
           isOpen={!!transacaoParaClassificar}
           onClose={() => setTransacaoParaClassificar(null)}
           transacao={transacaoParaClassificar}
-          onClassificar={handleClassificarTransacao}
+          onClassificar={(dados) => handleClassificarTransacao(transacaoParaClassificar!, dados)}
         />
       )}
 
@@ -187,10 +197,10 @@ export function PreviewImportacao({
         </button>
         <button
           onClick={onConfirmar}
-          disabled={carregando || novas.length === 0}
+          disabled={carregando || transacoesSelecionadas.length === 0}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
         >
-          {carregando ? 'Importando...' : `Importar ${novas.length} transações`}
+          {carregando ? 'Importando...' : `Importar ${transacoesSelecionadas.length} transações`}
         </button>
       </div>
     </div>

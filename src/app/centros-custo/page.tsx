@@ -49,7 +49,7 @@ export default function CentrosCustoPage() {
   if (carregando) {
     return (
       <LayoutPrincipal>
-        <div className="max-w-full mx-auto px-4 space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <div className="text-center py-8 text-muted-foreground">
             Carregando centros de custo...
           </div>
@@ -60,7 +60,7 @@ export default function CentrosCustoPage() {
 
   return (
     <LayoutPrincipal>
-      <div className="max-w-full mx-auto px-4 space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Centros de Custo</h1>
@@ -79,15 +79,15 @@ export default function CentrosCustoPage() {
           </div>
         )}
 
-        <div className="border rounded-lg overflow-x-auto bg-white shadow-sm">
+        <TableContainer>
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="border-b bg-gray-50/50">
-                <TableHead className="w-[40px] font-semibold text-center">Cor</TableHead>
-                <TableHead className="min-w-[200px] font-semibold">Nome</TableHead>
-                <TableHead className="min-w-[250px] font-semibold">Descrição</TableHead>
-                <TableHead className="w-[120px] font-semibold text-center">Status</TableHead>
-                <TableHead className="w-[90px] font-semibold text-center">Ações</TableHead>
+                <TableHead className="w-[50px] font-semibold text-center sticky left-0 bg-gray-50/50 z-20">Cor</TableHead>
+                <TableHead className="w-[140px] font-semibold sticky left-[50px] bg-gray-50/50 z-10">Nome</TableHead>
+                <TableHead className="w-[200px] font-semibold">Descrição</TableHead>
+                <TableHead className="w-[80px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+                <TableHead className="w-[80px] font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -104,14 +104,14 @@ export default function CentrosCustoPage() {
               ) : (
                 centrosCusto.map((centro) => (
                   <TableRow key={centro.id} className="hover:bg-gray-50/50">
-                    <TableCell className="text-center">
+                    <TableCell className="text-center sticky left-0 bg-white z-10">
                       <div 
                         className="w-6 h-6 rounded-full mx-auto border border-gray-300" 
                         style={{ backgroundColor: centro.cor }}
                         title={centro.cor}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="sticky left-[50px] bg-white z-10">
                       <div className="font-medium">{centro.nome}</div>
                     </TableCell>
                     <TableCell>
@@ -119,7 +119,7 @@ export default function CentrosCustoPage() {
                         {centro.descricao || 'Sem descrição'}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center hidden sm:table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                         centro.ativo 
                           ? 'bg-green-100 text-green-800' 
@@ -155,7 +155,7 @@ export default function CentrosCustoPage() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </TableContainer>
 
         <Card>
           <CardHeader>

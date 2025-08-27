@@ -66,7 +66,7 @@ export default function SubcategoriasPage() {
   if (carregando) {
     return (
       <LayoutPrincipal>
-        <div className="max-w-full mx-auto px-4 space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <div className="text-center py-8 text-muted-foreground">
             Carregando subcategorias...
           </div>
@@ -100,9 +100,9 @@ export default function SubcategoriasPage() {
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="border-b bg-gray-50/50">
-                <TableHead className="w-[160px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
-                <TableHead className="w-[140px] font-semibold">Categoria</TableHead>
-                <TableHead className="w-[100px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+                <TableHead className="w-[140px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
+                <TableHead className="w-[150px] font-semibold">Categoria</TableHead>
+                <TableHead className="w-[120px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
                 <TableHead className="w-[80px] font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>

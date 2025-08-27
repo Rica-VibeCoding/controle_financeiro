@@ -282,9 +282,10 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
               step="0.01"
               min="0.01"
               max="99999999.99"
-              value={dados.valor}
-              onChange={(e) => atualizarCampo('valor', parseFloat(e.target.value) || 0)}
-              placeholder="0,00"
+              inputMode="decimal"
+              placeholder="Ex: 500,00"
+              value={dados.valor || ''}
+              onChange={(e) => atualizarCampo('valor', e.target.value === '' ? 0 : Number(e.target.value))}
               required
             />
           </div>

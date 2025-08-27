@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { ModalBase } from './modal-base'
 import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'
+import { DateInput } from '@/componentes/ui/date-input'
 import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
 import { Skeleton, SkeletonInput, SkeletonLabel, SkeletonButton } from '@/componentes/ui/skeleton'
@@ -415,9 +416,10 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   step="0.01"
                   min="0.01"
                   max="99999999.99"
-                  value={dados.valor}
-                  onChange={(e) => atualizarCampo('valor', parseFloat(e.target.value) || 0)}
-                  placeholder="0,00"
+                  inputMode="decimal"
+                  placeholder="Ex: 150,00"
+                  value={dados.valor || ''}
+                  onChange={(e) => atualizarCampo('valor', e.target.value === '' ? 0 : Number(e.target.value))}
                   required
                 />
               </div>
@@ -546,11 +548,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
 
               <div className="space-y-2">
                 <Label htmlFor="data_vencimento">Data de Vencimento</Label>
-                <Input
+                <DateInput
                   id="data_vencimento"
-                  type="date"
                   value={dados.data_vencimento || ''}
                   onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
+                  clearable
                 />
               </div>
             </div>

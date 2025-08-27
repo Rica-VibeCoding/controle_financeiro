@@ -24,7 +24,7 @@ export function mapearLinhasCartao(
         identificador_externo: hashId,
         descricao: linha.title || '',
         conta_id: contaId,
-        tipo: valor >= 0 ? 'despesa' : 'receita' // Cartão: positivo=gasto, negativo=pagamento
+        tipo: valor >= 0 ? 'despesa' : 'receita' // Restaurar lógica original
       }
     } catch (error) {
       throw new Error(`Erro na linha ${index + 1}: ${error}`)

@@ -32,8 +32,16 @@ export function ModalClassificacaoRapida({
     if (isOpen && transacao) {
       setCategoria('')
       setSubcategoria('')
-      setFormaPagamento('')
       setSubcategorias([])
+      
+      // PRE-SELECIONAR FORMA DE PAGAMENTO baseada no formato origem
+      if (transacao.formato_origem === 'Cartão de crédito') {
+        // ID do "Crédito" na tabela fp_formas_pagamento
+        setFormaPagamento('777c439c-614d-41e0-b3bf-833d2abcf846')
+        console.log('💳 Pré-selecionado: Cartão de Crédito para transação de cartão')
+      } else {
+        setFormaPagamento('')
+      }
     }
   }, [isOpen, transacao])
 
@@ -67,8 +75,17 @@ export function ModalClassificacaoRapida({
   }
 
   const categoriasFiltradas = dados.categorias.filter(cat => 
-    cat.tipo === transacao?.tipo || cat.tipo === 'ambos'
+    cat.ativo && (cat.tipo === transacao?.tipo || cat.tipo === 'ambos')
   )
+
+  // Debug para verificar o que está acontecendo
+  console.log('🐛 Debug Categorias:', {
+    totalCategorias: dados.categorias.length,
+    categoriasAtivas: dados.categorias.filter(c => c.ativo).length,
+    tipoTransacao: transacao?.tipo,
+    categoriasFiltradas: categoriasFiltradas.length,
+    nomesFiltradas: categoriasFiltradas.map(c => c.nome)
+  })
 
   return (
     <ModalBase 

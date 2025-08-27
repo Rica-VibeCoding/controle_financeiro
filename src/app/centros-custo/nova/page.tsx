@@ -51,7 +51,7 @@ export default function NovoCentroCustoPage() {
         cor: formData.cor,
         ativo: formData.ativo,
         arquivado: false,
-        valor_orcamento: 0,
+        valor_orcamento: null,
         data_inicio: new Date().toISOString().split('T')[0],
         data_fim: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +1 ano
         data_arquivamento: null

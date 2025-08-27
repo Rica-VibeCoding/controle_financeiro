@@ -17,6 +17,7 @@ import {
   ResumoClassificacao,
   DadosClassificacao
 } from '@/tipos/importacao'
+import { detectarTipoLancamento } from '@/servicos/importacao/detector-tipos-lancamento'
 import {
   buscarClassificacaoHistorica,
   buscarClassificacoesEmLote
@@ -111,6 +112,9 @@ export function ModalImportacaoCSV({
         const chave = `${transacao.descricao}|${transacao.conta_id}`
         const classificacao = classificacoesEncontradas.get(chave)
         
+        // Detectar tipo de lançamento para sinalização
+        const sinalizacao = detectarTipoLancamento(transacao)
+        
         if (classificacao) {
           // Transação reconhecida
           transacoesClassificadas.push({
@@ -119,13 +123,19 @@ export function ModalImportacaoCSV({
             status_classificacao: 'reconhecida',
             categoria_id: classificacao.categoria_id,
             subcategoria_id: classificacao.subcategoria_id,
-            forma_pagamento_id: classificacao.forma_pagamento_id
+            forma_pagamento_id: classificacao.forma_pagamento_id,
+            formato_origem: formato.nome,
+            sinalizacao,
+            selecionada: sinalizacao.tipo === 'gasto_real' || sinalizacao.tipo === 'taxa_juro' // Padrão inteligente
           })
         } else {
           // Transação pendente
           transacoesClassificadas.push({
             ...transacao,
-            status_classificacao: 'pendente'
+            status_classificacao: 'pendente',
+            formato_origem: formato.nome,
+            sinalizacao,
+            selecionada: sinalizacao.tipo === 'gasto_real' || sinalizacao.tipo === 'taxa_juro' // Padrão inteligente
           })
         }
       }
@@ -134,10 +144,16 @@ export function ModalImportacaoCSV({
       const { novas, duplicadas: dups } = await verificarDuplicatas(transacoesClassificadas)
       
       // Marcar duplicadas no status
-      const duplicadasComStatus = dups.map(t => ({
-        ...t,
-        status_classificacao: 'duplicada' as const
-      }))
+      const duplicadasComStatus = dups.map(t => {
+        const sinalizacao = detectarTipoLancamento(t)
+        return {
+          ...t,
+          status_classificacao: 'duplicada' as const,
+          formato_origem: formato.nome,
+          sinalizacao,
+          selecionada: false // Duplicadas não selecionadas por padrão
+        }
+      })
 
       // 4. Calcular resumo
       const resumo: ResumoClassificacao = {
@@ -170,14 +186,21 @@ export function ModalImportacaoCSV({
   }
 
   const handleConfirmarImportacao = async () => {
-    if (transacoesMapeadas.length === 0) {
-      erro('Nenhuma transação para importar')
+    // Usar transações selecionadas se tiver classificação, senão usar mapeadas
+    const transacoesParaImportar = transacoesClassificadas.length > 0 
+      ? transacoesClassificadas.filter(t => 
+          t.status_classificacao !== 'duplicada' && (t.selecionada ?? true)
+        )
+      : transacoesMapeadas
+
+    if (transacoesParaImportar.length === 0) {
+      erro('Nenhuma transação selecionada para importar')
       return
     }
 
     setCarregando(true)
     try {
-      const resultado = await importarTransacoes(transacoesMapeadas)
+      const resultado = await importarTransacoes(transacoesParaImportar)
       
       if (resultado.erros.length === 0) {
         sucesso(`✅ ${resultado.importadas} transações importadas com sucesso!`)
@@ -231,6 +254,19 @@ export function ModalImportacaoCSV({
     sucesso('✅ Transação classificada com sucesso!')
   }
 
+  const handleToggleSelecaoTransacao = (
+    transacao: TransacaoClassificada, 
+    selecionada: boolean
+  ) => {
+    setTransacoesClassificadas(prev =>
+      prev.map(t =>
+        t.identificador_externo === transacao.identificador_externo
+          ? { ...t, selecionada }
+          : t
+      )
+    )
+  }
+
   const handleVoltarUpload = () => {
     setMostrarPreview(false)
     setTransacoesMapeadas([])
@@ -272,6 +308,7 @@ export function ModalImportacaoCSV({
             transacoesClassificadas={transacoesClassificadas}
             resumoClassificacao={resumoClassificacao}
             onClassificarTransacao={handleClassificarTransacao}
+            onToggleSelecaoTransacao={handleToggleSelecaoTransacao}
           />
         ) : (
           <>

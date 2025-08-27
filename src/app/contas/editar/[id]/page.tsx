@@ -47,6 +47,7 @@ export default function EditarContaPage() {
     nome: '',
     tipo: '' as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro' | '',
     banco: '',
+    bancoCustomizado: '', // Para armazenar o banco personalizado
     limite: '' as string | number | '',
     data_fechamento: '' as string | number | '',
     ativo: true
@@ -72,10 +73,14 @@ export default function EditarContaPage() {
         }
 
         setConta(contaEncontrada)
+        const bancoAtual = contaEncontrada.banco || ''
+        const ehBancoCustomizado = bancoAtual && !BANCOS_POPULARES.includes(bancoAtual)
+        
         setDados({
           nome: contaEncontrada.nome,
           tipo: contaEncontrada.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
-          banco: contaEncontrada.banco || '',
+          banco: ehBancoCustomizado ? 'Outro' : bancoAtual,
+          bancoCustomizado: ehBancoCustomizado ? bancoAtual : '',
           limite: typeof (contaEncontrada as any).limite === 'number' && (contaEncontrada as any).limite !== null
             ? (contaEncontrada as any).limite
             : '',
@@ -114,9 +119,15 @@ export default function EditarContaPage() {
       novosErros.push('Tipo é obrigatório')
     }
 
-    // Banco é opcional, mas se preenchido deve ter pelo menos 2 caracteres
-    if (dados.banco && dados.banco.trim().length < 2) {
-      novosErros.push('Nome do banco deve ter pelo menos 2 caracteres')
+    // Banco é obrigatório (exceto para dinheiro)
+    if (dados.tipo && dados.tipo !== 'dinheiro') {
+      if (!dados.banco) {
+        novosErros.push('Banco é obrigatório')
+      } else if (dados.banco === 'Outro') {
+        if (!dados.bancoCustomizado || dados.bancoCustomizado.trim().length < 2) {
+          novosErros.push('Nome do banco personalizado deve ter pelo menos 2 caracteres')
+        }
+      }
     }
 
     // Limite obrigatório para cartão; aceita 0 e centavos
@@ -161,7 +172,8 @@ export default function EditarContaPage() {
       await atualizarConta(conta.id, {
         nome: dados.nome.trim(),
         tipo: dados.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
-        banco: dados.banco.trim() || null,
+        banco: dados.banco === 'Outro' ? dados.bancoCustomizado.trim() : dados.banco.trim(),
+        // Garantir que sempre tenha um banco para tipos que não sejam dinheiro
         limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || null : null,
         data_fechamento: dados.tipo === 'cartao_credito' ? Number(dados.data_fechamento) || null : null,
         ativo: dados.ativo
@@ -299,12 +311,18 @@ export default function EditarContaPage() {
               {/* Banco (apenas se não for dinheiro) */}
               {dados.tipo && dados.tipo !== 'dinheiro' && (
                 <div className="space-y-2">
-                  <Label htmlFor="banco">Banco (opcional)</Label>
+                  <Label htmlFor="banco">Banco *</Label>
                   <Select
                     value={dados.banco}
-                    onChange={(e) => setDados(prev => ({ ...prev, banco: e.target.value }))}
+                    onChange={(e) => {
+                      setDados(prev => ({ 
+                        ...prev, 
+                        banco: e.target.value,
+                        bancoCustomizado: e.target.value === 'Outro' ? prev.bancoCustomizado : ''
+                      }))
+                    }}
                     disabled={salvando}
-                    className={erros.some(e => e.includes('banco')) ? 'border-destructive' : ''}
+                    className={erros.some(e => e.toLowerCase().includes('banco')) ? 'border-destructive' : ''}
                   >
                     <option value="">Selecione o banco</option>
                     {BANCOS_POPULARES.map((banco) => (
@@ -318,10 +336,10 @@ export default function EditarContaPage() {
                     <Input
                       type="text"
                       placeholder="Digite o nome do banco"
-                      value={dados.banco === 'Outro' ? '' : dados.banco}
-                      onChange={(e) => setDados(prev => ({ ...prev, banco: e.target.value }))}
+                      value={dados.bancoCustomizado}
+                      onChange={(e) => setDados(prev => ({ ...prev, bancoCustomizado: e.target.value }))}
                       disabled={salvando}
-                      className="mt-2"
+                      className={`mt-2 ${erros.some(e => e.toLowerCase().includes('personalizado')) ? 'border-destructive' : ''}`}
                     />
                   )}
                 </div>
@@ -414,6 +432,9 @@ export default function EditarContaPage() {
                           {tipoSelecionado?.label.replace(/^[🏦💰💳💵]\s/, '') || 'Selecione o tipo'}
                           {dados.banco && dados.banco !== 'Outro' && (
                             <span> • {dados.banco}</span>
+                          )}
+                          {dados.banco === 'Outro' && dados.bancoCustomizado && (
+                            <span> • {dados.bancoCustomizado}</span>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">

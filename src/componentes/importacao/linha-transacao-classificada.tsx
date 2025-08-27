@@ -3,11 +3,13 @@ import { TransacaoClassificada } from '@/tipos/importacao'
 interface LinhaTransacaoProps {
   transacao: TransacaoClassificada
   onClick?: () => void
+  onToggleSelecao?: (transacao: TransacaoClassificada, selecionada: boolean) => void
 }
 
 export function LinhaTransacaoClassificada({ 
   transacao, 
-  onClick 
+  onClick,
+  onToggleSelecao
 }: LinhaTransacaoProps) {
   
   const getStatusConfig = () => {
@@ -58,7 +60,34 @@ export function LinhaTransacaoClassificada({
       tabIndex={config.clickable ? 0 : undefined}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Checkbox de seleção */}
+        {onToggleSelecao && (
+          <input
+            type="checkbox"
+            checked={transacao.selecionada ?? true}
+            onChange={(e) => {
+              e.stopPropagation()
+              onToggleSelecao(transacao, e.target.checked)
+            }}
+            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+          />
+        )}
+        
+        {/* Ícone de status */}
         <span className="text-lg">{config.icon}</span>
+        
+        {/* Sinalização do tipo de lançamento */}
+        {transacao.sinalizacao && (
+          <div 
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white border"
+            title={transacao.sinalizacao.tooltip}
+          >
+            <span>{transacao.sinalizacao.icone}</span>
+            <span className="font-medium text-gray-600">
+              {transacao.sinalizacao.descricao}
+            </span>
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="font-medium truncate text-sm">
             {descricaoLimpa}

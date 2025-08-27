@@ -43,6 +43,7 @@ export default function NovaContaPage() {
     nome: '',
     tipo: '' as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro' | '',
     banco: '',
+    bancoCustomizado: '', // Para armazenar o banco personalizado
     limite: '' as string | number | '',
     data_fechamento: '' as string | number | '',
     ativo: true
@@ -79,9 +80,15 @@ export default function NovaContaPage() {
       }
     }
 
-    // Banco é opcional, mas se preenchido deve ter pelo menos 2 caracteres
-    if (dados.banco && dados.banco.trim().length < 2) {
-      novosErros.push('Nome do banco deve ter pelo menos 2 caracteres')
+    // Banco é obrigatório (exceto para dinheiro)
+    if (dados.tipo && dados.tipo !== 'dinheiro') {
+      if (!dados.banco) {
+        novosErros.push('Banco é obrigatório')
+      } else if (dados.banco === 'Outro') {
+        if (!dados.bancoCustomizado || dados.bancoCustomizado.trim().length < 2) {
+          novosErros.push('Nome do banco personalizado deve ter pelo menos 2 caracteres')
+        }
+      }
     }
 
     setErros(novosErros)
@@ -106,7 +113,7 @@ export default function NovaContaPage() {
       await criarConta({
         nome: dados.nome.trim(),
         tipo: dados.tipo as 'conta_corrente' | 'poupanca' | 'cartao_credito' | 'dinheiro',
-        banco: dados.banco.trim() || null,
+        banco: dados.banco === 'Outro' ? dados.bancoCustomizado.trim() : dados.banco.trim(),
         limite: dados.tipo === 'cartao_credito' ? Number(dados.limite) || null : null,
         data_fechamento: dados.tipo === 'cartao_credito' ? Number(dados.data_fechamento) || null : null,
         ativo: dados.ativo
@@ -212,12 +219,18 @@ export default function NovaContaPage() {
               {/* Banco (apenas se não for dinheiro) */}
               {dados.tipo && dados.tipo !== 'dinheiro' && (
                 <div className="space-y-2">
-                  <Label htmlFor="banco">Banco (opcional)</Label>
+                  <Label htmlFor="banco">Banco *</Label>
                   <Select
                     value={dados.banco}
-                    onChange={(e) => setDados(prev => ({ ...prev, banco: e.target.value }))}
+                    onChange={(e) => {
+                      setDados(prev => ({ 
+                        ...prev, 
+                        banco: e.target.value,
+                        bancoCustomizado: e.target.value === 'Outro' ? prev.bancoCustomizado : ''
+                      }))
+                    }}
                     disabled={carregando}
-                    className={erros.some(e => e.includes('banco')) ? 'border-destructive' : ''}
+                    className={erros.some(e => e.toLowerCase().includes('banco')) ? 'border-destructive' : ''}
                   >
                     <option value="">Selecione o banco</option>
                     {BANCOS_POPULARES.map((banco) => (
@@ -231,10 +244,10 @@ export default function NovaContaPage() {
                     <Input
                       type="text"
                       placeholder="Digite o nome do banco"
-                      value={dados.banco === 'Outro' ? '' : dados.banco}
-                      onChange={(e) => setDados(prev => ({ ...prev, banco: e.target.value }))}
+                      value={dados.bancoCustomizado}
+                      onChange={(e) => setDados(prev => ({ ...prev, bancoCustomizado: e.target.value }))}
                       disabled={carregando}
-                      className="mt-2"
+                      className={`mt-2 ${erros.some(e => e.toLowerCase().includes('personalizado')) ? 'border-destructive' : ''}`}
                     />
                   )}
                 </div>
@@ -295,6 +308,9 @@ export default function NovaContaPage() {
                           {tipoSelecionado?.label.replace(/^[🏦💰💳💵]\s/, '') || 'Selecione o tipo'}
                           {dados.banco && dados.banco !== 'Outro' && (
                             <span> • {dados.banco}</span>
+                          )}
+                          {dados.banco === 'Outro' && dados.bancoCustomizado && (
+                            <span> • {dados.bancoCustomizado}</span>
                           )}
                         </div>
                         <div className="text-xs text-green-600 mt-1">

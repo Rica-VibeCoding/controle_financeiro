@@ -249,9 +249,29 @@ export function ListaTransacoes({
                     <TableCell className="hidden md:table-cell">
                       <div className="text-sm">
                         <div className="truncate">{(transacao as any).conta?.nome || '-'}</div>
+                        {(transacao as any).conta && (
+                          <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                            <span>{(transacao as any).conta.tipo.replace('_', ' ')}</span>
+                            {(transacao as any).conta.banco && (
+                              <>
+                                <span>•</span>
+                                <span>{(transacao as any).conta.banco}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                         {transacao.tipo === 'transferencia' && (transacao as any).conta_destino && (
-                          <div className="text-xs text-muted-foreground truncate">
+                          <div className="text-xs text-muted-foreground truncate mt-1">
                             → {(transacao as any).conta_destino.nome}
+                            <div className="flex items-center gap-1">
+                              <span>{(transacao as any).conta_destino.tipo.replace('_', ' ')}</span>
+                              {(transacao as any).conta_destino.banco && (
+                                <>
+                                  <span>•</span>
+                                  <span>{(transacao as any).conta_destino.banco}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>

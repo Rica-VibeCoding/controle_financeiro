@@ -48,7 +48,7 @@ export default function ConfiguracaoMetasPage() {
   }, [metasDoMes])
 
   const obterValorMeta = (categoriaId: string): string => {
-    return valoresEdicao[categoriaId] || '0'
+    return valoresEdicao[categoriaId] || ''
   }
 
   const atualizarValor = (categoriaId: string, valor: string) => {
@@ -75,9 +75,10 @@ export default function ConfiguracaoMetasPage() {
   }
 
   const salvarMetaLocal = async (categoriaId: string): Promise<void> => {
-    const valorString = valoresEdicao[categoriaId] || '0'
-    const valor = parseFloat(valorString.replace(',', '.'))
+    const valorString = valoresEdicao[categoriaId] || ''
+    if (!valorString.trim()) return
     
+    const valor = parseFloat(valorString.replace(',', '.'))
     if (valor < 0 || isNaN(valor)) return
 
     setSalvando(prev => ({ ...prev, [categoriaId]: true }))
@@ -160,7 +161,7 @@ export default function ConfiguracaoMetasPage() {
                       onChange={(e) => atualizarValor(categoria.id, e.target.value)}
                       onKeyDown={(e) => handleEnterPress(categoria.id, e)}
                       className="w-32 text-right"
-                      placeholder="0,00"
+                      placeholder="Ex: 500,00"
                     />
                     <Button
                       size="sm"

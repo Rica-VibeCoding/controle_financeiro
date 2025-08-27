@@ -58,7 +58,7 @@ export default function FormasPagamentoPage() {
   if (carregando) {
     return (
       <LayoutPrincipal>
-        <div className="max-w-full mx-auto px-4 space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           <div className="text-center py-8 text-muted-foreground">
             Carregando formas de pagamento...
           </div>
@@ -95,7 +95,7 @@ export default function FormasPagamentoPage() {
                 <TableHead className="w-[140px] font-semibold sticky left-0 bg-gray-50/50 z-20">Nome</TableHead>
                 <TableHead className="w-[100px] font-semibold">Tipo</TableHead>
                 <TableHead className="w-[120px] font-semibold text-center hidden sm:table-cell">Parcelamento</TableHead>
-                <TableHead className="w-[100px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
+                <TableHead className="w-[80px] font-semibold text-center hidden sm:table-cell">Status</TableHead>
                 <TableHead className="w-[80px] font-semibold text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -113,7 +113,7 @@ export default function FormasPagamentoPage() {
               ) : (
                 formasPagamento.map((forma) => (
                   <TableRow key={forma.id} className="hover:bg-gray-50/50">
-                    <TableCell>
+                    <TableCell className="sticky left-0 bg-white z-10">
                       <div className="font-medium">{forma.nome}</div>
                     </TableCell>
                     <TableCell>
@@ -121,7 +121,7 @@ export default function FormasPagamentoPage() {
                         {getTipoLabel(forma.tipo)}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center hidden sm:table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                         forma.permite_parcelamento 
                           ? 'bg-green-100 text-green-800' 
@@ -130,7 +130,7 @@ export default function FormasPagamentoPage() {
                         {forma.permite_parcelamento ? 'Permite' : 'Não permite'}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center hidden sm:table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                         forma.ativo 
                           ? 'bg-green-100 text-green-800' 

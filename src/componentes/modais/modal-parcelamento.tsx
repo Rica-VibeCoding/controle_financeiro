@@ -365,9 +365,10 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
                   step="0.01"
                   min="0.02"
                   max="99999999.99"
-                  value={dados.valor}
-                  onChange={(e) => atualizarCampo('valor', parseFloat(e.target.value) || 0)}
-                  placeholder="0,00"
+                  inputMode="decimal"
+                  placeholder="Ex: 1200,00"
+                  value={dados.valor || ''}
+                  onChange={(e) => atualizarCampo('valor', e.target.value === '' ? 0 : Number(e.target.value))}
                   required
                 />
                 {valorParcela > 0 && (
@@ -526,7 +527,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
               </div>
             )}
 
-            {datasParcelas.length > 0 && (dados.valor ?? 0) > 0 && (
+            {datasParcelas.length > 0 && valorParcela > 0 && (
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
                 <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                   <Icone name="list" className="w-4 h-4" aria-hidden="true" />

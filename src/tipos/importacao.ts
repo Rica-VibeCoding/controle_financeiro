@@ -40,9 +40,24 @@ export interface DadosClassificacao {
   forma_pagamento_id: string
 }
 
+export type TipoLancamento = 'gasto_real' | 'ajuste_contabil' | 'pagamento_credito' | 'taxa_juro'
+
+export interface SinalizacaoLancamento {
+  tipo: TipoLancamento
+  icone: string
+  descricao: string
+  tooltip: string
+}
+
 export interface TransacaoClassificada extends TransacaoImportada {
   classificacao_automatica?: DadosClassificacao
   status_classificacao: 'reconhecida' | 'pendente' | 'duplicada'
+  categoria_id?: string
+  subcategoria_id?: string
+  forma_pagamento_id?: string
+  formato_origem?: string // Para identificar se veio de cartão, nubank, etc.
+  sinalizacao?: SinalizacaoLancamento
+  selecionada?: boolean // Para controle de seleção individual
 }
 
 export interface ResumoClassificacao {

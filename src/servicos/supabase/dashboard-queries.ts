@@ -434,17 +434,21 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
           .order('data', { ascending: false })
           .limit(5)
 
-        // Definir ícone baseado no tipo da conta
+        // Definir ícone baseado no tipo da conta (lógica simples e robusta)
         const obterIcone = (tipo: string, banco?: string) => {
-          if (tipo === 'dinheiro') return 'banknote'
+          // Por tipo de conta (usando apenas ícones que existem no componente)
+          if (tipo === 'dinheiro') return 'wallet'
           if (tipo === 'poupanca') return 'piggy-bank'
-          if (banco?.toLowerCase().includes('nubank')) return 'credit-card'
-          return 'building-2'
+          if (tipo === 'conta_corrente') return 'credit-card'
+          if (tipo === 'investimento') return 'line-chart'
+          
+          // Ícone padrão para qualquer banco/conta
+          return 'wallet'
         }
 
         return {
           id: conta.id.toString(),
-          nome: conta.nome || 'Conta sem nome',
+          nome: `${conta.nome || 'Conta sem nome'}${conta.banco ? ` | ${conta.banco}` : ''}`,
           saldo: saldo,
           tipo: conta.tipo || 'outros',
           icone: obterIcone(conta.tipo, conta.banco),

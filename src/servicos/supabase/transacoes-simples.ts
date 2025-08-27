@@ -5,8 +5,8 @@ import type { Transacao, NovaTransacao } from '@/tipos/database'
 type TransacaoComRelacoes = Transacao & {
   categoria?: { nome: string; cor: string; icone: string }
   subcategoria?: { nome: string }
-  conta?: { nome: string; tipo: string }
-  conta_destino?: { nome: string; tipo: string }
+  conta?: { nome: string; tipo: string; banco: string }
+  conta_destino?: { nome: string; tipo: string; banco: string }
   forma_pagamento?: { nome: string; tipo: string }
   centro_custo?: { nome: string; cor: string }
 }
@@ -22,8 +22,8 @@ export async function obterTransacoesSimples(): Promise<TransacaoComRelacoes[]> 
       *,
       categoria:categoria_id(nome, cor, icone),
       subcategoria:subcategoria_id(nome),
-      conta:conta_id(nome, tipo),
-      conta_destino:conta_destino_id(nome, tipo),
+      conta:conta_id(nome, tipo, banco),
+      conta_destino:conta_destino_id(nome, tipo, banco),
       forma_pagamento:forma_pagamento_id(nome, tipo),
       centro_custo:centro_custo_id(nome, cor)
     `)

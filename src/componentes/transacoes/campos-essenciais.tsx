@@ -75,9 +75,10 @@ export function CamposEssenciais({
           type="number"
           step="0.01"
           min="0"
-          placeholder="0,00"
+          inputMode="decimal"
+          placeholder="Ex: 150,00"
           value={dados.valor || ''}
-          onChange={(e) => onUpdate('valor', parseFloat(e.target.value) || 0)}
+          onChange={(e) => onUpdate('valor', e.target.value === '' ? 0 : Number(e.target.value))}
           required
         />
       </div>

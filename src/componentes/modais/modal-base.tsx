@@ -13,6 +13,7 @@ interface ModalBaseProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'
   fixedWidth?: string
   showCloseButton?: boolean
+  size?: string // Compatibilidade com código existente
 }
 
 export function ModalBase({

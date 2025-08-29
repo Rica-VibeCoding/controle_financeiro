@@ -34,9 +34,11 @@ import {
   Banknote,
   User,
   PiggyBank,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react'
 
-type IconName =
+export type IconName =
   | 'layout-dashboard'
   | 'credit-card'
   | 'line-chart'
@@ -68,6 +70,8 @@ type IconName =
   | 'banknote'
   | 'user'
   | 'piggy-bank'
+  | 'alert-triangle'
+  | 'loader-2'
 
 const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'layout-dashboard': LayoutDashboard,
@@ -101,6 +105,8 @@ const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'banknote': Banknote,
   'user': User,
   'piggy-bank': PiggyBank,
+  'alert-triangle': AlertTriangle,
+  'loader-2': Loader2,
 }
 
 export interface IconeProps extends Omit<LucideProps, 'ref'> {

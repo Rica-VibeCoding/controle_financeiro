@@ -8,11 +8,13 @@ import { CardProximaConta } from '@/componentes/dashboard/card-proxima-conta'
 import { CardSaldosContas } from '@/componentes/dashboard/card-saldos-contas'
 import { CardCartoesCredito } from '@/componentes/dashboard/card-cartoes-credito'
 import { CardProjetosPessoais } from '@/componentes/dashboard/card-projetos-melhorado'
+import { SeletorPeriodo } from '@/componentes/dashboard/seletor-periodo'
+import { LogoutDevButton } from '@/componentes/auth/logout-dev'
 import { useCardsData } from '@/hooks/usar-cards-dados'
-import { usePeriodo } from '@/hooks/usar-periodo'
+import { usePeriodoContexto } from '@/contextos/periodo-contexto'
 
 export default function DashboardPage() {
-  const { periodo } = usePeriodo()
+  const { periodo } = usePeriodoContexto()
   const { data: cards, error, isLoading } = useCardsData(periodo)
 
   return (
@@ -21,7 +23,10 @@ export default function DashboardPage() {
 
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <span className="text-sm text-gray-500">{periodo.mes} {periodo.ano}</span>
+          <div className="flex items-center gap-4">
+            <LogoutDevButton />
+            <SeletorPeriodo />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -86,7 +91,7 @@ export default function DashboardPage() {
           </div>
           
           <div style={{ animationDelay: '0.6s' }}>
-            <GraficoCategorias periodo={periodo} />
+            <GraficoCategorias />
           </div>
         </div>
 

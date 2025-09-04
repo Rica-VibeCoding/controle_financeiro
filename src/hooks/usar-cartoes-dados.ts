@@ -1,6 +1,7 @@
 import useSWR from 'swr'
 import { obterCartoesCredito } from '@/servicos/supabase/dashboard-queries'
-import type { CartaoData } from '@/tipos/dashboard'
+import { useAuth } from '@/contextos/auth-contexto'
+import type { CartaoData, Periodo } from '@/tipos/dashboard'
 
 interface CartoesResponse {
   cartoes: CartaoData[]
@@ -8,10 +9,12 @@ interface CartoesResponse {
   totalLimite: number
 }
 
-export function useCartoesDados() {
+export function useCartoesDados(periodo: Periodo) {
+  const { workspace } = useAuth()
+  
   return useSWR<CartoesResponse>(
-    'cartoes-credito-individuais',
-    obterCartoesCredito,
+    workspace ? ['cartoes-credito', workspace.id, periodo.inicio, periodo.fim] : null,
+    () => obterCartoesCredito(periodo, workspace!.id),
     {
       refreshInterval: 60000, // 1 minuto - dados financeiros em tempo real
       revalidateOnFocus: false,

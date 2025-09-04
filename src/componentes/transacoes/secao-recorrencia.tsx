@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Input } from '@/componentes/ui/input'
 import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
@@ -15,6 +16,44 @@ export function SecaoRecorrencia({
   dados,
   onUpdate
 }: SecaoRecorrenciaProps) {
+  
+  // Função para calcular próxima data baseada na data de vencimento e frequência
+  const calcularProximaData = (dataVencimento: string | undefined, frequencia: string | undefined): string => {
+    if (!dataVencimento || !frequencia) return ''
+    
+    const data = new Date(dataVencimento)
+    
+    switch (frequencia) {
+      case 'diario':
+        data.setDate(data.getDate() + 1)
+        break
+      case 'semanal':
+        data.setDate(data.getDate() + 7)
+        break
+      case 'mensal':
+        data.setMonth(data.getMonth() + 1)
+        break
+      case 'anual':
+        data.setFullYear(data.getFullYear() + 1)
+        break
+      default:
+        // Se não tem frequência ainda, assume mensal
+        data.setMonth(data.getMonth() + 1)
+    }
+    
+    return data.toISOString().split('T')[0]
+  }
+
+  // Auto-calcular próxima recorrência baseada na data de vencimento
+  useEffect(() => {
+    if (dados.recorrente && dados.data_vencimento && dados.frequencia_recorrencia) {
+      const proximaData = calcularProximaData(dados.data_vencimento, dados.frequencia_recorrencia)
+      // Só atualiza se for diferente do valor atual
+      if (proximaData !== dados.proxima_recorrencia) {
+        onUpdate('proxima_recorrencia', proximaData)
+      }
+    }
+  }, [dados.recorrente, dados.data_vencimento, dados.frequencia_recorrencia, dados.proxima_recorrencia, onUpdate])
   return (
     <div className="space-y-4 border-t pt-4">
       <h3 className="text-lg font-medium flex items-center gap-2">
@@ -40,9 +79,23 @@ export function SecaoRecorrencia({
           </p>
         </div>
 
-        {/* Frequência da Recorrência */}
+        {/* Campos para Transação Recorrente */}
         {dados.recorrente && (
           <>
+            <div>
+              <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
+              <Input
+                id="data_vencimento"
+                type="date"
+                value={dados.data_vencimento || ''}
+                onChange={(e) => onUpdate('data_vencimento', e.target.value)}
+                required={dados.recorrente}
+              />
+              <p className="text-sm text-gray-600 mt-1">
+                Quando esta transação vence mensalmente
+              </p>
+            </div>
+
             <div>
               <Label htmlFor="frequencia_recorrencia">Frequência *</Label>
               <Select
@@ -51,27 +104,33 @@ export function SecaoRecorrencia({
                 required={dados.recorrente}
               >
                 <option value="">Selecione a frequência</option>
+                <option value="diario">Diário</option>
                 <option value="semanal">Semanal</option>
-                <option value="quinzenal">Quinzenal</option>
                 <option value="mensal">Mensal</option>
-                <option value="bimestral">Bimestral</option>
-                <option value="trimestral">Trimestral</option>
-                <option value="semestral">Semestral</option>
                 <option value="anual">Anual</option>
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="proxima_recorrencia">Próxima Data *</Label>
+            <div className="md:col-span-2">
+              <Label htmlFor="proxima_recorrencia" className="flex items-center gap-2">
+                Próxima Recorrência (Calculado)
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                  Auto
+                </span>
+              </Label>
               <Input
                 id="proxima_recorrencia"
                 type="date"
                 value={dados.proxima_recorrencia || ''}
-                onChange={(e) => onUpdate('proxima_recorrencia', e.target.value)}
-                required={dados.recorrente}
+                readOnly
+                className="bg-green-50 border-green-200 cursor-not-allowed"
               />
-              <p className="text-sm text-gray-600 mt-1">
-                Data da próxima ocorrência desta transação
+              <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                <span>✅</span>
+                {dados.proxima_recorrencia ? 
+                  `Próximo vencimento será em ${new Date(dados.proxima_recorrencia).toLocaleDateString('pt-BR')}` :
+                  'Será calculado automaticamente'
+                }
               </p>
             </div>
           </>
@@ -85,10 +144,10 @@ export function SecaoRecorrencia({
             Como funciona a recorrência?
           </h4>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• A transação atual será salva normalmente</li>
-            <li>• Na data especificada, uma nova transação será criada automaticamente</li>
-            <li>• Você pode editar ou cancelar transações recorrentes a qualquer momento</li>
-            <li>• Transações recorrentes aparecem na aba "Recorrentes" da lista de transações</li>
+            <li>• <strong>Data Vencimento:</strong> Quando a conta vence todo mês/período</li>
+            <li>• <strong>Próxima Recorrência:</strong> É calculada automaticamente</li>
+            <li>• A transação atual será salva com status "previsto"</li>
+            <li>• Novas transações são geradas automaticamente nas datas certas</li>
           </ul>
         </div>
       )}

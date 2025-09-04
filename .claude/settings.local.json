@@ -3,13 +3,15 @@
     "allow": [
       "mcp__supabase__execute_sql"
     ],
-    "deny": [],
     "ask": [],
-    "additionalDirectories": [
-      "/home/ricar/.npm-global/lib/node_modules/@anthropic-ai/claude-code"
-    ]
+    "deny": []
   },
-  "enableAllProjectMcpServers": false,
+  "additionalDirectories": [
+    "/home/ricar/.npm-global/lib/node_modules/@anthropic-ai/claude-code",
+    "/mnt/c/Users/ricar/OneDrive/Documentos/ShareX/Screenshots",
+    "/mnt/c/Users/ricar/Projetos/bkps/Controle Financeiro"
+  ],
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
   ],

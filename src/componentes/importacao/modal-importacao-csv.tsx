@@ -23,6 +23,7 @@ import {
   buscarClassificacoesEmLote
 } from '@/servicos/importacao/classificador-historico'
 import { logger } from '@/utilitarios/logger'
+import { useAuth } from '@/contextos/auth-contexto'
 
 interface ModalImportacaoCSVProps {
   isOpen: boolean
@@ -35,6 +36,7 @@ export function ModalImportacaoCSV({
   onClose,
   onSuccess
 }: ModalImportacaoCSVProps) {
+  const { workspace } = useAuth()
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [contaSelecionada, setContaSelecionada] = useState('')
   const [carregando, setCarregando] = useState(false)
@@ -198,9 +200,14 @@ export function ModalImportacaoCSV({
       return
     }
 
+    if (!workspace) {
+      erro('❌ Workspace não encontrado')
+      return
+    }
+
     setCarregando(true)
     try {
-      const resultado = await importarTransacoes(transacoesParaImportar)
+      const resultado = await importarTransacoes(transacoesParaImportar, workspace.id)
       
       if (resultado.erros.length === 0) {
         sucesso(`✅ ${resultado.importadas} transações importadas com sucesso!`)

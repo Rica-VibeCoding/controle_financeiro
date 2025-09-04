@@ -12,7 +12,7 @@ export function ListaRecorrentes() {
   const { 
     buscarTransacoesRecorrentes, 
     processarRecorrenciasVencidas, 
-    pararRecorrencia, 
+    excluirRecorrencia, 
     loading 
   } = usarTransacoes()
   
@@ -43,21 +43,24 @@ export function ListaRecorrentes() {
     }
   }
 
-  // Parar recorrência
-  const handlePararRecorrencia = async (id: string, descricao: string) => {
+  // Excluir recorrência (hard delete)
+  const handleExcluirRecorrencia = async (id: string, descricao: string) => {
     const confirmar = window.confirm(
-      `Deseja parar a recorrência de "${descricao}"?\n\n` +
-      'A transação não será mais repetida automaticamente.'
+      `⚠️ EXCLUIR recorrência de "${descricao}"?\n\n` +
+      '• Configuração será REMOVIDA definitivamente\n' +
+      '• Transações já criadas serão MANTIDAS\n' +
+      '• Esta ação NÃO pode ser desfeita\n\n' +
+      'Confirma a exclusão?'
     )
 
     if (confirmar) {
       try {
-        await pararRecorrencia(id)
+        await excluirRecorrencia(id)
         // Recarregar lista
         const dados = await buscarTransacoesRecorrentes()
         setRecorrentes(dados)
       } catch (error) {
-        console.error('Erro ao parar recorrência:', error)
+        console.error('Erro ao excluir recorrência:', error)
       }
     }
   }
@@ -173,6 +176,17 @@ export function ListaRecorrentes() {
                       <div>
                         <span className="block text-xs">Conta:</span>
                         <div>{(transacao as any).conta?.nome || 'N/A'}</div>
+                        {(transacao as any).conta && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span>{(transacao as any).conta.tipo.replace('_', ' ')}</span>
+                            {(transacao as any).conta.banco && (
+                              <>
+                                <span>•</span>
+                                <span>{(transacao as any).conta.banco}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -187,10 +201,10 @@ export function ListaRecorrentes() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handlePararRecorrencia(transacao.id, transacao.descricao)}
+                      onClick={() => handleExcluirRecorrencia(transacao.id, transacao.descricao)}
                       className="text-xs text-red-600 hover:text-red-700"
                     >
-                      Parar
+                      Excluir
                     </Button>
                   </div>
                 </div>
@@ -204,7 +218,7 @@ export function ListaRecorrentes() {
                 <li>• <strong>Vencidas:</strong> Use "Processar Vencidas" para gerar as previstas</li>
                 <li>• <strong>Automático:</strong> Transações são criadas como "previsto"</li>
                 <li>• <strong>Manual:</strong> Marque como "realizado" após efetuar o pagamento</li>
-                <li>• <strong>Parar:</strong> Use "Parar" para interromper a recorrência</li>
+                <li>• <strong>Excluir:</strong> Remove configuração (mantém transações criadas)</li>
               </ul>
             </div>
           </div>

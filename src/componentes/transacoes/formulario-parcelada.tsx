@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'
 import { DateInput } from '@/componentes/ui/date-input'
@@ -9,9 +9,9 @@ import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
 import { LoadingText } from '@/componentes/comum/loading'
 import { UploadAnexo } from './upload-anexo'
-import { validarTransacao } from '@/utilitarios/validacao'
-import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
+import { NovaTransacao, Subcategoria } from '@/tipos/database'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
+import { useAuth } from '@/contextos/auth-contexto'
 import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
 
 interface FormularioParceladaProps {
@@ -30,7 +30,7 @@ export function FormularioParcelada({
     data: new Date().toISOString().split('T')[0],
     descricao: '',
     valor: 0,
-    tipo: 'despesa', // Parceladas são sempre despesas conforme PRD
+    tipo: 'despesa',
     conta_id: '',
     status: 'previsto',
     parcela_atual: 1,
@@ -41,14 +41,13 @@ export function FormularioParcelada({
   const [numeroParcelas, setNumeroParcelas] = useState(2)
 
   // Dados do Context
+  const { workspace } = useAuth()
   const { dados: dadosAuxiliares, loading: dadosLoading } = useDadosAuxiliares()
   const { contas, categorias, formasPagamento, centrosCusto } = dadosAuxiliares
   
   // Subcategorias ainda precisam ser carregadas por categoria
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
   const [carregandoSubcategorias, setCarregandoSubcategorias] = useState(false)
-  
-  const [loading, setLoading] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [mensagemAnexo, setMensagemAnexo] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null)
 
@@ -60,9 +59,11 @@ export function FormularioParcelada({
         return
       }
 
+      if (!workspace) return
+      
       try {
         setCarregandoSubcategorias(true)
-        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id)
+        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id, workspace.id)
         setSubcategorias(subcategoriasData)
       } catch (error) {
         console.error('Erro ao carregar subcategorias:', error)
@@ -72,10 +73,12 @@ export function FormularioParcelada({
     }
 
     carregarSubcategorias()
-  }, [dados.categoria_id])
+  }, [dados.categoria_id, workspace])
 
-  // Filtrar categorias e formas de pagamento para parceladas
-  const categoriasFiltradas = categorias.filter(cat => cat.tipo === 'despesa' || cat.tipo === 'ambos')
+  // Filtrar categorias dinamicamente por tipo selecionado
+  const categoriasFiltradas = categorias.filter(cat => 
+    cat.tipo === dados.tipo || cat.tipo === 'ambos'
+  )
   const formasParcelamento = formasPagamento.filter(forma => forma.permite_parcelamento)
 
   if (dadosLoading) {
@@ -89,15 +92,24 @@ export function FormularioParcelada({
   }
 
   // Atualizar campo
-  const atualizarCampo = (campo: string, valor: any) => {
-    setDados(prev => ({ ...prev, [campo]: valor }))
+  const atualizarCampo = (campo: string, valor: string | number | boolean | null) => {
+    setDados(prev => ({
+      ...prev,
+      [campo]: valor,
+      // Limpar categoria/subcategoria se tipo mudou
+      ...(campo === 'tipo' ? { categoria_id: '', subcategoria_id: '' } : {}),
+      // Limpar subcategoria se categoria mudou
+      ...(campo === 'categoria_id' ? { subcategoria_id: '' } : {}),
+      // Limpar data de vencimento se status mudou para realizado
+      ...(campo === 'status' && valor === 'realizado' ? { data_vencimento: '' } : {})
+    }))
   }
 
   // Calcular valor das parcelas
   const valorParcela = dados.valor ? Number((dados.valor / numeroParcelas).toFixed(2)) : 0
 
   // Manipular upload de anexo
-  const handleUploadSuccess = (url: string, fileName: string) => {
+  const handleUploadSuccess = (url: string, _fileName: string) => {
     if (url === '') {
       atualizarCampo('anexo_url', null)
       setMensagemAnexo({ tipo: 'sucesso', texto: 'Anexo removido com sucesso' })
@@ -144,9 +156,21 @@ export function FormularioParcelada({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Proteção instantânea no DOM contra duplo clique
+    const button = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement
+    if (button?.dataset.executing === 'true') return
+    if (button) button.dataset.executing = 'true'
+
+    // Verificação dupla de estado
+    if (salvando) {
+      if (button) button.dataset.executing = 'false'
+      return
+    }
+
     const erros = validarFormulario()
     if (erros.length > 0) {
       alert('Erros no formulário:\n' + erros.join('\n'))
+      if (button) button.dataset.executing = 'false'
       return
     }
 
@@ -157,14 +181,15 @@ export function FormularioParcelada({
       console.error('Erro ao salvar:', error)
     } finally {
       setSalvando(false)
+      if (button) button.dataset.executing = 'false'
     }
   }
 
-  if (loading || salvando) {
+  if (salvando) {
     return (
       <Card>
         <CardContent className="p-6">
-          <LoadingText>Carregando formulário...</LoadingText>
+          <LoadingText>Salvando...</LoadingText>
         </CardContent>
       </Card>
     )
@@ -177,7 +202,22 @@ export function FormularioParcelada({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Tipo */}
+            <div>
+              <Label htmlFor="tipo">Tipo *</Label>
+              <Select
+                id="tipo"
+                value={dados.tipo}
+                onChange={(e) => atualizarCampo('tipo', e.target.value as 'receita' | 'despesa')}
+                required
+              >
+                <option value="">Selecione o tipo</option>
+                <option value="receita">Receita</option>
+                <option value="despesa">Despesa</option>
+              </Select>
+            </div>
+
             {/* Data */}
             <div>
               <Label htmlFor="data">Data da Primeira Parcela *</Label>
@@ -324,16 +364,18 @@ export function FormularioParcelada({
               </Select>
             </div>
 
-            {/* Data de Vencimento */}
-            <div>
-              <Label htmlFor="data_vencimento">Data de Vencimento</Label>
-              <DateInput
-                id="data_vencimento"
-                value={dados.data_vencimento || ''}
-                onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
-                clearable
-              />
-            </div>
+            {/* Data de Vencimento - só para transações previstas */}
+            {dados.status === 'previsto' && (
+              <div>
+                <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+                <DateInput
+                  id="data_vencimento"
+                  value={dados.data_vencimento || ''}
+                  onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
+                  clearable
+                />
+              </div>
+            )}
           </div>
 
           {/* Observações */}

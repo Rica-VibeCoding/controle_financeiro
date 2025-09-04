@@ -1,0 +1,361 @@
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import RegisterPage from '../register/page'
+import * as convitesService from '@/servicos/supabase/convites-simples'
+import * as authClient from '@/servicos/supabase/auth-client'
+
+// Mocks
+jest.mock('next/navigation')
+jest.mock('@/servicos/supabase/convites-simples')
+jest.mock('@/servicos/supabase/auth-client')
+jest.mock('@/utilitarios/error-handler', () => ({
+  useErrorHandler: () => ({
+    showError: jest.fn()
+  }),
+  useNotifications: () => ({
+    showSuccess: jest.fn()
+  })
+}))
+jest.mock('@/utilitarios/url-helper', () => ({
+  getCallbackUrl: () => 'http://localhost:3005/auth/callback'
+}))
+
+const mockRouter = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  prefetch: jest.fn()
+}
+
+const mockSearchParams = new URLSearchParams()
+
+describe('RegisterPage - Fluxo com Convites', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(useRouter as jest.Mock).mockReturnValue(mockRouter)
+    ;(useSearchParams as jest.Mock).mockReturnValue(mockSearchParams)
+  })
+
+  describe('TESTE 1: Carregamento sem Convite', () => {
+    test('Deve renderizar formulário normal sem convite', () => {
+      render(<RegisterPage />)
+      
+      expect(screen.getByText('Criar nova conta')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Nome do workspace (ex: Família Silva)')).toBeInTheDocument()
+      expect(screen.getByText('Criar conta')).toBeInTheDocument()
+    })
+  })
+
+  describe('TESTE 2: Carregamento com Convite Válido', () => {
+    test('Deve validar convite automaticamente ao carregar', async () => {
+      // Mock do convite válido
+      const mockConviteValido = {
+        workspace: {
+          id: 'ws-123',
+          nome: 'Meu Workspace'
+        },
+        criadorNome: 'Ricardo'
+      }
+
+      ;(convitesService.usarCodigoConvite as jest.Mock).mockResolvedValue(mockConviteValido)
+
+      // Simular parâmetro de convite na URL
+      mockSearchParams.set('invite', '4YU2L0')
+
+      render(<RegisterPage />)
+
+      // Verificar se validação foi chamada
+      await waitFor(() => {
+        expect(convitesService.usarCodigoConvite).toHaveBeenCalledWith('4YU2L0')
+      })
+
+      // Verificar se interface mudou para contexto de convite
+      await waitFor(() => {
+        expect(screen.getByText('Você foi convidado!')).toBeInTheDocument()
+        expect(screen.getByText('Ricardo')).toBeInTheDocument()
+        expect(screen.getByText('"Meu Workspace"')).toBeInTheDocument()
+        expect(screen.getByText('Criar Conta e Ingressar na Workspace')).toBeInTheDocument()
+      })
+
+      // Campo workspace deve ser preenchido automaticamente e não editável
+      expect(screen.queryByPlaceholderText('Nome do workspace')).not.toBeInTheDocument()
+    })
+
+    test('Deve mostrar erro para convite inválido', async () => {
+      ;(convitesService.usarCodigoConvite as jest.Mock).mockResolvedValue({
+        error: 'Código inválido ou expirado'
+      })
+
+      mockSearchParams.set('invite', 'INVALID')
+
+      render(<RegisterPage />)
+
+      await waitFor(() => {
+        expect(convitesService.usarCodigoConvite).toHaveBeenCalledWith('INVALID')
+      })
+
+      // Deve voltar ao formulário normal após erro
+      expect(screen.getByText('Criar nova conta')).toBeInTheDocument()
+    })
+  })
+
+  describe('TESTE 3: Registro COM Convite (Linhas 94-114)', () => {
+    test('Deve processar registro com convite válido - CENÁRIO CRÍTICO', async () => {
+      // Configurar mocks para cenário completo
+      const mockConvite = {
+        workspace: { id: 'ws-123', nome: 'Meu Workspace' },
+        criadorNome: 'Ricardo'
+      }
+
+      ;(convitesService.usarCodigoConvite as jest.Mock).mockResolvedValue(mockConvite)
+      ;(convitesService.verificarSeEmailJaTemConta as jest.Mock).mockResolvedValue(false)
+      ;(authClient.supabaseClient.auth.signUp as jest.Mock).mockResolvedValue({ error: null })
+      ;(convitesService.aceitarConvite as jest.Mock).mockResolvedValue({ success: true })
+
+      mockSearchParams.set('invite', '4YU2L0')
+
+      render(<RegisterPage />)
+
+      // Aguardar carregamento do convite
+      await waitFor(() => {
+        expect(screen.getByText('Você foi convidado!')).toBeInTheDocument()
+      })
+
+      // Preencher formulário
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), {
+        target: { value: 'Teste Usuário' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Seu email'), {
+        target: { value: 'teste@teste.com' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), {
+        target: { value: 'senha123' }
+      })
+
+      // Submeter formulário
+      fireEvent.click(screen.getByText('Criar Conta e Ingressar na Workspace'))
+
+      // Verificar fluxo completo
+      await waitFor(() => {
+        // 1. Verificação de email duplicado
+        expect(convitesService.verificarSeEmailJaTemConta).toHaveBeenCalledWith('teste@teste.com')
+        
+        // 2. Registro do usuário
+        expect(authClient.supabaseClient.auth.signUp).toHaveBeenCalledWith({
+          email: 'teste@teste.com',
+          password: 'senha123',
+          options: {
+            data: {
+              full_name: 'Teste Usuário',
+              workspace_name: 'Meu Workspace'
+            },
+            emailRedirectTo: 'http://localhost:3005/auth/callback'
+          }
+        })
+
+        // 3. TESTE CRÍTICO: aceitarConvite chamado com parâmetros corretos
+        expect(convitesService.aceitarConvite).toHaveBeenCalledWith(
+          '4YU2L0', 
+          'teste@teste.com', 
+          'Teste Usuário'
+        )
+
+        // 4. Redirecionamento
+        expect(mockRouter.push).toHaveBeenCalledWith('/auth/login')
+      })
+    })
+
+    test('Deve falhar quando email já existe no sistema', async () => {
+      const mockConvite = {
+        workspace: { id: 'ws-123', nome: 'Meu Workspace' },
+        criadorNome: 'Ricardo'
+      }
+
+      ;(convitesService.usarCodigoConvite as jest.Mock).mockResolvedValue(mockConvite)
+      ;(convitesService.verificarSeEmailJaTemConta as jest.Mock).mockResolvedValue(true)
+
+      mockSearchParams.set('invite', '4YU2L0')
+
+      render(<RegisterPage />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Você foi convidado!')).toBeInTheDocument()
+      })
+
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), {
+        target: { value: 'Teste Usuário' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Seu email'), {
+        target: { value: 'existente@teste.com' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), {
+        target: { value: 'senha123' }
+      })
+
+      fireEvent.click(screen.getByText('Criar Conta e Ingressar na Workspace'))
+
+      await waitFor(() => {
+        expect(convitesService.verificarSeEmailJaTemConta).toHaveBeenCalledWith('existente@teste.com')
+        expect(authClient.supabaseClient.auth.signUp).not.toHaveBeenCalled()
+      })
+    })
+
+    test('Deve continuar mesmo se aceitarConvite falhar (fallback)', async () => {
+      const mockConvite = {
+        workspace: { id: 'ws-123', nome: 'Meu Workspace' },
+        criadorNome: 'Ricardo'
+      }
+
+      ;(convitesService.usarCodigoConvite as jest.Mock).mockResolvedValue(mockConvite)
+      ;(convitesService.verificarSeEmailJaTemConta as jest.Mock).mockResolvedValue(false)
+      ;(authClient.supabaseClient.auth.signUp as jest.Mock).mockResolvedValue({ error: null })
+      ;(convitesService.aceitarConvite as jest.Mock).mockResolvedValue({ 
+        success: false, 
+        error: 'Erro no processamento do convite' 
+      })
+
+      mockSearchParams.set('invite', '4YU2L0')
+
+      render(<RegisterPage />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Você foi convidado!')).toBeInTheDocument()
+      })
+
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), {
+        target: { value: 'Teste Usuário' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Seu email'), {
+        target: { value: 'teste@teste.com' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), {
+        target: { value: 'senha123' }
+      })
+
+      fireEvent.click(screen.getByText('Criar Conta e Ingressar na Workspace'))
+
+      await waitFor(() => {
+        expect(authClient.supabaseClient.auth.signUp).toHaveBeenCalled()
+        expect(convitesService.aceitarConvite).toHaveBeenCalled()
+        expect(mockRouter.push).toHaveBeenCalledWith('/auth/login')
+      })
+    })
+  })
+
+  describe('TESTE 4: Registro SEM Convite', () => {
+    test('Deve processar registro normal sem convite', async () => {
+      ;(authClient.supabaseClient.auth.signUp as jest.Mock).mockResolvedValue({ error: null })
+
+      render(<RegisterPage />)
+
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), {
+        target: { value: 'Usuário Normal' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Nome do workspace (ex: Família Silva)'), {
+        target: { value: 'Workspace Próprio' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Seu email'), {
+        target: { value: 'normal@teste.com' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), {
+        target: { value: 'senha123' }
+      })
+
+      fireEvent.click(screen.getByText('Criar conta'))
+
+      await waitFor(() => {
+        expect(authClient.supabaseClient.auth.signUp).toHaveBeenCalledWith({
+          email: 'normal@teste.com',
+          password: 'senha123',
+          options: {
+            data: {
+              full_name: 'Usuário Normal',
+              workspace_name: 'Workspace Próprio'
+            },
+            emailRedirectTo: 'http://localhost:3005/auth/callback'
+          }
+        })
+
+        // NÃO deve chamar funções de convite
+        expect(convitesService.verificarSeEmailJaTemConta).not.toHaveBeenCalled()
+        expect(convitesService.aceitarConvite).not.toHaveBeenCalled()
+        
+        expect(mockRouter.push).toHaveBeenCalledWith('/auth/login')
+      })
+    })
+  })
+
+  describe('TESTE 5: Estados de Loading', () => {
+    test('Deve mostrar loading durante validação de convite', async () => {
+      // Mock de delay na validação
+      ;(convitesService.usarCodigoConvite as jest.Mock).mockImplementation(
+        () => new Promise(resolve => 
+          setTimeout(() => resolve({ workspace: { nome: 'Teste' } }), 100)
+        )
+      )
+
+      mockSearchParams.set('invite', '4YU2L0')
+
+      render(<RegisterPage />)
+
+      expect(screen.getByText('Validando Convite')).toBeInTheDocument()
+      expect(screen.getByText('Verificando código de convite...')).toBeInTheDocument()
+
+      await waitFor(() => {
+        expect(screen.queryByText('Validando Convite')).not.toBeInTheDocument()
+      }, { timeout: 500 })
+    })
+
+    test('Deve mostrar loading durante submissão', async () => {
+      ;(authClient.supabaseClient.auth.signUp as jest.Mock).mockImplementation(
+        () => new Promise(resolve => 
+          setTimeout(() => resolve({ error: null }), 100)
+        )
+      )
+
+      render(<RegisterPage />)
+
+      fireEvent.change(screen.getByPlaceholderText('Seu nome completo'), {
+        target: { value: 'Teste' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Seu email'), {
+        target: { value: 'teste@teste.com' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), {
+        target: { value: 'senha123' }
+      })
+
+      fireEvent.click(screen.getByText('Criar conta'))
+
+      expect(screen.getByText('Criando conta...')).toBeInTheDocument()
+      
+      await waitFor(() => {
+        expect(screen.queryByText('Criando conta...')).not.toBeInTheDocument()
+      }, { timeout: 500 })
+    })
+  })
+
+  describe('TESTE 6: Validação de Formulário', () => {
+    test('Deve exigir campos obrigatórios', () => {
+      render(<RegisterPage />)
+
+      fireEvent.click(screen.getByText('Criar conta'))
+
+      // Form não deve ser submetido com campos vazios
+      expect(authClient.supabaseClient.auth.signUp).not.toHaveBeenCalled()
+    })
+
+    test('Deve exigir senha com mínimo 6 caracteres', () => {
+      render(<RegisterPage />)
+
+      const senhaInput = screen.getByPlaceholderText('Senha (mínimo 6 caracteres)')
+      expect(senhaInput).toHaveAttribute('minLength', '6')
+    })
+
+    test('Deve validar formato de email', () => {
+      render(<RegisterPage />)
+
+      const emailInput = screen.getByPlaceholderText('Seu email')
+      expect(emailInput).toHaveAttribute('type', 'email')
+    })
+  })
+})

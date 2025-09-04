@@ -5,6 +5,7 @@ import { MetaComProgresso, ResumoMetas, NovaMetaMensal } from '@/tipos/metas-men
 import { MetasMensaisService } from '@/servicos/supabase/metas-mensais'
 import { gerarMesReferencia } from '@/utilitarios/metas-helpers'
 import { usarToast } from './usar-toast'
+import { useAuth } from '@/contextos/auth-contexto'
 
 interface EstadoMetasMensais {
   metasDoMes: MetaComProgresso[]
@@ -15,6 +16,7 @@ interface EstadoMetasMensais {
 }
 
 export function useMetasMensais() {
+  const { workspace } = useAuth()
   const [estado, setEstado] = useState<EstadoMetasMensais>({
     metasDoMes: [],
     resumo: null,
@@ -27,12 +29,14 @@ export function useMetasMensais() {
 
   // Carregar metas do mês
   const carregarMetasDoMes = useCallback(async (mesReferencia?: number) => {
+    if (!workspace) return
+    
     const mes = mesReferencia || estado.mesAtual
     
     try {
       setEstado(prev => ({ ...prev, loading: true, error: null }))
       
-      const resumo = await MetasMensaisService.gerarResumoMetas(mes)
+      const resumo = await MetasMensaisService.gerarResumoMetas(mes, workspace.id)
       
       setEstado(prev => ({
         ...prev,
@@ -50,7 +54,7 @@ export function useMetasMensais() {
       }))
       erro('Erro ao carregar metas', mensagem)
     }
-  }, [estado.mesAtual, erro])
+  }, [estado.mesAtual, erro, workspace])
 
   // Criar ou atualizar meta
   const salvarMeta = useCallback(async (
@@ -58,6 +62,11 @@ export function useMetasMensais() {
     valorMeta: number,
     mesReferencia?: number
   ) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     const mes = mesReferencia || estado.mesAtual
     
     try {
@@ -80,7 +89,7 @@ export function useMetasMensais() {
         valor_meta: valorMeta
       }
 
-      await MetasMensaisService.criarOuAtualizarMeta(novaMeta)
+      await MetasMensaisService.criarOuAtualizarMeta(novaMeta, workspace.id)
       
       // Recarregar metas para refletir mudanças
       await carregarMetasDoMes(mes)
@@ -96,7 +105,7 @@ export function useMetasMensais() {
       erro('Erro ao salvar meta', mensagem)
       throw err
     }
-  }, [estado.mesAtual, carregarMetasDoMes, sucesso, erro])
+  }, [estado.mesAtual, carregarMetasDoMes, sucesso, erro, workspace])
 
   // Zerar meta
   const zerarMeta = useCallback(async (
@@ -108,12 +117,17 @@ export function useMetasMensais() {
 
   // Renovar metas do mês anterior
   const renovarMetas = useCallback(async (mesReferencia?: number) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      return
+    }
+    
     const mes = mesReferencia || gerarMesReferencia()
     
     try {
       setEstado(prev => ({ ...prev, loading: true, error: null }))
       
-      await MetasMensaisService.renovarMetasDoMesAnterior(mes)
+      await MetasMensaisService.renovarMetasDoMesAnterior(mes, workspace.id)
       
       // Recarregar metas
       await carregarMetasDoMes(mes)
@@ -128,16 +142,25 @@ export function useMetasMensais() {
       }))
       erro('Erro ao renovar metas', mensagem)
     }
-  }, [carregarMetasDoMes, sucesso, erro])
+  }, [carregarMetasDoMes, sucesso, erro, workspace])
 
   // Inicializar metas para novo usuário
   const inicializarMetas = useCallback(async (mesReferencia?: number) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      return
+    }
+    
     const mes = mesReferencia || estado.mesAtual
     
     try {
       setEstado(prev => ({ ...prev, loading: true, error: null }))
       
-      await MetasMensaisService.inicializarMetasParaNovoUsuario(mes)
+      if (!workspace) {
+        throw new Error('Workspace não encontrado')
+      }
+      
+      await MetasMensaisService.inicializarMetasParaNovoUsuario(workspace.id, mes)
       
       // Recarregar metas
       await carregarMetasDoMes(mes)
@@ -152,7 +175,7 @@ export function useMetasMensais() {
       }))
       erro('Erro ao inicializar metas', mensagem)
     }
-  }, [estado.mesAtual, carregarMetasDoMes, sucesso, erro])
+  }, [estado.mesAtual, carregarMetasDoMes, sucesso, erro, workspace])
 
   // Alterar mês visualizado
   const alterarMes = useCallback(async (novoMes: number) => {
@@ -169,11 +192,13 @@ export function useMetasMensais() {
     categoriaId: string,
     mesReferencia?: number
   ) => {
+    if (!workspace) return null
+    
     const mes = mesReferencia || estado.mesAtual
     
     try {
-      const gastos = await MetasMensaisService.calcularGastosPorCategoria(categoriaId, mes)
-      const meta = await MetasMensaisService.buscarMetaPorCategoriaeMes(categoriaId, mes)
+      const gastos = await MetasMensaisService.calcularGastosPorCategoria(categoriaId, mes, workspace.id)
+      const meta = await MetasMensaisService.buscarMetaPorCategoriaeMes(categoriaId, mes, workspace.id)
       
       return {
         valor_gasto: gastos.valor_total,
@@ -184,7 +209,7 @@ export function useMetasMensais() {
       console.error('Erro ao calcular progresso:', err)
       return null
     }
-  }, [estado.mesAtual])
+  }, [estado.mesAtual, workspace])
 
   // Carregar automaticamente na inicialização
   useEffect(() => {

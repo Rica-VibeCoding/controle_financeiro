@@ -1,5 +1,6 @@
 import useSWR from 'swr'
 import { obterSaldosContas } from '@/servicos/supabase/dashboard-queries'
+import { useAuth } from '@/contextos/auth-contexto'
 import type { ContaData } from '@/tipos/dashboard'
 
 interface ContasResponse {
@@ -8,9 +9,11 @@ interface ContasResponse {
 }
 
 export function useContasDados() {
+  const { workspace } = useAuth()
+  
   return useSWR<ContasResponse>(
-    'contas-bancarias-v2-fixed', // Nova chave para forçar refresh
-    obterSaldosContas,
+    workspace ? ['contas-bancarias', workspace.id] : null,
+    () => obterSaldosContas(workspace!.id),
     {
       refreshInterval: 60000, // 1 minuto - dados financeiros em tempo real
       revalidateOnFocus: false,

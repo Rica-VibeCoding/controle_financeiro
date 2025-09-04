@@ -43,9 +43,39 @@ next-env.d.ts
 # claude code local settings
 .claude/settings.local.json
 .claude/memory/
-
-
 claude/
 .claude/
-
 claude
+
+# Arquivos sensíveis (CRÍTICO - NÃO COMMITEAR!)
+.env
+.env.local
+.env.production
+.env.development
+docs/Chaves*
+*.key
+*.pem
+
+# Scripts temporários de debug/fix
+apply-*.js
+debug-*.js
+fix-*.js
+test-*.js
+sql-executor.js
+
+# Relatórios temporários  
+RELATORIO-*.md
+CORRECAO-*.md
+CORREÇÃO-*.md
+
+# Arquivos CSV de exemplo/teste
+docs/*.csv
+*.csv
+
+# Configurações locais específicas
+.mcp.json
+.npmrc
+
+# Cache adicional
+.swc/
+

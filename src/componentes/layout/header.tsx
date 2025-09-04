@@ -2,6 +2,7 @@
 
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
+import { MenuUsuario } from './menu-usuario'
 
 interface HeaderProps {
   onMenuClick?: () => void
@@ -34,10 +35,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon">
-          <span className="sr-only">Menu do usuário</span>
-          👤
-        </Button>
+        <MenuUsuario />
       </div>
     </header>
   )

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo, useMemo } from 'react'
 import { useCategoriasData } from '@/hooks/usar-categorias-dados'
-import type { Periodo } from '@/tipos/dashboard'
+import { usePeriodoContexto } from '@/contextos/periodo-contexto'
 
 // Constantes de configuração
 const LARGURA_NOME_MIN = 96
@@ -11,14 +11,32 @@ const LARGURA_BARRA_THRESHOLD = 30
 const CARACTERES_POR_PIXEL = 8
 const PADDING_NOME = 16
 
-interface GraficoCategoriasProps {
-  periodo: Periodo
-}
-
-export function GraficoCategorias({ periodo }: GraficoCategoriasProps) {
+export const GraficoCategorias = memo(function GraficoCategorias() {
+  // TODOS OS HOOKS NO TOPO - NUNCA CONDICIONAIS OU LOOPS
+  const { periodo } = usePeriodoContexto()
   const { data: categorias, error, isLoading } = useCategoriasData(periodo)
   const [mostrarMetas, setMostrarMetas] = useState(false)
 
+  // Cálculos memoizados para performance - SEMPRE executado
+  const dadosProcessados = useMemo(() => {
+    if (!categorias) return { categoriasComGasto: [], maiorGasto: 1, larguraNome: LARGURA_NOME_MIN }
+    
+    // Filtrar apenas categorias com gasto > 0
+    const categoriasComGasto = categorias.filter(categoria => categoria.gasto > 0)
+    
+    // Calcular maior gasto para escala absoluta (evitar -Infinity se array vazio)
+    const maiorGasto = categoriasComGasto.length > 0 ? Math.max(...categoriasComGasto.map(c => c.gasto)) : 1
+    
+    // Calcular largura baseada no texto mais longo + gap mínimo
+    const textoMaisLongo = categoriasComGasto.length > 0 ? Math.max(...categoriasComGasto.map(c => c.nome.length)) : 10
+    const larguraNome = Math.max(LARGURA_NOME_MIN, Math.min(textoMaisLongo * CARACTERES_POR_PIXEL + PADDING_NOME, LARGURA_NOME_MAX))
+    
+    return { categoriasComGasto, maiorGasto, larguraNome }
+  }, [categorias])
+
+  const { categoriasComGasto, maiorGasto, larguraNome } = dadosProcessados
+
+  // RENDERIZAÇÃO CONDICIONAL APÓS TODOS OS HOOKS
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -57,16 +75,6 @@ export function GraficoCategorias({ periodo }: GraficoCategoriasProps) {
       </div>
     )
   }
-
-  // Filtrar apenas categorias com gasto > 0
-  const categoriasComGasto = categorias.filter(categoria => categoria.gasto > 0)
-  
-  // Calcular maior gasto para escala absoluta (evitar -Infinity se array vazio)
-  const maiorGasto = categoriasComGasto.length > 0 ? Math.max(...categoriasComGasto.map(c => c.gasto)) : 1
-  
-  // Calcular largura baseada no texto mais longo + gap mínimo
-  const textoMaisLongo = categoriasComGasto.length > 0 ? Math.max(...categoriasComGasto.map(c => c.nome.length)) : 10
-  const larguraNome = Math.max(LARGURA_NOME_MIN, Math.min(textoMaisLongo * CARACTERES_POR_PIXEL + PADDING_NOME, LARGURA_NOME_MAX))
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-slide-up">
@@ -169,4 +177,4 @@ export function GraficoCategorias({ periodo }: GraficoCategoriasProps) {
       )}
     </div>
   )
-}
+})

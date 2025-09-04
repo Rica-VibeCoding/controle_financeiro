@@ -16,6 +16,7 @@ import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
 import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
+import { useAuth } from '@/contextos/auth-contexto'
 import { obterTransacaoPorId } from '@/servicos/supabase/transacoes'
 
 interface FormularioTransacaoProps {
@@ -48,6 +49,7 @@ export function FormularioTransacao({
   })
 
   // Dados do Context
+  const { workspace } = useAuth()
   const { dados: dadosAuxiliares, loading: dadosLoading } = useDadosAuxiliares()
   const { contas, categorias, formasPagamento, centrosCusto } = dadosAuxiliares
   
@@ -69,7 +71,9 @@ export function FormularioTransacao({
       try {
         setLoading(true)
 
-        const transacao = await obterTransacaoPorId(transacaoId)
+        if (!workspace) return
+        
+        const transacao = await obterTransacaoPorId(transacaoId, workspace.id)
         if (transacao) {
             setDados({
               data: transacao.data,
@@ -101,7 +105,7 @@ export function FormularioTransacao({
     }
 
     carregarTransacao()
-  }, [transacaoId])
+  }, [transacaoId, workspace])
 
   // Carregar subcategorias quando categoria muda
   useEffect(() => {
@@ -111,9 +115,11 @@ export function FormularioTransacao({
         return
       }
 
+      if (!workspace) return
+      
       try {
         setCarregandoSubcategorias(true)
-        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id)
+        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id, workspace.id)
         setSubcategorias(subcategoriasData)
       } catch (error) {
         console.error('Erro ao carregar subcategorias:', error)
@@ -123,7 +129,7 @@ export function FormularioTransacao({
     }
 
     carregarSubcategorias()
-  }, [dados.categoria_id])
+  }, [dados.categoria_id, workspace])
 
   // Filtrar categorias por tipo
   const categoriasFiltradas = categorias.filter(cat => 
@@ -161,6 +167,8 @@ export function FormularioTransacao({
       ...(campo === 'categoria_id' ? { subcategoria_id: '' } : {}),
       // Limpar conta destino se não é transferência
       ...(campo === 'tipo' && valor !== 'transferencia' ? { conta_destino_id: '' } : {}),
+      // Limpar data de vencimento se status mudou para realizado
+      ...(campo === 'status' && valor === 'realizado' ? { data_vencimento: '' } : {}),
       // Recalcular próxima recorrência se data mudou e é recorrente
       ...(campo === 'data' && prev.recorrente && prev.frequencia_recorrencia ? {
         proxima_recorrencia: calcularProximaRecorrencia(valor, prev.frequencia_recorrencia as 'diario' | 'semanal' | 'mensal' | 'anual')
@@ -288,15 +296,17 @@ export function FormularioTransacao({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="data_vencimento">Data de Vencimento</Label>
-              <DateInput
-                id="data_vencimento"
-                value={dados.data_vencimento || ''}
-                onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
-                clearable
-              />
-            </div>
+            {dados.status === 'previsto' && (
+              <div className="space-y-2">
+                <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+                <DateInput
+                  id="data_vencimento"
+                  value={dados.data_vencimento || ''}
+                  onChange={(e) => atualizarCampo('data_vencimento', e.target.value)}
+                  clearable
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="forma_pagamento_id">Forma de Pagamento</Label>

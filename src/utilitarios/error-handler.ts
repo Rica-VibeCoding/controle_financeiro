@@ -33,6 +33,7 @@ export class ErrorHandler {
     const messages: Record<string, string> = {
       'NETWORK_ERROR': 'Problema de conexão. Tente novamente.',
       'AUTH_ERROR': 'Erro de autenticação. Faça login novamente.',
+      'invalid_credentials': 'Email ou senha incorretos. Verifique seus dados.',
       'VALIDATION_ERROR': 'Dados inválidos. Verifique os campos.',
       'PERMISSION_ERROR': 'Você não tem permissão para esta ação.',
       'NOT_FOUND': 'Registro não encontrado.',

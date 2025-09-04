@@ -41,8 +41,10 @@ function SkeletonGrafico() {
 }
 
 export function GraficoTendencia() {
+  // TODOS OS HOOKS NO TOPO - SEMPRE EXECUTADOS
   const { data: tendencia, error, isLoading } = useTendenciaData()
 
+  // RENDERIZAÇÃO CONDICIONAL APÓS HOOKS
   if (isLoading) {
     return <SkeletonGrafico />
   }

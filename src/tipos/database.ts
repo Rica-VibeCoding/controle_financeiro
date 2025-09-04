@@ -12,6 +12,7 @@ export interface Database {
           cor: string
           ativo: boolean
           created_at: string
+          workspace_id: string
         }
         Insert: {
           id?: string
@@ -21,6 +22,7 @@ export interface Database {
           cor?: string
           ativo?: boolean
           created_at?: string
+          workspace_id: string
         }
         Update: {
           id?: string
@@ -30,6 +32,7 @@ export interface Database {
           cor?: string
           ativo?: boolean
           created_at?: string
+          workspace_id?: string
         }
       }
       fp_subcategorias: {
@@ -39,6 +42,7 @@ export interface Database {
           categoria_id: string
           ativo: boolean
           created_at: string
+          workspace_id: string
         }
         Insert: {
           id?: string
@@ -46,6 +50,7 @@ export interface Database {
           categoria_id: string
           ativo?: boolean
           created_at?: string
+          workspace_id: string
         }
         Update: {
           id?: string
@@ -53,6 +58,7 @@ export interface Database {
           categoria_id?: string
           ativo?: boolean
           created_at?: string
+          workspace_id?: string
         }
       }
       fp_contas: {
@@ -65,6 +71,7 @@ export interface Database {
           data_fechamento: number | null
           ativo: boolean
           created_at: string
+          workspace_id: string
         }
         Insert: {
           id?: string
@@ -75,6 +82,7 @@ export interface Database {
           data_fechamento?: number | null
           ativo?: boolean
           created_at?: string
+          workspace_id: string
         }
         Update: {
           id?: string
@@ -85,6 +93,7 @@ export interface Database {
           data_fechamento?: number | null
           ativo?: boolean
           created_at?: string
+          workspace_id?: string
         }
       }
       fp_formas_pagamento: {
@@ -95,6 +104,7 @@ export interface Database {
           permite_parcelamento: boolean
           ativo: boolean
           created_at: string
+          workspace_id: string
         }
         Insert: {
           id?: string
@@ -103,6 +113,7 @@ export interface Database {
           permite_parcelamento?: boolean
           ativo?: boolean
           created_at?: string
+          workspace_id: string
         }
         Update: {
           id?: string
@@ -111,6 +122,7 @@ export interface Database {
           permite_parcelamento?: boolean
           ativo?: boolean
           created_at?: string
+          workspace_id?: string
         }
       }
       fp_centros_custo: {
@@ -126,6 +138,7 @@ export interface Database {
           data_fim: string
           arquivado: boolean
           data_arquivamento: string | null
+          workspace_id: string
         }
         Insert: {
           id?: string
@@ -139,6 +152,7 @@ export interface Database {
           data_fim?: string
           arquivado?: boolean
           data_arquivamento?: string | null
+          workspace_id: string
         }
         Update: {
           id?: string
@@ -152,6 +166,7 @@ export interface Database {
           data_fim?: string
           arquivado?: boolean
           data_arquivamento?: string | null
+          workspace_id?: string
         }
       }
       fp_transacoes: {
@@ -295,3 +310,7 @@ export type Meta = Database['public']['Tables']['fp_metas']['Row']
 export type NovaTransacao = Database['public']['Tables']['fp_transacoes']['Insert']
 export type NovaMeta = Database['public']['Tables']['fp_metas']['Insert']
 export type NovaCategoria = Database['public']['Tables']['fp_categorias']['Insert']
+export type NovaSubcategoria = Database['public']['Tables']['fp_subcategorias']['Insert']
+export type NovaConta = Database['public']['Tables']['fp_contas']['Insert']
+export type NovaFormaPagamento = Database['public']['Tables']['fp_formas_pagamento']['Insert']
+export type NovoCentroCusto = Database['public']['Tables']['fp_centros_custo']['Insert']

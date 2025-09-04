@@ -1,6 +1,5 @@
 import { supabase } from './cliente'
 import type { 
-  CardMetricaData, 
   ProximaConta, 
   CategoriaData, 
   CartaoData, 
@@ -10,25 +9,33 @@ import type {
 } from '@/tipos/dashboard'
 
 // Função para obter dados dos cards principais
-export async function obterDadosCards(periodo: Periodo) {
+export async function obterDadosCards(periodo: Periodo, workspaceId: string) {
   try {
     // Receitas do período atual
-    const { data: receitasAtual } = await supabase
+    const queryReceitasAtual = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('tipo', 'receita')
       .eq('status', 'realizado')
       .gte('data', periodo.inicio)
       .lte('data', periodo.fim)
+    
+    queryReceitasAtual.eq('workspace_id', workspaceId)
+    
+    const { data: receitasAtual } = await queryReceitasAtual
 
     // Despesas do período atual
-    const { data: despesasAtual } = await supabase
+    const queryDespesasAtual = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('tipo', 'despesa')
       .eq('status', 'realizado')
       .gte('data', periodo.inicio)
       .lte('data', periodo.fim)
+    
+    queryDespesasAtual.eq('workspace_id', workspaceId)
+    
+    const { data: despesasAtual } = await queryDespesasAtual
 
     // Período anterior (mesmo número de dias)
     const dataInicio = new Date(periodo.inicio)
@@ -41,33 +48,45 @@ export async function obterDadosCards(periodo: Periodo) {
     periodoAnteriorInicio.setDate(periodoAnteriorInicio.getDate() - diasPeriodo + 1)
 
     // Receitas período anterior
-    const { data: receitasAnterior } = await supabase
+    const queryReceitasAnterior = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('tipo', 'receita')
       .eq('status', 'realizado')
       .gte('data', periodoAnteriorInicio.toISOString().split('T')[0])
       .lte('data', periodoAnteriorFim.toISOString().split('T')[0])
+    
+    queryReceitasAnterior.eq('workspace_id', workspaceId)
+    
+    const { data: receitasAnterior } = await queryReceitasAnterior
 
     // Despesas período anterior
-    const { data: despesasAnterior } = await supabase
+    const queryDespesasAnterior = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('tipo', 'despesa')
       .eq('status', 'realizado')
       .gte('data', periodoAnteriorInicio.toISOString().split('T')[0])
       .lte('data', periodoAnteriorFim.toISOString().split('T')[0])
+    
+    queryDespesasAnterior.eq('workspace_id', workspaceId)
+    
+    const { data: despesasAnterior } = await queryDespesasAnterior
 
     // Cartões: buscar informações dos cartões com limite
-    const { data: cartoesInfo } = await supabase
+    const queryCartoesInfo = supabase
       .from('fp_contas')
       .select('id, nome, limite')
       .eq('tipo', 'cartao_credito')
+    
+    queryCartoesInfo.eq('workspace_id', workspaceId)
+    
+    const { data: cartoesInfo } = await queryCartoesInfo
 
     const cartoesIds = cartoesInfo?.map(c => c.id) || []
     
     // Cartões: apenas gastos (despesas) do período - o que realmente foi "usado" no cartão
-    const { data: cartoesGastos } = await supabase
+    const queryCartoesGastos = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('tipo', 'despesa')
@@ -75,6 +94,10 @@ export async function obterDadosCards(periodo: Periodo) {
       .gte('data', periodo.inicio)
       .lte('data', periodo.fim)
       .in('conta_id', cartoesIds)
+    
+    queryCartoesGastos.eq('workspace_id', workspaceId)
+    
+    const { data: cartoesGastos } = await queryCartoesGastos
 
     // Calcular totais (convertendo strings para números)
     const totalReceitas = receitasAtual?.reduce((sum, r) => sum + Number(r.valor || 0), 0) || 0
@@ -130,26 +153,29 @@ export async function obterDadosCards(periodo: Periodo) {
 }
 
 // Função para obter próximas contas
-export async function obterProximasContas(): Promise<ProximaConta[]> {
+export async function obterProximasContas(workspaceId: string): Promise<ProximaConta[]> {
   try {
     // Verificar se existem transações previstas
-    const { data: todasPrevistas, error: errorTodasPrevistas } = await supabase
+    const queryTodasPrevistas = supabase
       .from('fp_transacoes')
       .select('id, status, data_vencimento, descricao, valor')
       .eq('status', 'previsto')
     
-    if (errorTodasPrevistas) {
-      console.error('❌ Erro ao buscar todas previstas:', errorTodasPrevistas)
-    }
+    queryTodasPrevistas.eq('workspace_id', workspaceId)
+    
 
-    // Query principal com categorias
-    const { data, error } = await supabase
+    const hojeString = new Date().toISOString().split('T')[0]
+
+    // Query para transações com data_vencimento
+    const queryTransacoesVencimento = supabase
       .from('fp_transacoes')
       .select(`
         id,
         descricao,
         valor,
         data_vencimento,
+        proxima_recorrencia,
+        recorrente,
         status,
         categoria_id,
         fp_categorias (
@@ -160,27 +186,117 @@ export async function obterProximasContas(): Promise<ProximaConta[]> {
       `)
       .eq('status', 'previsto')
       .not('data_vencimento', 'is', null)
+      .gte('data_vencimento', hojeString)
       .order('data_vencimento', { ascending: true })
-      .limit(10)
+    
+    queryTransacoesVencimento.eq('workspace_id', workspaceId)
+    
+    const { data: transacoesVencimento, error: errorVencimento } = await queryTransacoesVencimento
 
+    // Query para recorrências vencidas (que devem aparecer)
+    const queryRecorrenciasVencidas = supabase
+      .from('fp_transacoes')
+      .select(`
+        id,
+        descricao,
+        valor,
+        data_vencimento,
+        proxima_recorrencia,
+        recorrente,
+        status,
+        categoria_id,
+        fp_categorias (
+          nome,
+          cor,
+          icone
+        )
+      `)
+      .eq('recorrente', true)
+      .not('proxima_recorrencia', 'is', null)
+      .lte('proxima_recorrencia', hojeString)
+    
+    queryRecorrenciasVencidas.eq('workspace_id', workspaceId)
+    
+    const { data: recorrenciasVencidas, error: errorRecorrencias } = await queryRecorrenciasVencidas
 
-    if (error) {
-      console.error('❌ Erro na query principal:', error)
-      throw error
+    // Query para parcelas com vencimento (novas)
+    const queryParcelasVencimento = supabase
+      .from('fp_transacoes')
+      .select(`
+        id,
+        descricao,
+        valor,
+        data_vencimento,
+        parcela_atual,
+        total_parcelas,
+        status,
+        categoria_id,
+        fp_categorias (
+          nome,
+          cor,
+          icone
+        )
+      `)
+      .eq('status', 'previsto')
+      .not('data_vencimento', 'is', null)
+      .not('grupo_parcelamento', 'is', null)
+      .gte('data_vencimento', hojeString)
+      .order('data_vencimento', { ascending: true })
+    
+    queryParcelasVencimento.eq('workspace_id', workspaceId)
+    
+    const { data: parcelasVencimento, error: errorParcelas } = await queryParcelasVencimento
+
+    if (errorVencimento || errorRecorrencias || errorParcelas) {
+      console.error('❌ Erro nas queries:', { errorVencimento, errorRecorrencias, errorParcelas })
+      throw errorVencimento || errorRecorrencias || errorParcelas
     }
+
+    // Combinar e ordenar por data (vencimento ou próxima_recorrencia)
+    const todasTransacoes = [
+      ...(transacoesVencimento || []).map(t => ({ 
+        ...t, 
+        data_ordenacao: t.data_vencimento,
+        tipo_lista: 'vencimento' as const
+      })),
+      ...(recorrenciasVencidas || []).map(t => ({ 
+        ...t, 
+        data_ordenacao: t.proxima_recorrencia,
+        tipo_lista: 'recorrencia' as const
+      })),
+      ...(parcelasVencimento || []).map(t => ({ 
+        ...t, 
+        data_ordenacao: t.data_vencimento,
+        tipo_lista: 'parcela' as const
+      }))
+    ]
+
+    // Ordenar por data e limitar a 10
+    const data = todasTransacoes
+      .sort((a, b) => new Date(a.data_ordenacao || '').getTime() - new Date(b.data_ordenacao || '').getTime())
+      .slice(0, 10)
+
+
 
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
 
     const resultado = data?.map(item => {
-
-      const vencimento = new Date(item.data_vencimento + 'T00:00:00')
-      const diasRestantes = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+      // Usar data_ordenacao que pode ser data_vencimento ou proxima_recorrencia
+      const dataReferencia = new Date((item as any).data_ordenacao + 'T00:00:00')
+      const diasRestantes = Math.ceil((dataReferencia.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
       const vencida = diasRestantes < 0
+
+      // Indicar tipo de transação
+      const isRecorrencia = (item as any).tipo_lista === 'recorrencia'
+      const isParcela = (item as any).tipo_lista === 'parcela'
 
       return {
         id: item.id?.toString() || '',
-        descricao: item.descricao || 'Sem descrição',
+        descricao: 
+          isRecorrencia ? `🔄 ${item.descricao}` : 
+          isParcela ? `📦 ${item.descricao}` :
+          (item.descricao || 'Sem descrição'),
         valor: Number(item.valor || 0),
         dias: Math.abs(diasRestantes),
         vencida,
@@ -201,18 +317,22 @@ export async function obterProximasContas(): Promise<ProximaConta[]> {
 }
 
 // Função para obter dados de tendência (últimos 6 meses)
-export async function obterTendencia(): Promise<TendenciaData[]> {
+export async function obterTendencia(workspaceId: string): Promise<TendenciaData[]> {
   try {
     // Buscar transações dos últimos 6 meses
     const dataInicio = new Date()
     dataInicio.setMonth(dataInicio.getMonth() - 6)
     
-    const { data, error } = await supabase
+    const queryTendencia = supabase
       .from('fp_transacoes')
       .select('data, tipo, valor')
       .eq('status', 'realizado')
       .gte('data', dataInicio.toISOString().split('T')[0])
       .order('data', { ascending: true })
+    
+    queryTendencia.eq('workspace_id', workspaceId)
+    
+    const { data, error } = await queryTendencia
 
     if (error) throw error
 
@@ -255,14 +375,18 @@ export async function obterTendencia(): Promise<TendenciaData[]> {
 }
 
 // Função para obter categorias vs metas mensais
-export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaData[]> {
+export async function obterCategoriasMetas(periodo: Periodo, workspaceId: string): Promise<CategoriaData[]> {
   try {
     // 1. Buscar todas as categorias cadastradas
-    const { data: categorias, error: categoriasError } = await supabase
+    const queryCategorias = supabase
       .from('fp_categorias')
       .select('id, nome, cor')
       .eq('ativo', true)
       .order('nome', { ascending: true })
+    
+    queryCategorias.eq('workspace_id', workspaceId)
+    
+    const { data: categorias, error: categoriasError } = await queryCategorias
 
     if (categoriasError) {
       console.error('Erro ao buscar categorias:', categoriasError)
@@ -271,12 +395,16 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
 
 
     // 2. Buscar gastos por categoria no período (todos os status)
-    const { data: gastos, error: gastosError } = await supabase
+    const queryGastos = supabase
       .from('fp_transacoes')
       .select('categoria_id, valor, status, data')
       .eq('tipo', 'despesa')
       .gte('data', periodo.inicio)
       .lte('data', periodo.fim)
+    
+    queryGastos.eq('workspace_id', workspaceId)
+    
+    const { data: gastos, error: gastosError } = await queryGastos
 
     if (gastosError) {
       console.error('Erro ao buscar gastos:', gastosError)
@@ -297,21 +425,25 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
     
     try {
       // Parse da data para obter mês/ano
-      const [anoStr, mesStr] = periodo.inicio.split('-')
-      const ano = parseInt(anoStr)
+      const [, mesStr] = periodo.inicio.split('-')
+      const ano = new Date(periodo.inicio).getFullYear()
       const mes = parseInt(mesStr)
       const mesReferencia = ano * 100 + mes // 202508 para agosto 2025
       
-      const { data: metasMensais, error: metasMensaisError } = await supabase
+      const queryMetasMensais = supabase
         .from('fp_metas_mensais')
         .select('categoria_id, valor_meta')
         .eq('mes_referencia', mesReferencia)
+      
+      queryMetasMensais.eq('workspace_id', workspaceId)
+      
+      const { data: metasMensais, error: metasMensaisError } = await queryMetasMensais
 
       if (!metasMensaisError && metasMensais && metasMensais.length > 0) {
         metas = metasMensais.map(m => ({ categoria_id: m.categoria_id, valor_limite: m.valor_meta }))
-      } else {
       }
-    } catch (error) {
+    } catch {
+      // Silently handle errors
     }
 
     // 5. Processar dados: mapear metas por categoria
@@ -359,16 +491,20 @@ export async function obterCategoriasMetas(periodo: Periodo): Promise<CategoriaD
 }
 
 // Função para obter saldos das contas bancárias (excluindo cartões)
-export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalSaldo: number }> {
+export async function obterSaldosContas(workspaceId: string): Promise<{ contas: ContaData[]; totalSaldo: number }> {
   try {
     
     // Buscar todas as contas exceto cartões de crédito (campos corretos da tabela)
-    const { data: contas, error: contasError } = await supabase
+    const queryContas = supabase
       .from('fp_contas')
       .select('id, nome, tipo, banco')
       .neq('tipo', 'cartao_credito')
       .eq('ativo', true)
       .order('nome', { ascending: true })
+    
+    queryContas.eq('workspace_id', workspaceId)
+    
+    const { data: contas, error: contasError } = await queryContas
 
     if (contasError) {
       console.error('❌ Erro ao buscar contas:', contasError)
@@ -380,28 +516,40 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
     const contasComMovimentacoes = await Promise.all(
       (contas || []).map(async (conta) => {
         // Buscar receitas e despesas normais da conta
-        const { data: transacoesNormais } = await supabase
+        const queryTransacoesNormais = supabase
           .from('fp_transacoes')
           .select('valor, tipo')
           .eq('conta_id', conta.id)
           .eq('status', 'realizado')
           .in('tipo', ['receita', 'despesa'])
+        
+        queryTransacoesNormais.eq('workspace_id', workspaceId)
+        
+        const { data: transacoesNormais } = await queryTransacoesNormais
 
         // Buscar transferências recebidas (conta como destino)
-        const { data: transferenciasRecebidas } = await supabase
+        const queryTransferenciasRecebidas = supabase
           .from('fp_transacoes')
           .select('valor')
           .eq('conta_destino_id', conta.id)
           .eq('tipo', 'transferencia')
           .eq('status', 'realizado')
+        
+        queryTransferenciasRecebidas.eq('workspace_id', workspaceId)
+        
+        const { data: transferenciasRecebidas } = await queryTransferenciasRecebidas
 
         // Buscar transferências enviadas (conta como origem)
-        const { data: transferenciasEnviadas } = await supabase
+        const queryTransferenciasEnviadas = supabase
           .from('fp_transacoes')
           .select('valor')
           .eq('conta_id', conta.id)
           .eq('tipo', 'transferencia')
           .eq('status', 'realizado')
+        
+        queryTransferenciasEnviadas.eq('workspace_id', workspaceId)
+        
+        const { data: transferenciasEnviadas } = await queryTransferenciasEnviadas
 
         // Calcular saldo completo: receitas - despesas + transferências_recebidas - transferências_enviadas
         let saldo = 0
@@ -426,16 +574,20 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
         })
 
         // Buscar últimas 5 movimentações para o hover (incluindo transferências)
-        const { data: movimentacoes } = await supabase
+        const queryMovimentacoes = supabase
           .from('fp_transacoes')
           .select('descricao, valor, data, tipo, conta_destino_id')
           .or(`conta_id.eq.${conta.id},conta_destino_id.eq.${conta.id}`)
           .eq('status', 'realizado')
           .order('data', { ascending: false })
           .limit(5)
+        
+        queryMovimentacoes.eq('workspace_id', workspaceId)
+        
+        const { data: movimentacoes } = await queryMovimentacoes
 
         // Definir ícone baseado no tipo da conta (lógica simples e robusta)
-        const obterIcone = (tipo: string, banco?: string) => {
+        const obterIcone = (tipo: string) => {
           // Por tipo de conta (usando apenas ícones que existem no componente)
           if (tipo === 'dinheiro') return 'wallet'
           if (tipo === 'poupanca') return 'piggy-bank'
@@ -451,7 +603,7 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
           nome: `${conta.nome || 'Conta sem nome'}${conta.banco ? ` | ${conta.banco}` : ''}`,
           saldo: saldo,
           tipo: conta.tipo || 'outros',
-          icone: obterIcone(conta.tipo, conta.banco),
+          icone: obterIcone(conta.tipo),
           ultimasMovimentacoes: movimentacoes?.map(mov => {
             // Para transferências, determinar se é entrada ou saída baseado na conta
             if (mov.tipo === 'transferencia') {
@@ -491,16 +643,20 @@ export async function obterSaldosContas(): Promise<{ contas: ContaData[]; totalS
 }
 
 // Função para obter cartões de crédito individuais
-export async function obterCartoesCredito(): Promise<{ cartoes: CartaoData[]; totalUsado: number; totalLimite: number }> {
+export async function obterCartoesCredito(periodo: Periodo, workspaceId: string): Promise<{ cartoes: CartaoData[]; totalUsado: number; totalLimite: number }> {
   try {
     
     // Buscar todos os cartões de crédito
-    const { data: cartoes, error: cartoesError } = await supabase
+    const queryCartoes = supabase
       .from('fp_contas')
       .select('id, nome, banco, limite, data_fechamento')
       .eq('tipo', 'cartao_credito')
       .eq('ativo', true)
       .order('nome', { ascending: true })
+    
+    queryCartoes.eq('workspace_id', workspaceId)
+    
+    const { data: cartoes, error: cartoesError } = await queryCartoes
 
     if (cartoesError) {
       console.error('❌ Erro ao buscar cartões:', cartoesError)
@@ -510,27 +666,39 @@ export async function obterCartoesCredito(): Promise<{ cartoes: CartaoData[]; to
     // Para cada cartão, calcular valor usado e buscar últimas transações
     const cartoesComTransacoes = await Promise.all(
       (cartoes || []).map(async (cartao) => {
-        // Buscar despesas do cartão (valor usado)
-        const { data: despesas } = await supabase
+        // Buscar despesas do cartão (valor usado) no período específico
+        const queryDespesas = supabase
           .from('fp_transacoes')
           .select('valor')
           .eq('conta_id', cartao.id)
           .eq('tipo', 'despesa')
           .eq('status', 'realizado')
+          .gte('data', periodo.inicio)
+          .lte('data', periodo.fim)
+        
+        queryDespesas.eq('workspace_id', workspaceId)
+        
+        const { data: despesas } = await queryDespesas
 
         // Calcular valor usado
         const valorUsado = despesas?.reduce((acc, despesa) => {
           return acc + Number(despesa.valor || 0)
         }, 0) || 0
 
-        // Buscar últimas 5 transações para o hover
-        const { data: transacoes } = await supabase
+        // Buscar últimas 5 transações para o hover (no período específico)
+        const queryTransacoes = supabase
           .from('fp_transacoes')
           .select('descricao, valor, data, tipo')
           .eq('conta_id', cartao.id)
           .eq('status', 'realizado')
+          .gte('data', periodo.inicio)
+          .lte('data', periodo.fim)
           .order('data', { ascending: false })
           .limit(5)
+        
+        queryTransacoes.eq('workspace_id', workspaceId)
+        
+        const { data: transacoes } = await queryTransacoes
 
         const limite = Number(cartao.limite || 0)
         const percentual = limite > 0 ? Math.round((valorUsado / limite) * 100) : 0

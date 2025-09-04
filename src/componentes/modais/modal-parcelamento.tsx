@@ -12,6 +12,7 @@ import { NovaTransacao, Subcategoria } from '@/tipos/database'
 import { Icone } from '@/componentes/ui/icone'
 import { criarTransacaoParcelada } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
+import { useAuth } from '@/contextos/auth-contexto'
 
 /**
  * Props para o componente ModalParcelamento
@@ -29,7 +30,6 @@ type AbaAtiva = 'essencial' | 'categorizacao' | 'resumo'
 
 // Constantes para timeouts
 const TIMEOUT_ERRO = 5000
-const TIMEOUT_SUCESSO = 2000
 
 /**
  * Componente botao de aba reutilizavel
@@ -60,7 +60,7 @@ const ESTADO_INICIAL = {
   data: new Date().toISOString().split('T')[0],
   descricao: '',
   valor: 0,
-  tipo: 'despesa' as const, // Parceladas sao sempre despesas
+  tipo: 'despesa' as const,
   conta_id: '',
   status: 'previsto' as const,
   parcela_atual: 1,
@@ -120,6 +120,8 @@ const formatarData = (data: string): string => {
  * ```
  */
 export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelamentoProps) {
+  const { workspace } = useAuth()
+
   // Dados auxiliares do contexto global
   const { dados: dadosAuxiliares, loading: loadingAuxiliares, obterSubcategorias } = useDadosAuxiliares()
 
@@ -133,6 +135,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
   // Estados locais
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
   const [salvando, setSalvando] = useState(false)
+  const [processando, setProcessando] = useState(false)
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null)
 
   // Calculos derivados
@@ -177,11 +180,11 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
     carregarSubcategorias()
   }, [dados.categoria_id, obterSubcategorias])
 
-  // Filtrar categorias por tipo (apenas despesas)
+  // Filtrar categorias dinamicamente por tipo selecionado
   const categoriasFiltradas = useMemo(() => 
     dadosAuxiliares.categorias.filter(cat => 
-      cat.tipo === 'despesa' || cat.tipo === 'ambos'
-    ), [dadosAuxiliares.categorias]
+      cat.tipo === dados.tipo || cat.tipo === 'ambos'
+    ), [dadosAuxiliares.categorias, dados.tipo]
   )
 
   /**
@@ -196,7 +199,12 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
     setDados(prev => ({
       ...prev,
       [campo]: valor,
-      ...(campo === 'categoria_id' ? { subcategoria_id: '' } : {})
+      // Limpar categoria/subcategoria se tipo mudou
+      ...(campo === 'tipo' ? { categoria_id: '', subcategoria_id: '' } : {}),
+      // Limpar subcategoria se categoria mudou
+      ...(campo === 'categoria_id' ? { subcategoria_id: '' } : {}),
+      // Limpar data de vencimento se status mudou para realizado
+      ...(campo === 'status' && valor === 'realizado' ? { data_vencimento: '' } : {})
     }))
   }, [])
 
@@ -206,7 +214,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
    */
   const validarEssencial = useCallback(() => {
     const baseValid = dados.data && dados.valor && dados.valor > 0 && dados.conta_id
-    const tipoValid = dados.tipo === 'despesa'
+    const tipoValid = dados.tipo === 'receita' || dados.tipo === 'despesa'
     const parcelasValid = numeroParcelas >= 2 && numeroParcelas <= 60
     return baseValid && tipoValid && parcelasValid
   }, [dados.data, dados.valor, dados.conta_id, dados.tipo, numeroParcelas])
@@ -265,6 +273,18 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Proteção instantânea no DOM
+    const button = e.target as HTMLButtonElement
+    if (button.dataset.executing === 'true') return
+    button.dataset.executing = 'true'
+
+    if (processando) {
+      button.dataset.executing = 'false'
+      return
+    }
+
+    setProcessando(true)
+
     // Validacoes basicas
     const errosValidacao = validarTransacao(dados)
     if (errosValidacao.length > 0) {
@@ -273,6 +293,8 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
         texto: `Erro de validacao: ${errosValidacao[0]}` 
       })
       setTimeout(() => setMensagem(null), TIMEOUT_ERRO)
+      setProcessando(false)
+      button.dataset.executing = 'false'
       return
     }
 
@@ -283,6 +305,8 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
         texto: 'Numero de parcelas deve estar entre 2 e 60' 
       })
       setTimeout(() => setMensagem(null), TIMEOUT_ERRO)
+      setProcessando(false)
+      button.dataset.executing = 'false'
       return
     }
 
@@ -292,24 +316,30 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
         texto: 'Valor total deve ser maior que R$ 0,02 para parcelamento' 
       })
       setTimeout(() => setMensagem(null), TIMEOUT_ERRO)
+      setProcessando(false)
+      button.dataset.executing = 'false'
+      return
+    }
+
+    if (!workspace) {
+      setMensagem({ tipo: 'erro', texto: 'Workspace não encontrado' })
+      button.dataset.executing = 'false'
       return
     }
 
     try {
       setSalvando(true)
       
-      await criarTransacaoParcelada(dados as NovaTransacao, numeroParcelas)
+      await criarTransacaoParcelada(dados as NovaTransacao, numeroParcelas, workspace.id)
 
       setMensagem({ 
         tipo: 'sucesso', 
         texto: `Parcelamento criado com sucesso! ${numeroParcelas} parcelas geradas.` 
       })
       
-      setTimeout(() => {
-        setMensagem(null)
-        onSuccess?.()
-        onClose()
-      }, TIMEOUT_SUCESSO)
+      // Fechar modal imediatamente após sucesso (sem delay)
+      onSuccess?.()
+      onClose()
 
     } catch (error) {
       console.error('Erro ao criar parcelamento:', error)
@@ -320,6 +350,8 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
       setTimeout(() => setMensagem(null), TIMEOUT_ERRO)
     } finally {
       setSalvando(false)
+      setProcessando(false)
+      button.dataset.executing = 'false'
     }
   }
 
@@ -329,7 +361,21 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
       case 'essencial':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tipo">Tipo *</Label>
+                <Select
+                  id="tipo"
+                  value={dados.tipo}
+                  onChange={(e) => atualizarCampo('tipo', e.target.value as 'receita' | 'despesa')}
+                  required
+                >
+                  <option value="">Selecione o tipo</option>
+                  <option value="receita">Receita</option>
+                  <option value="despesa">Despesa</option>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="data">Data da 1a Parcela *</Label>
                 <Input
@@ -620,7 +666,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
             <Button 
               type="submit" 
               onClick={handleSubmit}
-              disabled={salvando || !validarEssencial()}
+              disabled={processando || salvando || !validarEssencial()}
             >
               {salvando ? 'Criando Parcelas...' : 'Criar Parcelamento'}
             </Button>

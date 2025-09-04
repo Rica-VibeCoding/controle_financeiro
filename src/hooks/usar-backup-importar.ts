@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { ValidadorBackup } from '@/servicos/backup/validador-backup'
 import { ImportadorDados } from '@/servicos/backup/importador-dados'
+import { useAuth } from '@/contextos/auth-contexto'
 import type { 
   EstadoImportacao,
   ConfiguracaoImportacao,
@@ -19,6 +20,7 @@ const configuracaoPadrao: ConfiguracaoImportacao = {
 }
 
 export function usarBackupImportar() {
+  const { workspace } = useAuth()
   const [estado, setEstado] = useState<EstadoImportacao>({
     importando: false,
     progresso: 0,
@@ -209,8 +211,8 @@ export function usarBackupImportar() {
   }, [estado.dadosCarregados])
 
   const executarImportacao = useCallback(async (): Promise<boolean> => {
-    if (!estado.dadosCarregados) {
-      setEstado(prev => ({ ...prev, erro: 'Nenhum dado carregado para importação' }))
+    if (!estado.dadosCarregados || !workspace) {
+      setEstado(prev => ({ ...prev, erro: 'Nenhum dado carregado para importação ou workspace não encontrado' }))
       return false
     }
 
@@ -265,7 +267,7 @@ export function usarBackupImportar() {
 
       return false
     }
-  }, [estado.dadosCarregados, configuracao, onProgresso])
+  }, [estado.dadosCarregados, configuracao, onProgresso, workspace])
 
   const reiniciarEstado = useCallback(() => {
     setEstado({

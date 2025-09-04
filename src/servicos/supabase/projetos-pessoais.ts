@@ -19,7 +19,8 @@ interface TransacaoFinanceira {
 
 // Função principal: wrapper semântico sobre centros de custo
 export async function obterProjetosPessoais(
-  filtros: FiltroProjetosPessoais = {}
+  filtros: FiltroProjetosPessoais = {},
+  workspaceId: string
 ): Promise<ProjetosPessoaisData> {
   try {
     // 1. Buscar centros de custo (base de dados)
@@ -32,6 +33,8 @@ export async function obterProjetosPessoais(
     if (!filtros.incluir_arquivados) {
       query = query.eq('arquivado', false)
     }
+    
+    query = query.eq('workspace_id', workspaceId)
 
     const { data: centrosCusto, error } = await query
 
@@ -46,7 +49,7 @@ export async function obterProjetosPessoais(
 
     // 2. Converter cada centro em projeto com cálculos
     const projetosBrutos = await Promise.all(
-      centrosCusto.map(centro => converterParaProjetoPessoal(centro, filtros))
+      centrosCusto.map(centro => converterParaProjetoPessoal(centro, filtros, workspaceId))
     )
 
     // 3. Filtrar apenas projetos com movimentação (receitas OU despesas > 0)
@@ -68,11 +71,12 @@ export async function obterProjetosPessoais(
 // Converter CentroCusto -> ProjetoPessoal (core da estratégia wrapper)
 async function converterParaProjetoPessoal(
   centro: CentroCusto, 
-  filtros: FiltroProjetosPessoais
+  filtros: FiltroProjetosPessoais,
+  workspaceId: string
 ): Promise<ProjetoPessoal> {
   
   // 1. Calcular financeiros do projeto
-  const calculos = await calcularFinanceirosProjeto(centro.id, filtros)
+  const calculos = await calcularFinanceirosProjeto(centro.id, filtros, workspaceId)
   
   // 2. Determinar modo de cálculo
   const modoCalculo = (centro.valor_orcamento && centro.valor_orcamento > 0) 
@@ -105,7 +109,8 @@ async function converterParaProjetoPessoal(
 // Calcular receitas/despesas de um projeto específico
 async function calcularFinanceirosProjeto(
   centroId: string, 
-  filtros: FiltroProjetosPessoais
+  filtros: FiltroProjetosPessoais,
+  workspaceId: string
 ): Promise<CalculosFinanceiros> {
   
   const cliente = getSupabaseClient()
@@ -122,6 +127,8 @@ async function calcularFinanceirosProjeto(
   if (filtros.periodo_fim) {
     query = query.lte('data', filtros.periodo_fim)
   }
+  
+  query = query.eq('workspace_id', workspaceId)
 
   const { data: transacoes, error } = await query
 

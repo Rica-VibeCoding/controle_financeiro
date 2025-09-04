@@ -15,24 +15,24 @@ import {
   buscarParcelasPorGrupo,
   obterTransacoesRecorrentesVencidas,
   processarRecorrencia,
-  pararRecorrencia,
+  excluirRecorrencia,
   buscarTransacoesRecorrentes
 } from '@/servicos/supabase/transacoes'
 import { usarToast } from './usar-toast'
+import { useAuth } from '@/contextos/auth-contexto'
 
-interface FiltrosTransacao {
-  tipo?: 'receita' | 'despesa' | 'transferencia'
-  status?: 'previsto' | 'realizado'
-  conta_id?: string
-  data_inicio?: string
-  data_fim?: string
-}
+import type { FiltrosTransacao } from '@/tipos/filtros'
 
 export function usarTransacoes() {
+  const { workspace } = useAuth()
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { sucesso, erro } = usarToast()
+
+  // Estados para paginação
+  const [totalTransacoes, setTotalTransacoes] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(0)
 
   // Carregar lista de transações
   const carregar = useCallback(async (
@@ -40,12 +40,16 @@ export function usarTransacoes() {
     offset: number = 0,
     filtros?: FiltrosTransacao
   ) => {
+    if (!workspace) return
+    
     try {
       setLoading(true)
       setError(null)
-      const resposta = await obterTransacoes(filtros, { pagina: Math.floor(offset/limite) + 1, limite })
+      const resposta = await obterTransacoes(filtros, { pagina: Math.floor(offset/limite) + 1, limite }, workspace.id)
       const dados = resposta.dados
       setTransacoes(dados)
+      setTotalTransacoes(resposta.total)
+      setTotalPaginas(resposta.total_paginas)
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro desconhecido'
       setError(mensagem)
@@ -53,10 +57,15 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [erro])
+  }, [erro, workspace])
 
   // Criar nova transação
   const criar = useCallback(async (dadosTransacao: NovaTransacao) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -78,7 +87,7 @@ export function usarTransacoes() {
       const novaTransacao = await criarTransacao({
         ...dadosTransacao,
         status: dadosTransacao.status || 'previsto'
-      })
+      }, workspace.id)
 
       // Atualizar lista local
       setTransacoes(prev => [novaTransacao, ...prev])
@@ -92,14 +101,16 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
   // Buscar transação por ID
   const buscarPorId = useCallback(async (id: string) => {
+    if (!workspace) return null
+    
     try {
       setLoading(true)
       setError(null)
-      return await obterTransacaoPorId(id)
+      return await obterTransacaoPorId(id, workspace.id)
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro ao buscar transação'
       setError(mensagem)
@@ -108,10 +119,15 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [erro])
+  }, [erro, workspace])
 
   // Atualizar transação
   const atualizar = useCallback(async (id: string, dados: Partial<NovaTransacao>) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -126,8 +142,8 @@ export function usarTransacoes() {
         }
       }
 
-      await atualizarTransacao(id, dados)
-      const transacaoAtualizada = await obterTransacaoPorId(id)
+      await atualizarTransacao(id, dados, workspace.id)
+      const transacaoAtualizada = await obterTransacaoPorId(id, workspace.id)
       
       // Atualizar lista local
       if (transacaoAtualizada) {
@@ -146,15 +162,20 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
   // Excluir transação
   const excluir = useCallback(async (id: string) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     try {
       setLoading(true)
       setError(null)
       
-      await excluirTransacao(id)
+      await excluirTransacao(id, workspace.id)
       
       // Remover da lista local
       setTransacoes(prev => prev.filter(t => t.id !== id))
@@ -168,32 +189,41 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
   // Calcular saldo de uma conta
-  const calcularSaldoConta = useCallback(async (contaId: string) => {
+  const calcularSaldoContaHook = useCallback(async (contaId: string) => {
+    if (!workspace) return 0
+    
     try {
-      return await calcularSaldoConta(contaId)
+      return await calcularSaldoConta(contaId, workspace.id)
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro ao calcular saldo'
       erro('Erro ao calcular saldo', mensagem)
       return 0
     }
-  }, [erro])
+  }, [erro, workspace])
 
   // Calcular saldo total
-  const calcularSaldoTotal = useCallback(async () => {
+  const calcularSaldoTotalHook = useCallback(async () => {
+    if (!workspace) return 0
+    
     try {
-      return await calcularSaldoTotal()
+      return await calcularSaldoTotal(workspace.id)
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro ao calcular saldo total'
       erro('Erro ao calcular saldo', mensagem)
       return 0
     }
-  }, [erro])
+  }, [erro, workspace])
 
   // Criar transação parcelada
   const criarParcelada = useCallback(async (dadosTransacao: NovaTransacao, numeroParcelas: number) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -214,9 +244,8 @@ export function usarTransacoes() {
 
       const parcelas = await criarTransacaoParcelada({
         ...dadosTransacao,
-        tipo: 'despesa', // Parceladas são sempre despesas conforme PRD
         status: dadosTransacao.status || 'previsto'
-      }, numeroParcelas)
+      }, numeroParcelas, workspace.id)
 
       // Atualizar lista local com todas as parcelas
       setTransacoes(prev => [...parcelas, ...prev])
@@ -230,15 +259,20 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
   // Excluir grupo de parcelas
-  const excluirGrupoParcelamento = useCallback(async (grupoParcelamento: number) => {
+  const excluirGrupoParcelamentoHook = useCallback(async (grupoParcelamento: number) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     try {
       setLoading(true)
       setError(null)
       
-      await excluirGrupoParcelamento(grupoParcelamento)
+      await excluirGrupoParcelamento(grupoParcelamento, workspace.id)
       
       // Remover parcelas da lista local
       setTransacoes(prev => prev.filter(t => t.grupo_parcelamento !== grupoParcelamento))
@@ -252,31 +286,35 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
   // Buscar parcelas por grupo
-  const buscarParcelasPorGrupo = useCallback(async (grupoParcelamento: number) => {
+  const buscarParcelasPorGrupoHook = useCallback(async (grupoParcelamento: number) => {
+    if (!workspace) return []
+    
     try {
-      return await buscarParcelasPorGrupo(grupoParcelamento)
+      return await buscarParcelasPorGrupo(grupoParcelamento, workspace.id)
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro ao buscar parcelas'
       erro('Erro ao buscar parcelas', mensagem)
       return []
     }
-  }, [erro])
+  }, [erro, workspace])
 
   // Processar recorrências vencidas
   const processarRecorrenciasVencidas = useCallback(async () => {
+    if (!workspace) return []
+    
     try {
       setLoading(true)
       setError(null)
       
-      const recorrenciasVencidas = await obterTransacoesRecorrentesVencidas()
+      const recorrenciasVencidas = await obterTransacoesRecorrentesVencidas(workspace.id)
       const novasTransacoes: Transacao[] = []
       
       for (const transacao of recorrenciasVencidas) {
         try {
-          const novaTransacao = await processarRecorrencia(transacao)
+          const novaTransacao = await processarRecorrencia(transacao, workspace.id)
           novasTransacoes.push(novaTransacao)
         } catch (err) {
           console.error(`Erro ao processar recorrência ${transacao.id}:`, err)
@@ -298,50 +336,55 @@ export function usarTransacoes() {
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
-  // Parar recorrência
-  const pararRecorrencia = useCallback(async (id: string) => {
+  // Excluir recorrência (hard delete)
+  const excluirRecorrenciaHook = useCallback(async (id: string) => {
+    if (!workspace) {
+      erro('Erro de autenticação', 'Workspace não encontrado')
+      throw new Error('Workspace não encontrado')
+    }
+    
     try {
       setLoading(true)
       setError(null)
       
-      await pararRecorrencia(id)
+      await excluirRecorrencia(id, workspace.id)
       
-      // Atualizar transação na lista local
-      setTransacoes(prev => prev.map(t => 
-        t.id === id 
-          ? { ...t, recorrente: false, proxima_recorrencia: null, frequencia_recorrencia: null }
-          : t
-      ))
+      // Remover da lista local (hard delete)
+      setTransacoes(prev => prev.filter(t => t.id !== id))
       
-      sucesso('Recorrência parada', 'A transação não será mais repetida automaticamente')
+      sucesso('Recorrência excluída', 'Configuração removida. Transações já criadas foram mantidas.')
     } catch (err) {
-      const mensagem = err instanceof Error ? err.message : 'Erro ao parar recorrência'
+      const mensagem = err instanceof Error ? err.message : 'Erro ao excluir recorrência'
       setError(mensagem)
-      erro('Erro ao parar recorrência', mensagem)
+      erro('Erro ao excluir recorrência', mensagem)
       throw err
     } finally {
       setLoading(false)
     }
-  }, [sucesso, erro])
+  }, [sucesso, erro, workspace])
 
   // Buscar transações recorrentes
   const buscarTransacoesRecorrentesHook = useCallback(async () => {
+    if (!workspace) return []
+    
     try {
-      return await buscarTransacoesRecorrentes()
+      return await buscarTransacoesRecorrentes(workspace.id)
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro ao buscar transações recorrentes'
       erro('Erro ao buscar recorrências', mensagem)
       return []
     }
-  }, [erro])
+  }, [erro, workspace])
 
   return {
     // Estado
     transacoes,
     loading,
     error,
+    totalTransacoes,
+    totalPaginas,
     
     // Ações CRUD
     carregar,
@@ -352,16 +395,16 @@ export function usarTransacoes() {
     
     // Parcelamento
     criarParcelada,
-    excluirGrupoParcelamento,
-    buscarParcelasPorGrupo,
+    excluirGrupoParcelamento: excluirGrupoParcelamentoHook,
+    buscarParcelasPorGrupo: buscarParcelasPorGrupoHook,
     
     // Recorrência
     processarRecorrenciasVencidas,
-    pararRecorrencia,
+    excluirRecorrencia: excluirRecorrenciaHook,
     buscarTransacoesRecorrentes: buscarTransacoesRecorrentesHook,
     
     // Cálculos
-    calcularSaldoConta,
-    calcularSaldoTotal
+    calcularSaldoConta: calcularSaldoContaHook,
+    calcularSaldoTotal: calcularSaldoTotalHook
   }
 }

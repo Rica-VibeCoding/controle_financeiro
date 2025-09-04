@@ -1,25 +1,25 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+// MIGRAÇÃO PARA @supabase/ssr - elimina conflito de múltiplas instâncias
+import { createClient as createNewClient } from './auth-client'
+import { SupabaseClient } from '@supabase/supabase-js'
 
-let supabaseInstance: SupabaseClient | null = null
+let supabaseInstance: SupabaseClient
 
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseInstance) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Variáveis de ambiente Supabase não configuradas')
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('🔧 CLIENTE LEGADO: Usando cliente @supabase/ssr unificado')
     }
-
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+    supabaseInstance = createNewClient()
   }
 
   return supabaseInstance
 }
 
-// Compatibilidade com código existente
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(target, prop) {
-    return getSupabaseClient()[prop as keyof SupabaseClient]
-  }
-})
+// Evitar proxy no SSR para prevenir erros de webpack
+export const supabase = typeof window !== 'undefined' 
+  ? new Proxy({} as SupabaseClient, {
+      get(target, prop) {
+        return getSupabaseClient()[prop as keyof SupabaseClient]
+      }
+    })
+  : getSupabaseClient()

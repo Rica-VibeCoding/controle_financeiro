@@ -12,6 +12,7 @@ import { NovaTransacao } from '@/tipos/database'
 import { Icone } from '@/componentes/ui/icone'
 import { criarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
+import { useAuth } from '@/contextos/auth-contexto'
 
 /**
  * Props para o componente ModalTransferencia
@@ -96,6 +97,8 @@ const calcularProximaRecorrencia = (
  * ```
  */
 export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransferenciaProps) {
+  const { workspace } = useAuth()
+  
   // Dados auxiliares do contexto global
   const { dados: dadosAuxiliares, loading: loadingAuxiliares } = useDadosAuxiliares()
 
@@ -229,10 +232,16 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
       return
     }
 
+    if (!workspace) {
+      setMensagem({ tipo: 'erro', texto: 'Workspace não encontrado' })
+      setTimeout(() => setMensagem(null), TIMEOUT_ERRO)
+      return
+    }
+
     try {
       setSalvando(true)
       
-      await criarTransacao(dados as NovaTransacao)
+      await criarTransacao(dados as NovaTransacao, workspace.id)
 
       setMensagem({ 
         tipo: 'sucesso', 
@@ -450,7 +459,7 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
       title="Transferência Entre Contas" 
       fixedWidth="600px"
     >
-      <div className="h-[450px] flex flex-col">
+      <div className="h-[550px] flex flex-col">
         {/* Mensagem Global */}
         {mensagem && (
           <div 

@@ -26,6 +26,8 @@ import {
   atualizarTransacao, 
   excluirTransacao 
 } from '@/servicos/supabase/transacoes'
+// Importar useAuth dinamicamente para evitar dependências circulares
+import { useAuth } from '@/contextos/auth-contexto'
 import type {
   FiltrosTransacao,
   ParametrosPaginacao,
@@ -64,6 +66,7 @@ interface TransacoesContextoType {
 const TransacoesContexto = createContext<TransacoesContextoType | undefined>(undefined)
 
 export function TransacoesProvider({ children }: { children: ReactNode }) {
+  const { workspace } = useAuth()
   const [transacoes, setTransacoes] = useState<TransacaoComRelacoes[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -75,13 +78,21 @@ export function TransacoesProvider({ children }: { children: ReactNode }) {
     ordenacao: 'data',
     direcao: 'desc'
   })
+  const [isClient, setIsClient] = useState(false)
+
+  // Garantir que só executa no cliente
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const carregarTransacoes = async () => {
+    if (!workspace) return
+    
     try {
       setCarregando(true)
       setErro(null)
       
-      const resposta = await obterTransacoes(filtros, paramsPaginacao)
+      const resposta = await obterTransacoes(filtros, paramsPaginacao, workspace.id)
       
       setTransacoes(resposta.dados)
       setPaginacao(resposta)
@@ -93,12 +104,16 @@ export function TransacoesProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    carregarTransacoes()
-  }, [filtros, paramsPaginacao])
+    if (isClient) {
+      carregarTransacoes()
+    }
+  }, [filtros, paramsPaginacao, workspace, isClient])
 
   const criar = async (transacao: NovaTransacao) => {
+    if (!workspace) throw new Error('Workspace não encontrado')
+    
     try {
-      await criarTransacao(transacao)
+      await criarTransacao(transacao, workspace.id)
       await carregarTransacoes()
     } catch (error) {
       throw error
@@ -106,8 +121,10 @@ export function TransacoesProvider({ children }: { children: ReactNode }) {
   }
 
   const atualizar = async (id: string, dados: AtualizarTransacao) => {
+    if (!workspace) throw new Error('Workspace não encontrado')
+    
     try {
-      await atualizarTransacao(id, dados)
+      await atualizarTransacao(id, dados, workspace.id)
       await carregarTransacoes()
     } catch (error) {
       throw error
@@ -115,8 +132,10 @@ export function TransacoesProvider({ children }: { children: ReactNode }) {
   }
 
   const excluir = async (id: string) => {
+    if (!workspace) throw new Error('Workspace não encontrado')
+    
     try {
-      await excluirTransacao(id)
+      await excluirTransacao(id, workspace.id)
       await carregarTransacoes()
     } catch (error) {
       throw error

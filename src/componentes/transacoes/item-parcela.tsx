@@ -79,19 +79,19 @@ export function ItemParcela({
             </div>
             
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span>
-                Parcela {transacao.parcela_atual}/{transacao.total_parcelas}
-              </span>
-              <span>{formatarData(transacao.data)}</span>
-              <span className="font-medium texto-despesa">
-                {formatarValor(transacao.valor)}
-              </span>
               <span className={`
                 ${transacao.status === 'realizado' ? 'texto-realizado' : 
                   transacao.status === 'previsto' ? 'texto-previsto' : 
                   'texto-outro'}
               `}>
                 {transacao.status}
+              </span>
+              <span className="text-muted-foreground truncate">
+                Parcela {transacao.parcela_atual}/{transacao.total_parcelas}
+              </span>
+              <span>{formatarData(transacao.data)}</span>
+              <span className="font-medium texto-despesa">
+                {formatarValor(transacao.valor)}
               </span>
             </div>
           </div>

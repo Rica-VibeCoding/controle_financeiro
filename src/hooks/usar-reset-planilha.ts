@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { ResetadorDados } from '@/servicos/backup/resetador-dados'
 import { usarToast } from './usar-toast'
+import { useAuth } from '@/contextos/auth-contexto'
 import type { 
   ConfiguracaoReset, 
   EstadoReset, 
@@ -28,6 +29,7 @@ const estadoInicial: EstadoReset = {
 }
 
 export function usarResetPlanilha() {
+  const { workspace } = useAuth()
   const [configuracao, setConfiguracao] = useState<ConfiguracaoReset>(configuracaoInicial)
   const [estado, setEstado] = useState<EstadoReset>(estadoInicial)
   const { erro, sucesso, aviso } = usarToast()
@@ -124,7 +126,7 @@ export function usarResetPlanilha() {
         etapaAtual: ''
       }))
     }
-  }, [configuracao, atualizarProgresso, erro, sucesso, aviso])
+  }, [configuracao, atualizarProgresso, erro, sucesso, aviso, workspace])
 
   const alterarConfiguracao = useCallback((novaConfiguracao: Partial<ConfiguracaoReset>) => {
     setConfiguracao(prev => ({

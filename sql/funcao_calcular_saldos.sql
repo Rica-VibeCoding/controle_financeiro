@@ -1,7 +1,7 @@
 -- Função para calcular saldos de todas as contas de uma vez
 -- Resolve o problema N+1 do arquivo contas.ts
 
-CREATE OR REPLACE FUNCTION calcular_saldos_contas()
+CREATE OR REPLACE FUNCTION calcular_saldos_contas(p_workspace_id UUID DEFAULT NULL)
 RETURNS TABLE (
   conta_id UUID,
   saldo DECIMAL(15,2)
@@ -22,6 +22,7 @@ BEGIN
     FROM fp_transacoes t
     WHERE t.status = 'realizado'
       AND t.tipo IN ('receita', 'despesa')
+      AND (p_workspace_id IS NULL OR t.workspace_id = p_workspace_id)
     GROUP BY t.conta_id
   ),
   transferencias_recebidas AS (
@@ -33,6 +34,7 @@ BEGIN
     WHERE t.status = 'realizado'
       AND t.tipo = 'transferencia'
       AND t.conta_destino_id IS NOT NULL
+      AND (p_workspace_id IS NULL OR t.workspace_id = p_workspace_id)
     GROUP BY t.conta_destino_id
   ),
   transferencias_enviadas AS (
@@ -43,11 +45,14 @@ BEGIN
     FROM fp_transacoes t
     WHERE t.status = 'realizado'
       AND t.tipo = 'transferencia'
+      AND (p_workspace_id IS NULL OR t.workspace_id = p_workspace_id)
     GROUP BY t.conta_id
   ),
   todas_contas AS (
     -- Garantir que todas as contas apareçam no resultado
-    SELECT id as conta_id FROM fp_contas WHERE ativo = true
+    SELECT id as conta_id FROM fp_contas 
+    WHERE ativo = true 
+      AND (p_workspace_id IS NULL OR workspace_id = p_workspace_id)
   )
   SELECT 
     tc.conta_id,

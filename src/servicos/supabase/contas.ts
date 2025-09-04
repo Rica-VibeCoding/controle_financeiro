@@ -1,8 +1,9 @@
 import { supabase } from './cliente'
 import type { Conta } from '@/tipos/database'
+import { mutate } from 'swr'
 
 // Tipos auxiliares baseados na documentação
-type NovaConta = Omit<Conta, 'id' | 'created_at'>
+type NovaConta = Omit<Conta, 'id' | 'created_at' | 'workspace_id'>
 
 type ContaComSaldo = Conta & {
   saldo: number
@@ -20,7 +21,7 @@ function formatarMoeda(valor: number): string {
 /**
  * Buscar todas as contas ativas
  */
-export async function obterContas(incluirInativas = false): Promise<Conta[]> {
+export async function obterContas(incluirInativas = false, workspaceId: string): Promise<Conta[]> {
   let query = supabase
     .from('fp_contas')
     .select('*')
@@ -29,6 +30,8 @@ export async function obterContas(incluirInativas = false): Promise<Conta[]> {
   if (!incluirInativas) {
     query = query.eq('ativo', true)
   }
+  
+  query = query.eq('workspace_id', workspaceId)
 
   const { data, error } = await query
 
@@ -39,13 +42,13 @@ export async function obterContas(incluirInativas = false): Promise<Conta[]> {
 /**
  * Buscar contas com saldo calculado (otimizado - corrige problema N+1)
  */
-export async function obterContasComSaldo(): Promise<ContaComSaldo[]> {
+export async function obterContasComSaldo(workspaceId: string): Promise<ContaComSaldo[]> {
   // Buscar contas ativas
-  const contas = await obterContas()
+  const contas = await obterContas(false, workspaceId)
   
   // Calcular todos os saldos de uma vez usando função SQL
   const { data: saldos, error } = await supabase
-    .rpc('calcular_saldos_contas')
+    .rpc('calcular_saldos_contas', { p_workspace_id: workspaceId })
   
   if (error) throw new Error(`Erro ao calcular saldos: ${error.message}`)
   
@@ -66,72 +69,53 @@ export async function obterContasComSaldo(): Promise<ContaComSaldo[]> {
   return contasComSaldo
 }
 
-/**
- * Calcular saldo de uma conta específica
- */
-async function calcularSaldoConta(contaId: string): Promise<number> {
-  // Receitas e despesas normais
-  const { data: transacoes, error } = await supabase
-    .from('fp_transacoes')
-    .select('valor, tipo')
-    .eq('conta_id', contaId)
-    .eq('status', 'realizado')
-
-  if (error) throw new Error(`Erro ao calcular saldo: ${error.message}`)
-
-  let saldo = 0
-  
-  for (const transacao of transacoes || []) {
-    if (transacao.tipo === 'receita') {
-      saldo += transacao.valor
-    } else if (transacao.tipo === 'despesa') {
-      saldo -= transacao.valor
-    }
-    // Transferências já são tratadas separadamente
-  }
-
-  // Transferências recebidas (como conta destino)
-  const { data: transferenciasRecebidas, error: errorRecebidas } = await supabase
-    .from('fp_transacoes')
-    .select('valor')
-    .eq('conta_destino_id', contaId)
-    .eq('tipo', 'transferencia')
-    .eq('status', 'realizado')
-
-  if (errorRecebidas) throw new Error(`Erro ao calcular transferências: ${errorRecebidas.message}`)
-
-  for (const transferencia of transferenciasRecebidas || []) {
-    saldo += transferencia.valor
-  }
-
-  // Transferências enviadas (como conta origem)
-  const { data: transferenciasEnviadas, error: errorEnviadas } = await supabase
-    .from('fp_transacoes')
-    .select('valor')
-    .eq('conta_id', contaId)
-    .eq('tipo', 'transferencia')
-    .eq('status', 'realizado')
-
-  if (errorEnviadas) throw new Error(`Erro ao calcular transferências: ${errorEnviadas.message}`)
-
-  for (const transferencia of transferenciasEnviadas || []) {
-    saldo -= transferencia.valor
-  }
-
-  return saldo
-}
 
 /**
  * Criar nova conta
  */
-export async function criarConta(conta: NovaConta): Promise<Conta> {
+export async function criarConta(conta: NovaConta, workspaceId: string): Promise<Conta> {
   const { data, error } = await supabase
     .from('fp_contas')
-    .insert([conta])
+    .insert([{ ...conta, workspace_id: workspaceId }])
     .select()
     .single()
 
   if (error) throw new Error(`Erro ao criar conta: ${error.message}`)
+
+  // Invalidar cache automaticamente
+  mutate((key: any) => 
+    Array.isArray(key) && 
+    key[0] === 'dados-auxiliares' && 
+    key[1] === workspaceId
+  )
+
+  // Invalidar saldos das contas
+  mutate((key: any) => 
+    Array.isArray(key) && 
+    key[0] === 'contas-bancarias' && 
+    key[1] === workspaceId
+  )
+
+  return data
+}
+
+/**
+ * Obter conta por ID
+ */
+export async function obterContaPorId(id: string): Promise<Conta> {
+  const { data, error } = await supabase
+    .from('fp_contas')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new Error('Conta não encontrada')
+    }
+    throw new Error(`Erro ao buscar conta: ${error.message}`)
+  }
+
   return data
 }
 
@@ -140,37 +124,61 @@ export async function criarConta(conta: NovaConta): Promise<Conta> {
  */
 export async function atualizarConta(
   id: string, 
-  atualizacoes: Partial<NovaConta>
+  atualizacoes: Partial<NovaConta>,
+  workspaceId: string
 ): Promise<void> {
   const { error } = await supabase
     .from('fp_contas')
     .update(atualizacoes)
     .eq('id', id)
+    .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao atualizar conta: ${error.message}`)
+
+  // Invalidar cache automaticamente
+  mutate((key: any) => 
+    Array.isArray(key) && 
+    key[0] === 'dados-auxiliares' && 
+    key[1] === workspaceId
+  )
+
+  // Invalidar saldos das contas
+  mutate((key: any) => 
+    Array.isArray(key) && 
+    key[0] === 'contas-bancarias' && 
+    key[1] === workspaceId
+  )
 }
 
 /**
  * Verificar se conta possui transações vinculadas
  */
-async function verificarTransacoesVinculadasConta(contaId: string): Promise<boolean> {
+async function verificarTransacoesVinculadasConta(contaId: string, workspaceId: string): Promise<boolean> {
   // Verificar transações normais
-  const { data: transacoes, error: errorTransacoes } = await supabase
+  const queryTransacoes = supabase
     .from('fp_transacoes')
     .select('id')
     .eq('conta_id', contaId)
     .limit(1)
+  
+  queryTransacoes.eq('workspace_id', workspaceId)
+  
+  const { data: transacoes, error: errorTransacoes } = await queryTransacoes
 
   if (errorTransacoes) throw new Error(`Erro ao verificar transações: ${errorTransacoes.message}`)
 
   if (transacoes && transacoes.length > 0) return true
 
   // Verificar transferências como conta destino
-  const { data: transferencias, error: errorTransferencias } = await supabase
+  const queryTransferencias = supabase
     .from('fp_transacoes')
     .select('id')
     .eq('conta_destino_id', contaId)
     .limit(1)
+  
+  queryTransferencias.eq('workspace_id', workspaceId)
+  
+  const { data: transferencias, error: errorTransferencias } = await queryTransferencias
 
   if (errorTransferencias) throw new Error(`Erro ao verificar transferências: ${errorTransferencias.message}`)
 
@@ -181,9 +189,9 @@ async function verificarTransacoesVinculadasConta(contaId: string): Promise<bool
  * Excluir conta (hard delete)
  * Verifica integridade antes da exclusão
  */
-export async function excluirConta(id: string): Promise<void> {
+export async function excluirConta(id: string, workspaceId: string): Promise<void> {
   // Verificar se tem transações vinculadas
-  const temTransacoes = await verificarTransacoesVinculadasConta(id)
+  const temTransacoes = await verificarTransacoesVinculadasConta(id, workspaceId)
   if (temTransacoes) {
     throw new Error('Não é possível excluir conta com transações vinculadas')
   }
@@ -193,6 +201,21 @@ export async function excluirConta(id: string): Promise<void> {
     .from('fp_contas')
     .delete()
     .eq('id', id)
+    .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao excluir conta: ${error.message}`)
+
+  // Invalidar cache automaticamente
+  mutate((key: any) => 
+    Array.isArray(key) && 
+    key[0] === 'dados-auxiliares' && 
+    key[1] === workspaceId
+  )
+
+  // Invalidar saldos das contas
+  mutate((key: any) => 
+    Array.isArray(key) && 
+    key[0] === 'contas-bancarias' && 
+    key[1] === workspaceId
+  )
 }

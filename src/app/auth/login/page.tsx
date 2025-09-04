@@ -25,8 +25,8 @@ export default function LoginPage() {
       if (error) {
         showError(error, 'Login')
       } else {
-        router.push('/')
-        router.refresh()
+        // Redirecionar diretamente para dashboard após login
+        router.replace('/dashboard')
       }
     } catch (error) {
       showError(error, 'Login')
@@ -92,7 +92,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center space-y-2">
+          <div className="text-center">
             <p className="text-sm text-gray-600">
               Não tem conta?{' '}
               <a 
@@ -102,17 +102,6 @@ export default function LoginPage() {
                 Criar conta
               </a>
             </p>
-            
-            {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
-              <p className="text-sm text-gray-500">
-                <a 
-                  href="/auth/dev" 
-                  className="font-medium text-orange-600 hover:text-orange-500"
-                >
-                  🔧 Modo Desenvolvimento
-                </a>
-              </p>
-            )}
           </div>
         </form>
       </div>

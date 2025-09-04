@@ -6,6 +6,7 @@ import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategoria
 import { obterTransacaoPorId } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { validarTransacao } from '@/utilitarios/validacao'
+import { useAuth } from '@/contextos/auth-contexto'
 
 interface UseFormularioTransacaoOptions {
   transacaoInicial?: Partial<NovaTransacao>
@@ -16,6 +17,7 @@ export function useFormularioTransacao({
   transacaoInicial = {},
   transacaoId
 }: UseFormularioTransacaoOptions = {}) {
+  const { workspace } = useAuth()
   // Dados auxiliares do Context
   const { dados: dadosAuxiliares, loading: dadosLoading } = useDadosAuxiliares()
   const { contas, categorias, formasPagamento, centrosCusto } = dadosAuxiliares
@@ -41,11 +43,11 @@ export function useFormularioTransacao({
   // Carregar transação para edição
   useEffect(() => {
     async function carregarTransacao() {
-      if (!transacaoId) return
+      if (!transacaoId || !workspace) return
       
       try {
         setLoading(true)
-        const transacao = await obterTransacaoPorId(transacaoId)
+        const transacao = await obterTransacaoPorId(transacaoId, workspace.id)
         if (transacao) {
           setDados({
             data: transacao.data,
@@ -77,19 +79,19 @@ export function useFormularioTransacao({
     }
 
     carregarTransacao()
-  }, [transacaoId])
+  }, [transacaoId, workspace])
 
   // Carregar subcategorias quando categoria muda
   useEffect(() => {
     async function carregarSubcategorias() {
-      if (!dados.categoria_id) {
+      if (!dados.categoria_id || !workspace) {
         setSubcategorias([])
         return
       }
 
       try {
         setCarregandoSubcategorias(true)
-        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id)
+        const subcategoriasData = await obterSubcategoriasPorCategoria(dados.categoria_id, workspace.id)
         setSubcategorias(subcategoriasData)
       } catch (error) {
         console.error('Erro ao carregar subcategorias:', error)
@@ -99,7 +101,7 @@ export function useFormularioTransacao({
     }
 
     carregarSubcategorias()
-  }, [dados.categoria_id])
+  }, [dados.categoria_id, workspace])
 
   // Atualizar campo do formulário
   const atualizarCampo = useCallback((campo: string, valor: any) => {

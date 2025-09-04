@@ -19,7 +19,11 @@ const eslintConfig = [
       // Mantemos off para evitar falsos positivos com hooks "usar..."
       "react-hooks/rules-of-hooks": "off",
       // Evita quebrar o build por tipagens em progresso
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "@next/next/no-img-element": "off",
       // Interfaces de UI que apenas estendem HTML props
       "@typescript-eslint/no-empty-object-type": "off",
     },

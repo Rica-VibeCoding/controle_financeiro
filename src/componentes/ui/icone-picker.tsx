@@ -48,10 +48,14 @@ interface IconePickerProps {
 export function IconePicker({ iconeSelecionado, onIconeChange, disabled = false }: IconePickerProps) {
   return (
     <div className="space-y-2">
-      <Label>Ícone *</Label>
-      <div className="grid grid-cols-6 gap-2">
+      <Label className="text-sm font-medium text-gray-700">Ícone *</Label>
+      
+      {/* Grid compacto */}
+      <div className="grid grid-cols-8 gap-1.5 p-3 bg-gray-50 rounded-lg border max-h-40 overflow-y-auto">
         {ICONES_CATEGORIAS.map((item) => {
           const IconeComponente = item.componente
+          const isSelected = iconeSelecionado === item.nome
+          
           return (
             <button
               key={item.nome}
@@ -60,16 +64,15 @@ export function IconePicker({ iconeSelecionado, onIconeChange, disabled = false 
               disabled={disabled}
               title={item.categoria}
               className={`
-                p-3 rounded-lg border-2 transition-colors
-                hover:bg-accent hover:text-accent-foreground
-                disabled:opacity-50 disabled:cursor-not-allowed
-                ${iconeSelecionado === item.nome 
-                  ? 'border-primary bg-primary/10 text-primary' 
-                  : 'border-border text-muted-foreground'
+                relative flex items-center justify-center w-8 h-8 rounded-md border transition-colors
+                hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed
+                ${isSelected
+                  ? 'border-blue-500 bg-blue-50 text-blue-600' 
+                  : 'border-gray-200 bg-white text-gray-600'
                 }
               `}
             >
-              <IconeComponente size={20} />
+              <IconeComponente size={16} className="flex-shrink-0" />
             </button>
           )
         })}

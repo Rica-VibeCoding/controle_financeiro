@@ -4,7 +4,6 @@ import {
   NovaMetaMensal, 
   MetaComProgresso, 
   ResumoMetas,
-  FiltrosMetas,
   GastoCategoria 
 } from '@/tipos/metas-mensais'
 import { 
@@ -21,14 +20,17 @@ export class MetasMensaisService {
   /**
    * Criar ou atualizar meta para categoria e mês
    */
-  static async criarOuAtualizarMeta(meta: NovaMetaMensal): Promise<MetaMensal> {
+  static async criarOuAtualizarMeta(meta: NovaMetaMensal, workspaceId: string): Promise<MetaMensal> {
     // Verificar se já existe meta para esta categoria/mês
-    const { data: existente } = await supabase
+    const queryExistente = supabase
       .from('fp_metas_mensais')
       .select('*')
       .eq('categoria_id', meta.categoria_id)
       .eq('mes_referencia', meta.mes_referencia)
-      .single()
+    
+    queryExistente.eq('workspace_id', workspaceId)
+    
+    const { data: existente } = await queryExistente.single()
 
     if (existente) {
       // Atualizar meta existente
@@ -48,7 +50,7 @@ export class MetasMensaisService {
       // Criar nova meta
       const { data, error } = await supabase
         .from('fp_metas_mensais')
-        .insert([meta])
+        .insert([{ ...meta, workspace_id: workspaceId }])
         .select()
         .single()
 
@@ -60,12 +62,16 @@ export class MetasMensaisService {
   /**
    * Buscar metas por mês
    */
-  static async buscarMetasPorMes(mesReferencia: number): Promise<MetaMensal[]> {
-    const { data, error } = await supabase
+  static async buscarMetasPorMes(mesReferencia: number, workspaceId: string): Promise<MetaMensal[]> {
+    const query = supabase
       .from('fp_metas_mensais')
       .select('*')
       .eq('mes_referencia', mesReferencia)
       .order('valor_meta', { ascending: false })
+    
+    query.eq('workspace_id', workspaceId)
+    
+    const { data, error } = await query
 
     if (error) throw new Error(`Erro ao buscar metas: ${error.message}`)
     return data || []
@@ -76,14 +82,18 @@ export class MetasMensaisService {
    */
   static async buscarMetaPorCategoriaeMes(
     categoriaId: string, 
-    mesReferencia: number
+    mesReferencia: number,
+    workspaceId: string
   ): Promise<MetaMensal | null> {
-    const { data, error } = await supabase
+    const query = supabase
       .from('fp_metas_mensais')
       .select('*')
       .eq('categoria_id', categoriaId)
       .eq('mes_referencia', mesReferencia)
-      .single()
+    
+    query.eq('workspace_id', workspaceId)
+    
+    const { data, error } = await query.single()
 
     if (error && error.code !== 'PGRST116') {
       throw new Error(`Erro ao buscar meta: ${error.message}`)
@@ -96,12 +106,13 @@ export class MetasMensaisService {
    */
   static async calcularGastosPorCategoria(
     categoriaId: string,
-    mesReferencia: number
+    mesReferencia: number,
+    workspaceId: string
   ): Promise<GastoCategoria> {
     const dataInicio = mesReferenciaParaDataInicio(mesReferencia).toISOString().split('T')[0]
     const dataFim = mesReferenciaParaDataFim(mesReferencia).toISOString().split('T')[0]
 
-    const { data, error } = await supabase
+    const query = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('categoria_id', categoriaId)
@@ -109,6 +120,10 @@ export class MetasMensaisService {
       .eq('status', 'realizado')
       .gte('data', dataInicio)
       .lte('data', dataFim)
+    
+    query.eq('workspace_id', workspaceId)
+    
+    const { data, error } = await query
 
     if (error) {
       throw new Error(`Erro ao calcular gastos: ${error.message}`)
@@ -127,12 +142,16 @@ export class MetasMensaisService {
   /**
    * Obter todas as categorias ativas
    */
-  static async obterCategoriasAtivas() {
-    const { data, error } = await supabase
+  static async obterCategoriasAtivas(workspaceId: string) {
+    const query = supabase
       .from('fp_categorias')
       .select('id, nome, icone, cor')
       .eq('ativo', true)
       .order('nome')
+    
+    query.eq('workspace_id', workspaceId)
+    
+    const { data, error } = await query
 
     if (error) throw new Error(`Erro ao buscar categorias: ${error.message}`)
     return data || []
@@ -141,12 +160,12 @@ export class MetasMensaisService {
   /**
    * Gerar metas com progresso para um mês
    */
-  static async gerarMetasComProgresso(mesReferencia: number): Promise<MetaComProgresso[]> {
+  static async gerarMetasComProgresso(mesReferencia: number, workspaceId: string): Promise<MetaComProgresso[]> {
     // Buscar todas as categorias ativas
-    const categorias = await this.obterCategoriasAtivas()
+    const categorias = await this.obterCategoriasAtivas(workspaceId)
     
     // Buscar metas existentes para o mês
-    const metas = await this.buscarMetasPorMes(mesReferencia)
+    const metas = await this.buscarMetasPorMes(mesReferencia, workspaceId)
     const metasMap = new Map(metas.map(m => [m.categoria_id, m]))
 
     const metasComProgresso: MetaComProgresso[] = []
@@ -157,7 +176,7 @@ export class MetasMensaisService {
       const valorMeta = metaExistente?.valor_meta || 0
 
       // Calcular gastos da categoria no mês
-      const gastos = await this.calcularGastosPorCategoria(categoria.id, mesReferencia)
+      const gastos = await this.calcularGastosPorCategoria(categoria.id, mesReferencia, workspaceId)
       
       // Calcular progresso
       const percentualUsado = calcularPercentualMeta(gastos.valor_total, valorMeta)
@@ -185,8 +204,8 @@ export class MetasMensaisService {
   /**
    * Gerar resumo completo das metas do mês
    */
-  static async gerarResumoMetas(mesReferencia: number): Promise<ResumoMetas> {
-    const categorias = await this.gerarMetasComProgresso(mesReferencia)
+  static async gerarResumoMetas(mesReferencia: number, workspaceId: string): Promise<ResumoMetas> {
+    const categorias = await this.gerarMetasComProgresso(mesReferencia, workspaceId)
 
     const totalMetas = categorias.reduce((sum, cat) => sum + cat.valor_meta, 0)
     const totalGastos = categorias.reduce((sum, cat) => sum + cat.valor_gasto, 0)
@@ -206,16 +225,20 @@ export class MetasMensaisService {
   /**
    * Renovar metas do mês anterior (executar todo dia 1º)
    */
-  static async renovarMetasDoMesAnterior(mesReferencia?: number): Promise<void> {
+  static async renovarMetasDoMesAnterior(mesReferencia?: number, workspaceId?: string): Promise<void> {
+    if (!workspaceId) {
+      throw new Error('WorkspaceId é obrigatório para renovar metas')
+    }
+    
     const mesAtual = mesReferencia || gerarMesReferencia()
     const mesAnterior = obterMesAnterior(mesAtual)
 
     try {
       // Buscar metas do mês anterior
-      const metasAnteriores = await this.buscarMetasPorMes(mesAnterior)
+      const metasAnteriores = await this.buscarMetasPorMes(mesAnterior, workspaceId)
       
       // Buscar todas as categorias ativas (incluindo novas)
-      const categorias = await this.obterCategoriasAtivas()
+      const categorias = await this.obterCategoriasAtivas(workspaceId)
 
       // Para cada categoria ativa, criar meta no mês atual
       for (const categoria of categorias) {
@@ -223,7 +246,7 @@ export class MetasMensaisService {
         const valorMeta = metaAnterior?.valor_meta || 0
 
         // Verificar se já existe meta para este mês (evitar duplicação)
-        const metaExistente = await this.buscarMetaPorCategoriaeMes(categoria.id, mesAtual)
+        const metaExistente = await this.buscarMetaPorCategoriaeMes(categoria.id, mesAtual, workspaceId)
         
         if (!metaExistente) {
           const novaMeta: NovaMetaMensal = {
@@ -232,7 +255,7 @@ export class MetasMensaisService {
             valor_meta: valorMeta
           }
 
-          await this.criarOuAtualizarMeta(novaMeta)
+          await this.criarOuAtualizarMeta(novaMeta, workspaceId)
         }
       }
 
@@ -246,14 +269,14 @@ export class MetasMensaisService {
   /**
    * Inicializar metas para novos usuários (todas com valor 0)
    */
-  static async inicializarMetasParaNovoUsuario(mesReferencia?: number): Promise<void> {
+  static async inicializarMetasParaNovoUsuario(workspaceId: string, mesReferencia?: number): Promise<void> {
     const mes = mesReferencia || gerarMesReferencia()
     
     try {
-      const categorias = await this.obterCategoriasAtivas()
+      const categorias = await this.obterCategoriasAtivas(workspaceId)
       
       for (const categoria of categorias) {
-        const metaExistente = await this.buscarMetaPorCategoriaeMes(categoria.id, mes)
+        const metaExistente = await this.buscarMetaPorCategoriaeMes(categoria.id, mes, workspaceId)
         
         if (!metaExistente) {
           const novaMeta: NovaMetaMensal = {
@@ -262,7 +285,7 @@ export class MetasMensaisService {
             valor_meta: 0
           }
 
-          await this.criarOuAtualizarMeta(novaMeta)
+          await this.criarOuAtualizarMeta(novaMeta, workspaceId)
         }
       }
 
@@ -276,14 +299,14 @@ export class MetasMensaisService {
   /**
    * Deletar meta específica (zerar valor)
    */
-  static async zerarMeta(categoriaId: string, mesReferencia: number): Promise<void> {
+  static async zerarMeta(categoriaId: string, mesReferencia: number, workspaceId: string): Promise<void> {
     const novaMeta: NovaMetaMensal = {
       categoria_id: categoriaId,
       mes_referencia: mesReferencia,
       valor_meta: 0
     }
 
-    await this.criarOuAtualizarMeta(novaMeta)
+    await this.criarOuAtualizarMeta(novaMeta, workspaceId)
   }
 
   /**

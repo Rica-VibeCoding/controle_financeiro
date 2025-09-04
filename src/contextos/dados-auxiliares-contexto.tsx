@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import useSWR from 'swr'
 import { Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import { obterContas } from '@/servicos/supabase/contas'
@@ -8,6 +9,7 @@ import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategoria
 import { obterFormasPagamento } from '@/servicos/supabase/formas-pagamento'
 import { obterCentrosCusto } from '@/servicos/supabase/centros-custo'
 import { logger } from '@/utilitarios/logger'
+import { useAuth } from '@/contextos/auth-contexto'
 
 /**
  * Interface para dados auxiliares do sistema
@@ -55,42 +57,48 @@ interface DadosAuxiliaresProviderProps {
 
 /**
  * Provider para cache global de dados auxiliares
- * Carrega uma vez e compartilha entre todos os componentes
+ * Usa SWR para cache automático e revalidação
  */
 export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderProps) {
-  const [dados, setDados] = useState<DadosAuxiliares>(DADOS_VAZIOS)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { workspace } = useAuth()
   const [cacheSubcategorias, setCacheSubcategorias] = useState<CacheSubcategorias>({})
 
   /**
-   * Carrega todos os dados auxiliares
+   * Função para carregar todos os dados auxiliares
    */
-  const carregarDados = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const carregarDadosAuxiliares = async () => {
+    if (!workspace) return DADOS_VAZIOS
 
-      const [contasData, categoriasData, formasData, centrosData] = await Promise.all([
-        obterContas(),
-        obterCategorias(),
-        obterFormasPagamento(),
-        obterCentrosCusto()
-      ])
+    const [contasData, categoriasData, formasData, centrosData] = await Promise.all([
+      obterContas(false, workspace.id),
+      obterCategorias(false, workspace.id),
+      obterFormasPagamento(false, workspace.id),
+      obterCentrosCusto(false, workspace.id)
+    ])
 
-      setDados({
-        contas: contasData,
-        categorias: categoriasData,
-        formasPagamento: formasData,
-        centrosCusto: centrosData
-      })
-    } catch (error) {
-      logger.error('Erro ao carregar dados auxiliares:', error)
-      setError(error instanceof Error ? error.message : 'Erro desconhecido')
-    } finally {
-      setLoading(false)
+    return {
+      contas: contasData,
+      categorias: categoriasData,
+      formasPagamento: formasData,
+      centrosCusto: centrosData
     }
   }
+
+  // Hook SWR para cache automático dos dados auxiliares
+  const { data: dados = DADOS_VAZIOS, error, isLoading: loading, mutate: recarregarDados } = useSWR(
+    workspace ? ['dados-auxiliares', workspace.id] : null,
+    carregarDadosAuxiliares,
+    {
+      refreshInterval: 300000, // 5 minutos - dados auxiliares mudam pouco
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // 1 minuto
+      errorRetryCount: 3,
+      errorRetryInterval: 5000,
+      onError: (error) => {
+        logger.error('Erro ao carregar dados auxiliares:', error)
+      }
+    }
+  )
 
   /**
    * Obtém subcategorias com cache inteligente
@@ -98,13 +106,15 @@ export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderPro
    * @returns Promise com array de subcategorias
    */
   const obterSubcategorias = async (categoriaId: string): Promise<Subcategoria[]> => {
+    if (!workspace) return []
+    
     // Verificar cache primeiro
     if (cacheSubcategorias[categoriaId]) {
       return cacheSubcategorias[categoriaId]
     }
 
     try {
-      const subcategorias = await obterSubcategoriasPorCategoria(categoriaId)
+      const subcategorias = await obterSubcategoriasPorCategoria(categoriaId, workspace.id)
       
       // Atualizar cache
       setCacheSubcategorias(prev => ({
@@ -120,24 +130,19 @@ export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderPro
   }
 
   /**
-   * Recarrega todos os dados (para refresh manual)
+   * Função para recarregar dados manualmente
    */
-  const recarregarDados = async () => {
+  const recarregarDadosManual = async () => {
     setCacheSubcategorias({}) // Limpar cache de subcategorias
-    await carregarDados()
+    await recarregarDados() // Função do SWR
   }
-
-  // Carregar dados na inicialização
-  useEffect(() => {
-    carregarDados()
-  }, [])
 
   const value: DadosAuxiliaresContextType = {
     dados,
     loading,
-    error,
+    error: error?.message || null,
     obterSubcategorias,
-    recarregarDados
+    recarregarDados: recarregarDadosManual
   }
 
   return (
@@ -148,12 +153,11 @@ export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderPro
 }
 
 /**
- * Hook para usar dados auxiliares em qualquer componente
- * @returns Contexto de dados auxiliares
+ * Hook para usar o contexto de dados auxiliares
  */
 export function useDadosAuxiliares() {
   const context = useContext(DadosAuxiliaresContexto)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useDadosAuxiliares deve ser usado dentro de DadosAuxiliaresProvider')
   }
   return context

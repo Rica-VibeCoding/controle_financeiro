@@ -14,7 +14,7 @@ export class ProcessadorRecorrencia {
    * Processar todas as recorrências vencidas
    * Função principal do sistema de recorrência
    */
-  static async processarTodasRecorrencias(): Promise<{
+  static async processarTodasRecorrencias(workspaceId: string): Promise<{
     processadas: number,
     erros: number,
     detalhes: string[]
@@ -27,7 +27,7 @@ export class ProcessadorRecorrencia {
 
     try {
       // Buscar recorrências vencidas conforme PRD
-      const recorrenciasVencidas = await obterTransacoesRecorrentesVencidas()
+      const recorrenciasVencidas = await obterTransacoesRecorrentesVencidas(workspaceId)
       
       if (recorrenciasVencidas.length === 0) {
         resultado.detalhes.push('Nenhuma recorrência vencida encontrada')
@@ -37,7 +37,7 @@ export class ProcessadorRecorrencia {
       // Processar cada recorrência
       for (const transacao of recorrenciasVencidas) {
         try {
-          await processarRecorrencia(transacao)
+          await processarRecorrencia(transacao, workspaceId)
           resultado.processadas++
           resultado.detalhes.push(`✅ ${transacao.descricao} - ${this.formatarValor(transacao.valor)}`)
         } catch (error) {
@@ -59,9 +59,9 @@ export class ProcessadorRecorrencia {
    * Verificar quantas recorrências estão vencidas
    * Para exibição de notificações/alertas
    */
-  static async contarRecorrenciasVencidas(): Promise<number> {
+  static async contarRecorrenciasVencidas(workspaceId: string): Promise<number> {
     try {
-      const recorrencias = await obterTransacoesRecorrentesVencidas()
+      const recorrencias = await obterTransacoesRecorrentesVencidas(workspaceId)
       return recorrencias.length
     } catch (error) {
       console.error('Erro ao contar recorrências vencidas:', error)
@@ -120,7 +120,7 @@ export class ProcessadorRecorrencia {
   static formatarFrequencia(freq: string): string {
     const frequencias = {
       'diario': 'Diário',
-      'semanal': 'Semanal',
+      'semanal': 'Semanal', 
       'mensal': 'Mensal',
       'anual': 'Anual'
     }

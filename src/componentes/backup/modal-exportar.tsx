@@ -119,7 +119,7 @@ export function ModalExportar({ isOpen, onClose }: ModalExportarProps) {
       <div className="space-y-6">
         {/* Configuração da Exportação */}
         {!estado.exportando && !exportacaoCompleta && (
-          <Card>
+          <Card className="shadow-md">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Database className="w-5 h-5" />
@@ -166,7 +166,7 @@ export function ModalExportar({ isOpen, onClose }: ModalExportarProps) {
 
         {/* Progresso da Exportação */}
         {estado.exportando && (
-          <Card>
+          <Card className="shadow-md">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Clock className="w-5 h-5 animate-spin" />
@@ -200,7 +200,7 @@ export function ModalExportar({ isOpen, onClose }: ModalExportarProps) {
 
         {/* Resultado da Exportação */}
         {exportacaoCompleta && ultimoResumo && (
-          <Card>
+          <Card className="shadow-md">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2 text-green-600">
                 <CheckCircle2 className="w-5 h-5" />

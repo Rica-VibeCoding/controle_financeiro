@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { ExportadorDados } from '@/servicos/backup/exportador-dados'
+import { useAuth } from '@/contextos/auth-contexto'
 import type { 
   EstadoExportacao, 
   ConfiguracaoExportacao, 
@@ -18,6 +19,7 @@ const configuracaoPadrao: ConfiguracaoExportacao = {
 }
 
 export function usarBackupExportar() {
+  const { workspace } = useAuth()
   const [estado, setEstado] = useState<EstadoExportacao>({
     exportando: false,
     progresso: 0,
@@ -57,7 +59,7 @@ export function usarBackupExportar() {
   }, [])
 
   const exportarDados = useCallback(async (): Promise<boolean> => {
-    if (estado.exportando) {
+    if (estado.exportando || !workspace) {
       return false
     }
 
@@ -113,7 +115,7 @@ export function usarBackupExportar() {
 
       return false
     }
-  }, [estado.exportando, configuracao, onProgresso, downloadArquivo])
+  }, [estado.exportando, configuracao, onProgresso, downloadArquivo, workspace])
 
   const reiniciarEstado = useCallback(() => {
     setEstado({

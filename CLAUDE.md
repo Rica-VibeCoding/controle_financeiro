@@ -12,8 +12,10 @@
 
 ## Comandos Obrigatórios
 - `npx tsc --noEmit` para validar TypeScript
-- `npm run build` para testar build
+- `npm run build` para testar build (43s tempo atual otimizado)
+- `npm run build:analyze` para análise de bundle
 - `npm run lint` quando problemas WSL forem resolvidos
+- `node --version` para verificar Node.js 20.19.4
 
 ## Comandos Customizados
 - `qcheck` - Revisão rápida de código e best practices

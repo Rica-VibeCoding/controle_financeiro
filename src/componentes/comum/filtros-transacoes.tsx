@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'
 import { Label } from '@/componentes/ui/label'
@@ -9,7 +9,6 @@ import { Select } from '@/componentes/ui/select'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { obterIconePorNome } from '@/componentes/ui/icone-picker'
 import type { FiltrosTransacao } from '@/tipos/filtros'
-import type { Categoria, Conta } from '@/tipos/database'
 import { Icone } from '@/componentes/ui/icone'
 
 interface FiltrosTransacoesProps {
@@ -29,7 +28,7 @@ export function FiltrosTransacoes({
   const { categorias, contas } = dadosAuxiliares
   const [expandido, setExpandido] = useState(false)
 
-  const handleChange = (campo: keyof FiltrosTransacao, valor: any) => {
+  const handleChange = (campo: keyof FiltrosTransacao, valor: string | number | boolean | undefined) => {
     onFiltrosChange({
       ...filtros,
       [campo]: valor || undefined
@@ -121,14 +120,11 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               >
                 <option value="">Todas as categorias</option>
-                {categorias.map((categoria) => {
-                  const IconeComponente = obterIconePorNome(categoria.icone)
-                  return (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nome}
-                    </option>
-                  )
-                })}
+                {categorias.map((categoria) => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nome}
+                  </option>
+                ))}
               </Select>
             </div>
 
@@ -282,8 +278,8 @@ export function FiltrosTransacoes({
             <div className="border-t pt-4">
               <div className="text-sm text-muted-foreground">
                 <span className="font-medium">Filtros ativos:</span> {Object.entries(filtros)
-                  .filter(([_, valor]) => valor !== undefined && valor !== '')
-                  .map(([chave, _]) => chave)
+                  .filter(([, valor]) => valor !== undefined && valor !== '')
+                  .map(([chave]) => chave)
                   .join(', ')}
               </div>
             </div>

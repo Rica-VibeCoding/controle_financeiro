@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/utilitarios/cn'
 import { Icone } from '@/componentes/ui/icone'
+import { useAuth } from '@/contextos/auth-contexto'
+import { verificarAcessoSuperAdmin } from '@/servicos/supabase/dashboard-admin'
 
 const menuItems = [
   {
@@ -54,6 +56,29 @@ const cadastroItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { workspace, user } = useAuth()
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  
+  // Verificar se usuário é owner do workspace
+  const isOwner = workspace?.owner_id === user?.id
+  
+  // Verificar se usuário é super admin
+  useEffect(() => {
+    async function checkSuperAdmin() {
+      if (user) {
+        try {
+          const superAdmin = await verificarAcessoSuperAdmin()
+          setIsSuperAdmin(superAdmin)
+        } catch (error) {
+          console.error('Erro ao verificar super admin:', error)
+          setIsSuperAdmin(false)
+        }
+      } else {
+        setIsSuperAdmin(false)
+      }
+    }
+    checkSuperAdmin()
+  }, [user])
   
   // Verificar se alguma página de cadastro está ativa
   const isCadastroActive = cadastroItems.some(item => pathname.startsWith(item.href))
@@ -105,6 +130,36 @@ export function Sidebar() {
           Configurações
         </Link>
 
+        {/* Usuários (apenas para owners) */}
+        {isOwner && (
+          <Link
+            href="/configuracoes/usuarios"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+              pathname.startsWith("/configuracoes/usuarios")
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <Icone name="users" className="w-4 h-4" aria-hidden="true" />
+            Usuários
+          </Link>
+        )}
+
+        {/* Metas */}
+        <Link
+          href="/configuracoes/metas"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+            pathname.startsWith("/configuracoes/metas")
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
+          <Icone name="target" className="w-4 h-4" aria-hidden="true" />
+          Metas
+        </Link>
+
         {/* Cadastramento - Seção Expansível */}
         <div className="mt-2">
           <button
@@ -147,7 +202,38 @@ export function Sidebar() {
             </div>
           )}
         </div>
+
+        {/* Dashboard Super Admin (apenas para super admin) */}
+        {isSuperAdmin && (
+          <Link
+            href="/admin/dashboard"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mt-2",
+              pathname.startsWith("/admin")
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <Icone name="shield" className="w-4 h-4" aria-hidden="true" />
+            Dashboard Admin
+          </Link>
+        )}
       </div>
+
+      {/* Info do Workspace */}
+      {workspace && (
+        <div className="mt-auto pt-4 border-t border-border">
+          <div className="px-3 py-2 text-xs">
+            <div className="text-muted-foreground mb-1">Workspace</div>
+            <div className="font-medium truncate" title={workspace.nome}>
+              {workspace.nome}
+            </div>
+            <div className="text-muted-foreground mt-1">
+              {isOwner ? 'Proprietário' : 'Membro'}
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

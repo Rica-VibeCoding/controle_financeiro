@@ -14,6 +14,7 @@ import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCu
 import { Icone } from '@/componentes/ui/icone'
 import { obterTransacaoPorId, criarTransacao, atualizarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
+import { useAuth } from '@/contextos/auth-contexto'
 
 /**
  * Props para o componente ModalLancamento
@@ -152,6 +153,7 @@ const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransa
  */
 export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: ModalLancamentoProps) {
   const isEdicao = !!transacaoId
+  const { workspace } = useAuth()
 
   // Dados auxiliares do contexto global
   const { dados: dadosAuxiliares, loading: loadingAuxiliares, obterSubcategorias } = useDadosAuxiliares()
@@ -171,11 +173,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
   // Carregar transação para edição
   useEffect(() => {
     async function carregarTransacao() {
-      if (!isOpen || !transacaoId) return
+      if (!isOpen || !transacaoId || !workspace) return
 
       try {
         setLoadingTransacao(true)
-        const transacao = await obterTransacaoPorId(transacaoId)
+        const transacao = await obterTransacaoPorId(transacaoId, workspace.id)
         if (transacao) {
           setDados(mapearTransacaoParaEstado(transacao))
         }
@@ -206,7 +208,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       setAbaAtiva('essencial')
       setDados(ESTADO_INICIAL)
     }
-  }, [isOpen, transacaoId])
+  }, [isOpen, transacaoId, workspace])
 
   // Carregar subcategorias quando categoria muda
   useEffect(() => {
@@ -248,7 +250,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       ...prev,
       [campo]: valor,
       ...(campo === 'categoria_id' ? { subcategoria_id: '' } : {}),
-      ...(campo === 'tipo' && valor !== 'transferencia' ? { conta_destino_id: '' } : {})
+      ...(campo === 'tipo' && valor !== 'transferencia' ? { conta_destino_id: '' } : {}),
     }))
   }, [])
 
@@ -333,12 +335,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
   }
 
   /**
-   * Submete o formulário criando ou atualizando transação
-   * @param e - Evento do formulário
+   * Manipula o clique do botão salvar prevenindo duplo clique
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleSalvarClick = async () => {
+    if (salvando) return // Previne duplo clique
+    
     const errosValidacao = validarTransacao(dados)
     if (errosValidacao.length > 0) {
       setMensagem({ 
@@ -349,15 +350,20 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       return
     }
 
-    try {
-      setSalvando(true)
-      
-      if (isEdicao && transacaoId) {
-        await atualizarTransacao(transacaoId, dados as NovaTransacao)
-      } else {
-        await criarTransacao(dados as NovaTransacao)
-      }
+    if (!workspace) {
+      setMensagem({ tipo: 'erro', texto: 'Workspace não encontrado' })
+      setTimeout(() => setMensagem(null), 5000)
+      return
+    }
 
+    setSalvando(true) // Ativa imediatamente
+
+    try {
+      if (isEdicao && transacaoId) {
+        await atualizarTransacao(transacaoId, dados as NovaTransacao, workspace.id)
+      } else {
+        await criarTransacao(dados as NovaTransacao, workspace.id)
+      }
 
       onSuccess?.()
       onClose()
@@ -368,9 +374,16 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
         texto: `Erro ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
       })
       setTimeout(() => setMensagem(null), 5000)
-    } finally {
-      setSalvando(false)
+      setSalvando(false) // Reativa apenas em caso de erro
     }
+  }
+
+  /**
+   * Submete o formulário (mantido para compatibilidade)
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await handleSalvarClick()
   }
 
 
@@ -481,7 +494,20 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                 <Select
                   id="status"
                   value={dados.status}
-                  onChange={(e) => atualizarCampo('status', e.target.value as 'previsto' | 'realizado')}
+                  onChange={(e) => {
+                    const novoStatus = e.target.value as 'previsto' | 'realizado'
+                    
+                    // Validação: não permitir realizado com data futura
+                    if (novoStatus === 'realizado' && dados.data) {
+                      const hoje = new Date().toISOString().split('T')[0]
+                      if (dados.data > hoje) {
+                        alert('Não é possível marcar como realizado uma transação com data futura!')
+                        return
+                      }
+                    }
+                    
+                    atualizarCampo('status', novoStatus)
+                  }}
                 >
                   <option value="previsto">Previsto</option>
                   <option value="realizado">Realizado</option>
@@ -608,18 +634,20 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
               {dados.recorrente && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="frequencia_recorrencia">Frequência</Label>
+                    <Label htmlFor="frequencia_recorrencia">Frequência *</Label>
                     <Select
                       id="frequencia_recorrencia"
                       value={dados.frequencia_recorrencia || ''}
                       onChange={(e) => {
                         const freq = e.target.value as 'diario' | 'semanal' | 'mensal' | 'anual'
                         atualizarCampo('frequencia_recorrencia', freq)
-                        if (dados.data) {
-                          const proximaData = calcularProximaRecorrencia(dados.data, freq)
+                        // Auto-sugerir próxima recorrência baseada na data de vencimento
+                        if (dados.data_vencimento && freq) {
+                          const proximaData = calcularProximaRecorrencia(dados.data_vencimento, freq)
                           atualizarCampo('proxima_recorrencia', proximaData)
                         }
                       }}
+                      required
                     >
                       <option value="">Selecione...</option>
                       <option value="diario">📅 Diário</option>
@@ -630,12 +658,19 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="proxima_recorrencia">Próxima Recorrência</Label>
+                    <Label htmlFor="proxima_recorrencia" className="flex items-center gap-2">
+                      Próxima Recorrência *
+                      <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded">
+                        sugerido
+                      </span>
+                    </Label>
                     <Input
                       id="proxima_recorrencia"
                       type="date"
                       value={dados.proxima_recorrencia || ''}
                       onChange={(e) => atualizarCampo('proxima_recorrencia', e.target.value)}
+                      className="border-blue-200 focus:border-blue-400"
+                      required
                     />
                   </div>
                 </div>
@@ -722,11 +757,19 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
             <SkeletonButton className="w-36" />
           ) : (
             <Button 
-              type="submit" 
-              onClick={handleSubmit}
+              type="button" 
+              onClick={handleSalvarClick}
               disabled={salvando || !validarEssencial()}
+              className={salvando ? 'pointer-events-none' : ''}
             >
-              {salvando ? 'Salvando...' : isEdicao ? 'Atualizar Transação' : 'Salvar Transação'}
+              {salvando ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Salvando...
+                </div>
+              ) : (
+                isEdicao ? 'Atualizar Transação' : 'Salvar Transação'
+              )}
             </Button>
           )}
         </div>

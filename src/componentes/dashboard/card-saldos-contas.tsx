@@ -1,12 +1,29 @@
 'use client'
 
+import { memo, useCallback } from 'react'
 import { useContasDados } from '@/hooks/usar-contas-dados'
 import { Icone } from '@/componentes/ui/icone'
 import { Skeleton } from '@/componentes/ui/skeleton'
 
-export function CardSaldosContas() {
+export const CardSaldosContas = memo(function CardSaldosContas() {
+  // TODOS OS HOOKS NO TOPO - SEMPRE EXECUTADOS
   const { data, error, isLoading } = useContasDados()
+  
+  const formatarValor = useCallback((valor: number): string => {
+    return valor.toLocaleString('pt-BR', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    })
+  }, [])
 
+  const formatarData = useCallback((data: string): string => {
+    return new Date(data).toLocaleDateString('pt-BR', { 
+      day: '2-digit', 
+      month: '2-digit' 
+    })
+  }, [])
+
+  // RENDERIZAÇÃO CONDICIONAL APÓS HOOKS
   if (error) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -15,20 +32,6 @@ export function CardSaldosContas() {
         </div>
       </div>
     )
-  }
-
-  const formatarValor = (valor: number): string => {
-    return valor.toLocaleString('pt-BR', { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2 
-    })
-  }
-
-  const formatarData = (data: string): string => {
-    return new Date(data).toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
-      month: '2-digit' 
-    })
   }
 
   return (
@@ -132,4 +135,4 @@ export function CardSaldosContas() {
       </div>
     </div>
   )
-}
+})

@@ -36,6 +36,26 @@ import {
   PiggyBank,
   AlertTriangle,
   Loader2,
+  Users,
+  UserPlus,
+  UserX,
+  Link2,
+  Copy,
+  Target,
+  Check,
+  LogOut,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Activity,
+  Database,
+  Wifi,
+  WifiOff,
+  Shield,
+  ShieldX,
+  MoreHorizontal,
+  Home,
+  UserMinus,
 } from 'lucide-react'
 
 export type IconName =
@@ -72,6 +92,26 @@ export type IconName =
   | 'piggy-bank'
   | 'alert-triangle'
   | 'loader-2'
+  | 'users'
+  | 'user-plus'
+  | 'user-x'
+  | 'link-2'
+  | 'copy'
+  | 'target'
+  | 'check'
+  | 'log-out'
+  | 'trending-up'
+  | 'trending-down'
+  | 'dollar-sign'
+  | 'activity'
+  | 'database'
+  | 'wifi'
+  | 'wifi-off'
+  | 'shield'
+  | 'shield-x'
+  | 'more-horizontal'
+  | 'home'
+  | 'user-minus'
 
 const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'layout-dashboard': LayoutDashboard,
@@ -107,6 +147,26 @@ const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'piggy-bank': PiggyBank,
   'alert-triangle': AlertTriangle,
   'loader-2': Loader2,
+  'users': Users,
+  'user-plus': UserPlus,
+  'user-x': UserX,
+  'link-2': Link2,
+  'copy': Copy,
+  'target': Target,
+  'check': Check,
+  'log-out': LogOut,
+  'trending-up': TrendingUp,
+  'trending-down': TrendingDown,
+  'dollar-sign': DollarSign,
+  'activity': Activity,
+  'database': Database,
+  'wifi': Wifi,
+  'wifi-off': WifiOff,
+  'shield': Shield,
+  'shield-x': ShieldX,
+  'more-horizontal': MoreHorizontal,
+  'home': Home,
+  'user-minus': UserMinus,
 }
 
 export interface IconeProps extends Omit<LucideProps, 'ref'> {

@@ -3,7 +3,8 @@ import type { NovaTransacao } from '@/tipos/database'
 import { TransacaoImportada, ResultadoImportacao } from '@/tipos/importacao'
 
 export async function importarTransacoes(
-  transacoes: TransacaoImportada[]
+  transacoes: TransacaoImportada[],
+  workspaceId: string
 ): Promise<ResultadoImportacao> {
   if (!transacoes || transacoes.length === 0) {
     throw new Error('Nenhuma transação fornecida para importação')
@@ -43,7 +44,7 @@ export async function importarTransacoes(
       
       console.log('🔍 DEBUG - Dados enviados para criarTransacao:', dadosParaSalvar)
       
-      await criarTransacao(dadosParaSalvar)
+      await criarTransacao(dadosParaSalvar, workspaceId)
       resultado.importadas++
     } catch (error) {
       const mensagem = error instanceof Error ? error.message : String(error)

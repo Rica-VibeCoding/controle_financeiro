@@ -1,0 +1,348 @@
+/**
+ * Testes para AuthContext
+ * Validação do isolamento multiusuário e gerenciamento de workspace
+ */
+
+import { renderHook, act, waitFor } from '@testing-library/react'
+import { ReactNode } from 'react'
+import { AuthProvider, useAuth } from '../auth-contexto'
+
+// Mock do Supabase Client
+const mockSupabaseClient = {
+  auth: {
+    getSession: jest.fn(),
+    onAuthStateChange: jest.fn(),
+    signOut: jest.fn(),
+    refreshSession: jest.fn(),
+  },
+  from: jest.fn(() => ({
+    select: jest.fn(() => ({
+      eq: jest.fn(() => ({
+        single: jest.fn(),
+      })),
+    })),
+  })),
+}
+
+jest.mock('@/servicos/supabase/cliente', () => ({
+  getSupabaseClient: jest.fn(() => mockSupabaseClient),
+}))
+
+describe('AuthContext', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <AuthProvider>{children}</AuthProvider>
+  )
+
+  describe('Inicialização', () => {
+    it('deve iniciar com estados padrão', async () => {
+      // Mock da sessão inicial vazia
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: null },
+      })
+      
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      expect(result.current.user).toBeNull()
+      expect(result.current.session).toBeNull()
+      expect(result.current.workspace).toBeNull()
+    })
+
+    it('deve carregar usuário e workspace quando há sessão', async () => {
+      const mockSession = {
+        user: { id: 'user-123' },
+        access_token: 'token-123',
+      }
+
+      const mockWorkspaceData = {
+        workspace_id: 'workspace-456',
+        fp_workspaces: {
+          id: 'workspace-456',
+          nome: 'Meu Workspace',
+          owner_id: 'user-123',
+          plano: 'free',
+          ativo: true,
+          created_at: '2024-01-15T10:00:00Z',
+          updated_at: '2024-01-15T10:00:00Z',
+        },
+      }
+
+      // Mock sessão inicial
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: mockSession },
+      })
+
+      // Mock busca do workspace
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: mockWorkspaceData,
+        error: null,
+      })
+      
+      const mockEq = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      // Mock listener de auth
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      expect(result.current.user).toEqual(mockSession.user)
+      expect(result.current.session).toEqual(mockSession)
+      expect(result.current.workspace).toEqual(mockWorkspaceData.fp_workspaces)
+
+      // Verificar que a query do workspace foi feita corretamente
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('fp_usuarios')
+      expect(mockSelect).toHaveBeenCalledWith(`
+          workspace_id,
+          fp_workspaces (
+            id,
+            nome,
+            owner_id,
+            plano,
+            ativo,
+            created_at,
+            updated_at
+          )
+        `)
+      expect(mockEq).toHaveBeenCalledWith('id', 'user-123')
+    })
+  })
+
+  describe('Gerenciamento de Workspace', () => {
+    it('deve lidar com erro ao carregar workspace', async () => {
+      const mockSession = {
+        user: { id: 'user-123' },
+        access_token: 'token-123',
+      }
+
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: mockSession },
+      })
+
+      // Mock erro na busca do workspace
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Workspace não encontrado' },
+      })
+      
+      const mockEq = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })
+
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      expect(result.current.user).toEqual(mockSession.user)
+      expect(result.current.workspace).toBeNull()
+      expect(consoleError).toHaveBeenCalledWith(
+        'Erro ao carregar workspace:', 
+        { message: 'Workspace não encontrado' }
+      )
+
+      consoleError.mockRestore()
+    })
+
+    it('deve limpar workspace no logout', async () => {
+      // Setup inicial com usuário logado
+      const mockSession = {
+        user: { id: 'user-123' },
+      }
+
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: mockSession },
+      })
+
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: {
+          workspace_id: 'workspace-456',
+          fp_workspaces: { id: 'workspace-456', nome: 'Test' },
+        },
+        error: null,
+      })
+      
+      const mockEq = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.workspace).toBeTruthy()
+      })
+
+      // Mock signOut
+      mockSupabaseClient.auth.signOut.mockResolvedValue({})
+
+      // Executar logout
+      await act(async () => {
+        await result.current.signOut()
+      })
+
+      expect(result.current.user).toBeNull()
+      expect(result.current.session).toBeNull()
+      expect(result.current.workspace).toBeNull()
+    })
+  })
+
+  describe('Mudanças de Estado de Auth', () => {
+    it('deve reagir a mudanças no estado de autenticação', async () => {
+      let authCallback: any
+
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: null },
+      })
+
+      // Capturar o callback do onAuthStateChange
+      mockSupabaseClient.auth.onAuthStateChange.mockImplementation((callback: any) => {
+        authCallback = callback
+        return { data: { subscription: { unsubscribe: jest.fn() } } }
+      })
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      // Estado inicial sem auth
+      expect(result.current.user).toBeNull()
+      expect(result.current.workspace).toBeNull()
+
+      // Simular login
+      const newSession = {
+        user: { id: 'user-789' },
+        access_token: 'new-token',
+      }
+
+      const mockWorkspaceData = {
+        workspace_id: 'workspace-999',
+        fp_workspaces: {
+          id: 'workspace-999',
+          nome: 'Novo Workspace',
+          owner_id: 'user-789',
+          plano: 'premium',
+          ativo: true,
+          created_at: '2024-01-15T11:00:00Z',
+          updated_at: '2024-01-15T11:00:00Z',
+        },
+      }
+
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: mockWorkspaceData,
+        error: null,
+      })
+      
+      const mockEq = jest.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq })
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect })
+
+      // Disparar mudança de auth
+      await act(async () => {
+        await authCallback('SIGNED_IN', newSession)
+      })
+
+      await waitFor(() => {
+        expect(result.current.user).toEqual(newSession.user)
+        expect(result.current.workspace?.id).toBe('workspace-999')
+      })
+
+      // Simular logout
+      await act(async () => {
+        await authCallback('SIGNED_OUT', null)
+      })
+
+      expect(result.current.user).toBeNull()
+      expect(result.current.workspace).toBeNull()
+    })
+  })
+
+  describe('Refresh de Sessão', () => {
+    it('deve atualizar sessão corretamente', async () => {
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: null },
+      })
+
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      const newSession = {
+        user: { id: 'user-refresh' },
+        access_token: 'refreshed-token',
+      }
+
+      mockSupabaseClient.auth.refreshSession.mockResolvedValue({
+        data: { session: newSession },
+      })
+
+      await act(async () => {
+        await result.current.refreshSession()
+      })
+
+      expect(result.current.user).toEqual(newSession.user)
+      expect(result.current.session).toEqual(newSession)
+    })
+
+    it('deve lidar com erro no refresh', async () => {
+      mockSupabaseClient.auth.getSession.mockResolvedValue({
+        data: { session: null },
+      })
+
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })
+
+      const { result } = renderHook(() => useAuth(), { wrapper })
+
+      mockSupabaseClient.auth.refreshSession.mockRejectedValue(
+        new Error('Refresh failed')
+      )
+
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+      await act(async () => {
+        await result.current.refreshSession()
+      })
+
+      expect(consoleError).toHaveBeenCalledWith(
+        'Erro ao atualizar sessão:',
+        new Error('Refresh failed')
+      )
+
+      consoleError.mockRestore()
+    })
+  })
+})

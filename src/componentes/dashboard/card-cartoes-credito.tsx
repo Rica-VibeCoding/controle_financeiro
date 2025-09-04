@@ -1,10 +1,12 @@
 'use client'
 
 import { useCartoesDados } from '@/hooks/usar-cartoes-dados'
+import { usePeriodoContexto } from '@/contextos/periodo-contexto'
 import { Skeleton } from '@/componentes/ui/skeleton'
 
 export function CardCartoesCredito() {
-  const { data, error, isLoading } = useCartoesDados()
+  const { periodo } = usePeriodoContexto()
+  const { data, error, isLoading } = useCartoesDados(periodo)
 
   if (error) {
     return (

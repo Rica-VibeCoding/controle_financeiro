@@ -1,99 +1,100 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseClient } from '@/servicos/supabase/auth-client'
+import { useErrorHandler, useNotifications } from '@/utilitarios/error-handler'
 
-export default function DevAuthPage() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default function DevLoginPage() {
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { showError } = useErrorHandler()
+  const { showSuccess } = useNotifications()
 
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
-      autoLogin()
-    } else {
-      router.push('/auth/login')
-    }
-  }, [router])
+  const handleDevLogin = async () => {
+    setLoading(true)
 
-  const autoLogin = async () => {
     try {
-      // Verificar se já está logado
-      const { data: { session } } = await supabaseClient.auth.getSession()
-      
-      if (!session) {
-        console.log('🔧 Fazendo auto-login para desenvolvimento...')
-        const { error } = await supabaseClient.auth.signInWithPassword({
-          email: 'ricardo@dev.com',
-          password: 'senha123'
-        })
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: 'conectamovelmar@gmail.com',
+        password: 'senha123',
+      })
 
-        if (error) {
-          console.error('Erro no auto-login:', error)
-          setError('Erro no auto-login. Verifique se o usuário de dev foi criado no Supabase.')
-          return
-        }
+      if (error) {
+        showError(error, 'Login Dev')
+      } else {
+        showSuccess('Login de desenvolvimento realizado com sucesso!')
+        router.replace('/dashboard')
       }
-
-      console.log('✅ Auto-login realizado com sucesso')
-      router.push('/')
-      router.refresh()
     } catch (error) {
-      console.error('Erro:', error)
-      setError('Erro inesperado no auto-login')
+      showError(error, 'Login Dev')
     } finally {
       setLoading(false)
     }
   }
 
-  const goToManualLogin = () => {
-    router.push('/auth/login')
-  }
-
-  if (!loading && error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md">
-          <div className="mb-6">
-            <div className="mx-auto h-12 w-12 text-red-500">
-              ⚠️
-            </div>
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Erro no Auto-login
-          </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="space-y-3">
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-            >
-              Tentar novamente
-            </button>
-            <button
-              onClick={goToManualLogin}
-              className="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              Login manual
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
+  // Só mostrar em desenvolvimento
+  if (process.env.NODE_ENV !== 'development') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Fazendo login automático para desenvolvimento...</p>
-          <p className="text-sm text-gray-500 mt-2">🔧 Modo Desenvolvimento</p>
+          <h2 className="text-2xl font-bold text-gray-900">Página não disponível</h2>
+          <p className="mt-2 text-gray-600">Esta página só está disponível em desenvolvimento.</p>
         </div>
       </div>
     )
   }
 
-  return null
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            🚀 Login Desenvolvedor
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Controle Financeiro - Modo Desenvolvimento
+          </p>
+          <div className="mt-4 p-4 bg-blue-50 rounded-md">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Super Admin
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>Email: conectamovelmar@gmail.com</p>
+                  <p>Workspace: Conecta</p>
+                  <p>Privilégios: Super Administrador</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-8">
+          <button
+            onClick={handleDevLogin}
+            disabled={loading}
+            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Entrando...' : '🔑 Login Automático'}
+          </button>
+        </div>
+
+        <div className="text-center space-y-2">
+          <p className="text-sm text-gray-600">
+            <a 
+              href="/auth/login" 
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              ← Login Normal
+            </a>
+          </p>
+          <p className="text-xs text-gray-500">
+            Disponível apenas em desenvolvimento
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }

@@ -3,13 +3,16 @@
 
 import useSWR from 'swr'
 import { obterProjetosPessoais } from '@/servicos/supabase/projetos-pessoais'
+import { useAuth } from '@/contextos/auth-contexto'
 import { ProjetosPessoaisData, FiltroProjetosPessoais } from '@/tipos/projetos-pessoais'
 
 // Hook principal para dados de projetos pessoais
 export function useProjetosData(filtros: FiltroProjetosPessoais = {}) {
+  const { workspace } = useAuth()
+  
   return useSWR<ProjetosPessoaisData>(
-    ['projetos-pessoais', filtros],
-    () => obterProjetosPessoais(filtros),
+    workspace ? ['projetos-pessoais', workspace.id, filtros] : null,
+    () => obterProjetosPessoais(filtros, workspace!.id),
     {
       refreshInterval: 60000, // 1 minuto (padrão dashboard)
       revalidateOnFocus: false,
@@ -24,9 +27,11 @@ export function useProjetosData(filtros: FiltroProjetosPessoais = {}) {
 
 // Hook específico para o card do dashboard (sem filtros de período)
 export function useProjetosDashboard() {
+  const { workspace } = useAuth()
+  
   return useSWR<ProjetosPessoaisData>(
-    'projetos-pessoais-dashboard',
-    () => obterProjetosPessoais({ apenas_ativos: true }),
+    workspace ? ['projetos-pessoais-dashboard', workspace.id] : null,
+    () => obterProjetosPessoais({ apenas_ativos: true }, workspace!.id),
     {
       refreshInterval: 60000,
       revalidateOnFocus: false,
@@ -43,13 +48,15 @@ export function useProjetosPeriodo(
   periodo_fim: string,
   incluir_arquivados = false
 ) {
+  const { workspace } = useAuth()
+  
   return useSWR<ProjetosPessoaisData>(
-    ['projetos-pessoais-periodo', periodo_inicio, periodo_fim, incluir_arquivados],
+    workspace ? ['projetos-pessoais-periodo', workspace.id, periodo_inicio, periodo_fim, incluir_arquivados] : null,
     () => obterProjetosPessoais({
       periodo_inicio,
       periodo_fim,
       incluir_arquivados
-    }),
+    }, workspace!.id),
     {
       refreshInterval: 120000, // 2 minutos para dados históricos
       revalidateOnFocus: false,

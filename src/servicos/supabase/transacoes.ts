@@ -1,5 +1,5 @@
 import { supabase } from './cliente'
-import { prepararTransacaoParaInsercao, validarTransacao, limparCamposUUID, corrigirTransacaoRecorrente } from '@/utilitarios/validacao'
+import { prepararTransacaoParaInsercao, validarTransacao, limparCamposUUID, corrigirTransacaoRecorrente, normalizarData } from '@/utilitarios/validacao'
 import type { 
   Transacao, 
   NovaTransacao
@@ -26,7 +26,8 @@ type AtualizarTransacao = Partial<NovaTransacao>
  */
 export async function obterTransacoes(
   filtros: FiltrosTransacao = {},
-  paginacao: ParametrosPaginacao = { pagina: 1, limite: 50 }
+  paginacao: ParametrosPaginacao = { pagina: 1, limite: 50 },
+  workspaceId: string
 ): Promise<RespostaPaginada<TransacaoComRelacoes>> {
   let query = supabase
     .from('fp_transacoes')
@@ -39,6 +40,9 @@ export async function obterTransacoes(
       forma_pagamento:forma_pagamento_id(nome, tipo),
       centro_custo:centro_custo_id(nome, cor)
     `, { count: 'exact' })
+
+  // Aplicar filtro workspace_id (obrigatório)
+  query = query.eq('workspace_id', workspaceId)
 
   // Aplicar filtros
   if (filtros.data_inicio) {
@@ -99,8 +103,8 @@ export async function obterTransacoes(
 /**
  * Buscar transação por ID
  */
-export async function obterTransacaoPorId(id: string): Promise<TransacaoComRelacoes | null> {
-  const { data, error } = await supabase
+export async function obterTransacaoPorId(id: string, workspaceId: string): Promise<TransacaoComRelacoes | null> {
+  let query = supabase
     .from('fp_transacoes')
     .select(`
       *,
@@ -112,7 +116,10 @@ export async function obterTransacaoPorId(id: string): Promise<TransacaoComRelac
       centro_custo:centro_custo_id(nome, cor)
     `)
     .eq('id', id)
-    .single()
+  
+  query = query.eq('workspace_id', workspaceId)
+  
+  const { data, error } = await query.single()
 
   if (error && error.code !== 'PGRST116') {
     throw new Error(`Erro ao buscar transação: ${error.message}`)
@@ -124,7 +131,7 @@ export async function obterTransacaoPorId(id: string): Promise<TransacaoComRelac
 /**
  * Criar nova transação
  */
-export async function criarTransacao(transacao: NovaTransacao): Promise<Transacao> {
+export async function criarTransacao(transacao: NovaTransacao, workspaceId: string): Promise<Transacao> {
   // Validar dados antes de inserir
   const errosValidacao = validarTransacao(transacao)
   if (errosValidacao.length > 0) {
@@ -133,10 +140,13 @@ export async function criarTransacao(transacao: NovaTransacao): Promise<Transaca
 
   // Preparar transação (limpar campos vazios para null)
   const transacaoPreparada = prepararTransacaoParaInsercao(transacao)
+  
+  // Adicionar workspace_id manualmente após preparação
+  const transacaoComWorkspace = { ...transacaoPreparada, workspace_id: workspaceId }
 
   const { data, error } = await supabase
     .from('fp_transacoes')
-    .insert([transacaoPreparada])
+    .insert([transacaoComWorkspace])
     .select()
     .single()
 
@@ -151,15 +161,51 @@ export async function criarTransacao(transacao: NovaTransacao): Promise<Transaca
  */
 export async function atualizarTransacao(
   id: string, 
-  atualizacoes: AtualizarTransacao
+  atualizacoes: AtualizarTransacao,
+  workspaceId: string
 ): Promise<void> {
+  // Debug: Log dos dados recebidos
+  console.log('🔍 DEBUG atualizarTransacao - dados recebidos:', atualizacoes)
+  
   // Limpar campos UUID vazios antes de atualizar
   const atualizacoesLimpas = limparCamposUUID(atualizacoes)
   
+  // Normalizar datas para formato ISO se necessário
+  const atualizacoesNormalizadas = {
+    ...atualizacoesLimpas,
+    ...(atualizacoesLimpas.data && { data: normalizarData(atualizacoesLimpas.data) })
+  }
+
+  // Tratar data_vencimento especialmente para evitar erro de string vazia (mesmo fix das recorrentes)
+  if (atualizacoesLimpas.data_vencimento !== undefined) {
+    // Se é string vazia, pular completamente (não enviar ao banco)
+    if (atualizacoesLimpas.data_vencimento === '') {
+      // Não adiciona data_vencimento ao update - remove do objeto se existir
+    } else {
+      const dataVencimentoNormalizada = normalizarData(atualizacoesLimpas.data_vencimento)
+      // Só adiciona ao update se for uma data válida (não null/undefined)
+      if (dataVencimentoNormalizada !== null && dataVencimentoNormalizada !== undefined) {
+        atualizacoesNormalizadas.data_vencimento = dataVencimentoNormalizada
+      }
+    }
+  }
+
+  // Tratar proxima_recorrencia especialmente para evitar erro de string vazia
+  if (atualizacoesLimpas.proxima_recorrencia !== undefined) {
+    const proximaDataNormalizada = normalizarData(atualizacoesLimpas.proxima_recorrencia)
+    // Só adiciona ao update se for uma data válida (não null/undefined)
+    if (proximaDataNormalizada !== null && proximaDataNormalizada !== undefined) {
+      atualizacoesNormalizadas.proxima_recorrencia = proximaDataNormalizada
+    }
+  }
+  
+  console.log('🔍 DEBUG atualizarTransacao - dados normalizados:', atualizacoesNormalizadas)
+  
   const { error } = await supabase
     .from('fp_transacoes')
-    .update(atualizacoesLimpas)
+    .update(atualizacoesNormalizadas)
     .eq('id', id)
+    .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao atualizar transação: ${error.message}`)
 }
@@ -167,11 +213,12 @@ export async function atualizarTransacao(
 /**
  * Excluir transação
  */
-export async function excluirTransacao(id: string): Promise<void> {
+export async function excluirTransacao(id: string, workspaceId: string): Promise<void> {
   const { error } = await supabase
     .from('fp_transacoes')
     .delete()
     .eq('id', id)
+    .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao excluir transação: ${error.message}`)
 }
@@ -179,25 +226,33 @@ export async function excluirTransacao(id: string): Promise<void> {
 /**
  * Calcular saldo por conta
  */
-export async function calcularSaldoConta(contaId: string): Promise<number> {
+export async function calcularSaldoConta(contaId: string, workspaceId: string): Promise<number> {
     // Receitas e despesas da conta
-    const { data: transacoes, error: errorTransacoes } = await supabase
+    const queryTransacoes = supabase
       .from('fp_transacoes')
       .select('valor, tipo')
       .eq('conta_id', contaId)
       .eq('status', 'realizado')
+    
+    queryTransacoes.eq('workspace_id', workspaceId)
+    
+    const { data: transacoes, error: errorTransacoes } = await queryTransacoes
 
     if (errorTransacoes) {
       throw new Error(`Erro ao calcular saldo: ${errorTransacoes.message}`)
     }
 
     // Transferências recebidas (conta destino)
-    const { data: transferenciasRecebidas, error: errorRecebidas } = await supabase
+    const queryTransferenciasRecebidas = supabase
       .from('fp_transacoes')
       .select('valor')
       .eq('conta_destino_id', contaId)
       .eq('tipo', 'transferencia')
       .eq('status', 'realizado')
+    
+    queryTransferenciasRecebidas.eq('workspace_id', workspaceId)
+    
+    const { data: transferenciasRecebidas, error: errorRecebidas } = await queryTransferenciasRecebidas
 
     if (errorRecebidas) {
       throw new Error(`Erro ao calcular transferências: ${errorRecebidas.message}`)
@@ -227,17 +282,21 @@ export async function calcularSaldoConta(contaId: string): Promise<number> {
 /**
  * Calcular saldo total de todas as contas
  */
-export async function calcularSaldoTotal(): Promise<number> {
-  const { data: contas } = await supabase
+export async function calcularSaldoTotal(workspaceId: string): Promise<number> {
+  const queryContas = supabase
     .from('fp_contas')
     .select('id')
     .eq('ativo', true)
+  
+  queryContas.eq('workspace_id', workspaceId)
+  
+  const { data: contas } = await queryContas
 
   if (!contas) return 0
 
   let saldoTotal = 0
   for (const conta of contas) {
-    saldoTotal += await calcularSaldoConta(conta.id)
+    saldoTotal += await calcularSaldoConta(conta.id, workspaceId)
   }
 
   return saldoTotal
@@ -248,7 +307,8 @@ export async function calcularSaldoTotal(): Promise<number> {
  */
 export async function criarTransacaoParcelada(
   transacaoBase: NovaTransacao,
-  numeroParcelas: number
+  numeroParcelas: number,
+  workspaceId: string
 ): Promise<Transacao[]> {
   const grupoParcelamento = Date.now() // ID único para agrupar (BIGINT)
   const valorParcela = Number((transacaoBase.valor / numeroParcelas).toFixed(2))
@@ -260,6 +320,9 @@ export async function criarTransacaoParcelada(
     const dataParcela = new Date(dataBase)
     dataParcela.setMonth(dataParcela.getMonth() + (i - 1))
     
+    // 1ª parcela: status escolhido pelo usuário, demais: sempre "previsto"
+    const statusParcela = i === 1 ? transacaoBase.status : 'previsto'
+    
     parcelas.push({
       ...transacaoBase,
       valor: valorParcela,
@@ -267,12 +330,17 @@ export async function criarTransacaoParcelada(
       total_parcelas: numeroParcelas,
       grupo_parcelamento: grupoParcelamento,
       data: dataParcela.toISOString().split('T')[0],
+      data_vencimento: dataParcela.toISOString().split('T')[0],
+      status: statusParcela,
       descricao: `${transacaoBase.descricao} (${i}/${numeroParcelas})`
     })
   }
 
-  // Preparar todas as parcelas (limpar campos UUID vazios)
-  const parcelasPreparadas = parcelas.map(parcela => prepararTransacaoParaInsercao(parcela))
+  // Preparar todas as parcelas (limpar campos UUID vazios e adicionar workspace_id)
+  const parcelasPreparadas = parcelas.map(parcela => {
+    const parcelaPreparada = prepararTransacaoParaInsercao(parcela)
+    return { ...parcelaPreparada, workspace_id: workspaceId }
+  })
 
   const { data, error } = await supabase
     .from('fp_transacoes')
@@ -286,11 +354,12 @@ export async function criarTransacaoParcelada(
 /**
  * Excluir todas as parcelas de um grupo
  */
-export async function excluirGrupoParcelamento(grupoParcelamento: number): Promise<void> {
+export async function excluirGrupoParcelamento(grupoParcelamento: number, workspaceId: string): Promise<void> {
   const { error } = await supabase
     .from('fp_transacoes')
     .delete()
     .eq('grupo_parcelamento', grupoParcelamento)
+    .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao excluir parcelas: ${error.message}`)
 }
@@ -298,8 +367,8 @@ export async function excluirGrupoParcelamento(grupoParcelamento: number): Promi
 /**
  * Buscar parcelas de um grupo
  */
-export async function buscarParcelasPorGrupo(grupoParcelamento: number): Promise<Transacao[]> {
-  const { data, error } = await supabase
+export async function buscarParcelasPorGrupo(grupoParcelamento: number, workspaceId: string): Promise<Transacao[]> {
+  let query = supabase
     .from('fp_transacoes')
     .select(`
       *,
@@ -311,6 +380,10 @@ export async function buscarParcelasPorGrupo(grupoParcelamento: number): Promise
     `)
     .eq('grupo_parcelamento', grupoParcelamento)
     .order('parcela_atual')
+  
+  query = query.eq('workspace_id', workspaceId)
+  
+  const { data, error } = await query
 
   if (error) throw new Error(`Erro ao buscar parcelas: ${error.message}`)
   return data || []
@@ -319,14 +392,18 @@ export async function buscarParcelasPorGrupo(grupoParcelamento: number): Promise
 /**
  * Buscar transações recorrentes que precisam ser processadas
  */
-export async function obterTransacoesRecorrentesVencidas(): Promise<Transacao[]> {
+export async function obterTransacoesRecorrentesVencidas(workspaceId: string): Promise<Transacao[]> {
   const hoje = new Date().toISOString().split('T')[0]
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('fp_transacoes')
     .select('*')
     .eq('recorrente', true)
     .lte('proxima_recorrencia', hoje)
+  
+  query = query.eq('workspace_id', workspaceId)
+  
+  const { data, error } = await query
 
   if (error) throw new Error(`Erro ao buscar recorrências: ${error.message}`)
   return data || []
@@ -335,7 +412,7 @@ export async function obterTransacoesRecorrentesVencidas(): Promise<Transacao[]>
 /**
  * Processar recorrência - gerar próxima transação
  */
-export async function processarRecorrencia(transacaoBase: Transacao): Promise<Transacao> {
+export async function processarRecorrencia(transacaoBase: Transacao, workspaceId: string): Promise<Transacao> {
   // Auto-corrigir transação recorrente com dados inconsistentes
   const transacaoCorrigida = corrigirTransacaoRecorrente(transacaoBase)
   
@@ -348,10 +425,10 @@ export async function processarRecorrencia(transacaoBase: Transacao): Promise<Tr
     await atualizarTransacao(transacaoBase.id, {
       frequencia_recorrencia: transacaoCorrigida.frequencia_recorrencia,
       proxima_recorrencia: transacaoCorrigida.proxima_recorrencia
-    })
+    }, workspaceId)
   }
 
-  // Calcular próxima data com base na frequência (usar dados corrigidos)
+  // Calcular próxima data baseada na proxima_recorrencia (que é a data de vencimento)
   const proximaData = calcularProximaDataRecorrencia(
     transacaoCorrigida.proxima_recorrencia!, 
     transacaoCorrigida.frequencia_recorrencia as 'diario' | 'semanal' | 'mensal' | 'anual'
@@ -375,16 +452,20 @@ export async function processarRecorrencia(transacaoBase: Transacao): Promise<Tr
     recorrente: true,
     frequencia_recorrencia: transacaoCorrigida.frequencia_recorrencia,
     proxima_recorrencia: proximaData,
+    data_vencimento: proximaData, // Próxima recorrência vira data de vencimento da nova transação
     observacoes: transacaoCorrigida.observacoes
   }
 
   // Preparar transação (limpar campos UUID vazios)
   const transacaoPreparada = prepararTransacaoParaInsercao(novaTransacao)
+  
+  // Adicionar workspace_id manualmente após preparação
+  const transacaoComWorkspace = { ...transacaoPreparada, workspace_id: workspaceId }
 
   // Inserir nova transação
   const { data, error } = await supabase
     .from('fp_transacoes')
-    .insert([transacaoPreparada])
+    .insert([transacaoComWorkspace])
     .select()
     .single()
 
@@ -427,9 +508,25 @@ function calcularProximaDataRecorrencia(
 }
 
 /**
- * Parar recorrência de uma transação
+ * Excluir recorrência (hard delete da configuração)
+ * Mantém transações já criadas para preservar histórico e valores
  */
-export async function pararRecorrencia(id: string): Promise<void> {
+export async function excluirRecorrencia(id: string, workspaceId: string): Promise<void> {
+  const { error } = await supabase
+    .from('fp_transacoes')
+    .delete()
+    .eq('id', id)
+    .eq('recorrente', true) // Segurança: só deleta se realmente for recorrente
+    .eq('workspace_id', workspaceId)
+  
+  if (error) throw new Error(`Erro ao excluir recorrência: ${error.message}`)
+}
+
+/**
+ * @deprecated Use excluirRecorrencia() - mantido para compatibilidade
+ * Parar recorrência de uma transação (soft delete)
+ */
+export async function pararRecorrencia(id: string, workspaceId: string): Promise<void> {
   const { error } = await supabase
     .from('fp_transacoes')
     .update({ 
@@ -438,6 +535,7 @@ export async function pararRecorrencia(id: string): Promise<void> {
       frequencia_recorrencia: null
     })
     .eq('id', id)
+    .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao parar recorrência: ${error.message}`)
 }
@@ -445,19 +543,23 @@ export async function pararRecorrencia(id: string): Promise<void> {
 /**
  * Buscar todas as transações recorrentes ativas
  */
-export async function buscarTransacoesRecorrentes(): Promise<Transacao[]> {
-  const { data, error } = await supabase
+export async function buscarTransacoesRecorrentes(workspaceId: string): Promise<Transacao[]> {
+  let query = supabase
     .from('fp_transacoes')
     .select(`
       *,
       categoria:categoria_id(nome, cor, icone),
       subcategoria:subcategoria_id(nome),
-      conta:conta_id(nome, tipo),
+      conta:conta_id(nome, tipo, banco),
       forma_pagamento:forma_pagamento_id(nome, tipo),
       centro_custo:centro_custo_id(nome, cor)
     `)
     .eq('recorrente', true)
     .order('proxima_recorrencia')
+  
+  query = query.eq('workspace_id', workspaceId)
+  
+  const { data, error } = await query
 
   if (error) throw new Error(`Erro ao buscar transações recorrentes: ${error.message}`)
   return data || []
@@ -466,14 +568,18 @@ export async function buscarTransacoesRecorrentes(): Promise<Transacao[]> {
 /**
  * Corrigir transações recorrentes com dados inconsistentes
  */
-export async function corrigirTransacoesRecorrentesInconsistentes(): Promise<void> {
+export async function corrigirTransacoesRecorrentesInconsistentes(workspaceId: string): Promise<void> {
   try {
     // Buscar transações recorrentes com frequência nula
-    const { data: transacoesInconsistentes, error } = await supabase
+    const queryInconsistentes = supabase
       .from('fp_transacoes')
       .select('*')
       .eq('recorrente', true)
       .is('frequencia_recorrencia', null)
+    
+    queryInconsistentes.eq('workspace_id', workspaceId)
+    
+    const { data: transacoesInconsistentes, error } = await queryInconsistentes
 
     if (error) throw new Error(`Erro ao buscar transações inconsistentes: ${error.message}`)
 

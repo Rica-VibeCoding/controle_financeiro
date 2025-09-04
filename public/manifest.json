@@ -1,12 +1,71 @@
 {
-  "name": "Controle Financeiro",
+  "name": "Controle Financeiro - Sistema Completo",
   "short_name": "Finanças",
-  "description": "Sistema de controle financeiro pessoal",
-  "start_url": "/",
+  "description": "Sistema completo de controle financeiro pessoal com dashboard, relatórios e importação inteligente",
+  "start_url": "/?utm_source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#059669",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "business"],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "shortcuts": [
+    {
+      "name": "Nova Transação",
+      "short_name": "Transação",
+      "description": "Adicionar nova receita ou despesa",
+      "url": "/?action=nova-transacao",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver resumo financeiro",
+      "url": "/?view=dashboard",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Importar CSV",
+      "short_name": "Import CSV",
+      "description": "Importar transações do banco",
+      "url": "/?action=importar-csv",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Dashboard principal do sistema"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -15,10 +74,24 @@
       "purpose": "maskable any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any",
+      "platform": "android"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any",
+      "platform": "ios"
     }
   ]
 }

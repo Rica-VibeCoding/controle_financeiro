@@ -108,15 +108,12 @@ export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuari
     return (
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="p-4 border-b border-gray-200 animate-pulse">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="h-6 bg-gray-200 rounded w-40 mb-1"></div>
-              <div className="h-3 bg-gray-200 rounded w-24"></div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="h-8 bg-gray-200 rounded w-64"></div>
-              <div className="h-8 bg-gray-200 rounded w-20"></div>
-            </div>
+          <div className="mb-3">
+            <div className="h-6 bg-gray-200 rounded w-80"></div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-gray-200 rounded w-20"></div>
           </div>
         </div>
         <div className="p-4 animate-pulse">
@@ -132,35 +129,37 @@ export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuari
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      {/* Header compacto com busca inline */}
+      {/* Header otimizado para mobile */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          {/* Título e contador */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Gestão de Usuários</h3>
-            <p className="text-xs text-gray-600 mt-0.5">
-              {usuariosFiltrados.length} de {usuarios.length} usuários
-            </p>
+        {/* Linha 1: Título e contador inline */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            Gestão de Usuários
+            <span className="ml-2 text-sm font-normal text-gray-600">
+              | {usuariosFiltrados.length} de {usuarios.length} usuários
+            </span>
+          </h3>
+        </div>
+
+        {/* Linha 2: Busca e filtros responsivos */}
+        <div className="flex items-center space-x-2">
+          {/* Busca flex */}
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Buscar por nome, email..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
-          {/* Busca e filtros inline */}
-          <div className="flex items-center space-x-3">
-            {/* Busca compacta */}
-            <div className="w-64">
-              <input
-                type="text"
-                placeholder="Buscar por nome, email..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Filtro compacto */}
+          {/* Filtros compactos */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <select
               value={filtro}
               onChange={(e) => setFiltro(e.target.value as any)}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="todos">Todos</option>
               <option value="ativos">Ativos</option>

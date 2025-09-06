@@ -19,6 +19,59 @@ interface DashboardPrincipalProps {
 }
 
 /**
+ * Formatar crescimento de usuários de forma mais intuitiva
+ * FASE 2: Melhoria visual para casos de início de sistema
+ * FASE 3: Validações robustas e tratamento de casos extremos
+ */
+function formatarCrescimentoUsuarios(crescimentoPercentual: number, totalUsuarios: number): {
+  valor: string;
+  subtitulo: string;
+} {
+  // FASE 3: Validações de entrada
+  const crescimentoSeguro = isNaN(crescimentoPercentual) || !isFinite(crescimentoPercentual) ? 0 : crescimentoPercentual;
+  const totalSeguro = isNaN(totalUsuarios) || !isFinite(totalUsuarios) || totalUsuarios < 0 ? 0 : Math.floor(totalUsuarios);
+  
+  // FASE 3: Caso especial - sem usuários
+  if (totalSeguro === 0) {
+    return {
+      valor: '0',
+      subtitulo: 'nenhum usuário'
+    };
+  }
+  
+  // Caso especial: sistema novo (100% = todos os usuários são novos)
+  if (crescimentoSeguro === 100 && totalSeguro <= 10) {
+    return {
+      valor: `+${totalSeguro}`,
+      subtitulo: totalSeguro === 1 ? 'novo usuário' : 'novos usuários'
+    };
+  }
+  
+  // FASE 3: Casos extremos de crescimento
+  if (crescimentoSeguro > 1000) {
+    return {
+      valor: '+999%',
+      subtitulo: 'crescimento excepcional'
+    };
+  }
+  
+  if (crescimentoSeguro < -100) {
+    return {
+      valor: '-100%',
+      subtitulo: 'declínio acentuado'
+    };
+  }
+  
+  // Caso normal: crescimento percentual com precisão limitada
+  const percentualFormatado = Math.round(crescimentoSeguro * 10) / 10; // 1 decimal
+  const sinal = percentualFormatado > 0 ? '+' : '';
+  return {
+    valor: `${sinal}${percentualFormatado}%`,
+    subtitulo: 'vs mês anterior'
+  };
+}
+
+/**
  * Componente principal do dashboard administrativo com TABS
  * FASE 3: Sistema de navegação organizado
  * Layout otimizado com conteúdo separado por contexto
@@ -61,7 +114,7 @@ export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuar
         </div>
 
         {/* KPIs Skeleton - compactos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-3">
@@ -144,27 +197,27 @@ export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuar
         </div>
       </div>
 
-      {/* Seção KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      {/* Seção KPIs - FASE 3: Validações robustas */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <CardKPI
           titulo="Usuários Ativos"
-          valor={kpis?.usuariosAtivos?.toLocaleString('pt-BR') || '0'}
+          valor={(kpis?.usuariosAtivos ?? 0).toLocaleString('pt-BR')}
           icone="users"
           cor="azul"
-          subtitulo={`${kpis?.totalUsuarios || 0} total`}
+          subtitulo={`${(kpis?.totalUsuarios ?? 0).toLocaleString('pt-BR')} total`}
         />
         
         <CardKPI
           titulo="Workspaces"
-          valor={kpis?.workspacesComTransacoes?.toLocaleString('pt-BR') || '0'}
+          valor={(kpis?.workspacesComTransacoes ?? 0).toLocaleString('pt-BR')}
           icone="building"
           cor="roxo"
-          subtitulo={`${kpis?.totalWorkspaces || 0} total`}
+          subtitulo={`${(kpis?.totalWorkspaces ?? 0).toLocaleString('pt-BR')} total`}
         />
         
         <CardKPI
           titulo="Transações"
-          valor={kpis?.totalTransacoes?.toLocaleString('pt-BR') || '0'}
+          valor={(kpis?.totalTransacoes ?? 0).toLocaleString('pt-BR')}
           icone="activity"
           cor="verde"
           subtitulo="Volume processado"
@@ -172,13 +225,13 @@ export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuar
         
         <CardKPI
           titulo="Crescimento"
-          valor={`${(kpis?.crescimentoPercentual || 0) > 0 ? '+' : ''}${kpis?.crescimentoPercentual || 0}%`}
+          valor={formatarCrescimentoUsuarios(kpis?.crescimentoPercentual ?? 0, kpis?.totalUsuarios ?? 0).valor}
           icone="trending-up"
           cor="laranja"
-          subtitulo="Usuários/mês"
+          subtitulo={formatarCrescimentoUsuarios(kpis?.crescimentoPercentual ?? 0, kpis?.totalUsuarios ?? 0).subtitulo}
           tendencia={{
-            percentual: kpis?.crescimentoPercentual || 0,
-            periodo: "vs mês anterior"
+            percentual: kpis?.crescimentoPercentual ?? 0,
+            periodo: formatarCrescimentoUsuarios(kpis?.crescimentoPercentual ?? 0, kpis?.totalUsuarios ?? 0).subtitulo
           }}
         />
       </div>

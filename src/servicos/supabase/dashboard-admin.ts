@@ -15,7 +15,68 @@ import type {
 const supabase = createClient();
 
 /**
+ * Cache inteligente para dashboard admin - FASE 4: Performance
+ */
+interface CacheItem<T> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+}
+
+class DashboardCache {
+  private cache = new Map<string, CacheItem<any>>();
+  
+  set<T>(key: string, data: T, ttlMinutes: number = 2): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl: ttlMinutes * 60 * 1000
+    });
+  }
+  
+  get<T>(key: string): T | null {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    
+    const isExpired = Date.now() - item.timestamp > item.ttl;
+    if (isExpired) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.data;
+  }
+  
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+const dashboardCache = new DashboardCache();
+
+/**
+ * Parsing seguro de números - FASE 3: Validações robustas
+ */
+function parseFloatSeguro(valor: string | number | null | undefined): number {
+  if (valor === null || valor === undefined) return 0;
+  
+  const numero = typeof valor === 'string' ? parseFloat(valor) : Number(valor);
+  return isNaN(numero) || !isFinite(numero) ? 0 : numero;
+}
+
+/**
+ * Parsing seguro de inteiros - FASE 3: Validações robustas  
+ */
+function parseIntSeguro(valor: string | number | null | undefined): number {
+  if (valor === null || valor === undefined) return 0;
+  
+  const numero = typeof valor === 'string' ? parseInt(valor, 10) : Number(valor);
+  return isNaN(numero) || !isFinite(numero) ? 0 : Math.max(0, Math.floor(numero));
+}
+
+/**
  * Busca métricas principais (KPIs) do sistema
+ * FASE 3: Com validações robustas e tratamento de erros
  */
 export async function buscarKPIMetricas(): Promise<KPIMetricas> {
   try {
@@ -23,29 +84,41 @@ export async function buscarKPIMetricas(): Promise<KPIMetricas> {
     const { data: usuarioStats, error: usuarioError } = await supabase.rpc('get_usuario_stats');
     if (usuarioError) throw usuarioError;
 
-    // Query 2: Workspaces
-    const { data: workspaceStats, error: workspaceError } = await supabase.rpc('get_workspace_stats');  
+    // Query 2: Workspaces - USANDO NOVA FUNÇÃO ADMIN
+    const { data: workspaceStats, error: workspaceError } = await supabase.rpc('get_workspace_stats_admin');  
     if (workspaceError) throw workspaceError;
 
     // Query 3: Volume financeiro
     const { data: volumeStats, error: volumeError } = await supabase.rpc('get_volume_stats');
     if (volumeError) throw volumeError;
 
-    const usuarioData = usuarioStats?.[0] || {};
-    const workspaceData = workspaceStats?.[0] || {};
-    const volumeData = volumeStats?.[0] || {};
+    // FASE 3: Validações robustas - verificar se dados existem
+    if (!Array.isArray(usuarioStats) || usuarioStats.length === 0) {
+      throw new Error('Dados de usuários não encontrados');
+    }
+    if (!Array.isArray(workspaceStats) || workspaceStats.length === 0) {
+      throw new Error('Dados de workspaces não encontrados');
+    }
+    if (!Array.isArray(volumeStats) || volumeStats.length === 0) {
+      throw new Error('Dados de volume não encontrados');
+    }
 
+    const usuarioData = usuarioStats[0] || {};
+    const workspaceData = workspaceStats[0] || {};
+    const volumeData = volumeStats[0] || {};
+
+    // FASE 3: Parsing seguro com funções validadas
     return {
-      totalUsuarios: usuarioData.total_usuarios || 0,
-      usuariosAtivos: usuarioData.usuarios_ativos || 0,
-      crescimentoPercentual: usuarioData.crescimento_percentual || 0,
-      totalWorkspaces: workspaceData.total_workspaces || 0,
-      workspacesComTransacoes: workspaceData.workspaces_com_transacoes || 0,
-      totalReceitas: parseFloat(volumeData.total_receitas || '0'),
-      totalDespesas: parseFloat(volumeData.total_despesas || '0'),
-      totalTransacoes: volumeData.total_transacoes || 0,
-      volumeMes: parseFloat(volumeData.volume_mes || '0'),
-      transacoesMes: volumeData.transacoes_mes || 0
+      totalUsuarios: parseIntSeguro(usuarioData.total_usuarios),
+      usuariosAtivos: parseIntSeguro(usuarioData.usuarios_ativos),
+      crescimentoPercentual: parseFloatSeguro(usuarioData.crescimento_percentual),
+      totalWorkspaces: parseIntSeguro(workspaceData.total_workspaces),
+      workspacesComTransacoes: parseIntSeguro(workspaceData.workspaces_com_transacoes),
+      totalReceitas: parseFloatSeguro(volumeData.total_receitas),
+      totalDespesas: parseFloatSeguro(volumeData.total_despesas),
+      totalTransacoes: parseIntSeguro(volumeData.total_transacoes),
+      volumeMes: parseFloatSeguro(volumeData.volume_mes),
+      transacoesMes: parseIntSeguro(volumeData.transacoes_mes)
     };
   } catch (error: any) {
     console.error('Erro ao buscar KPIs:', error);
@@ -144,6 +217,12 @@ export async function alterarStatusUsuario(usuarioId: string, novoStatus: boolea
     if (error) throw error;
 
     const resultado = data?.[0];
+    
+    // FASE 4: Invalidar cache após modificação
+    if (resultado?.sucesso) {
+      invalidarCacheDashboard();
+    }
+    
     return {
       sucesso: resultado?.sucesso || false,
       mensagem: resultado?.mensagem || 'Erro desconhecido',
@@ -159,18 +238,91 @@ export async function alterarStatusUsuario(usuarioId: string, novoStatus: boolea
 }
 
 /**
- * Função principal - busca todos os dados do dashboard (ATUALIZADA)
+ * FASE 4: Funções com cache individual para melhor performance
+ */
+async function buscarKPIMetricasComCache(): Promise<KPIMetricas> {
+  const cacheKey = 'kpi_metricas';
+  const cached = dashboardCache.get<KPIMetricas>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+  
+  const result = await buscarKPIMetricas();
+  dashboardCache.set(cacheKey, result, 2); // Cache por 2 minutos
+  return result;
+}
+
+async function buscarDadosCrescimentoComCache(): Promise<DadosCrescimento[]> {
+  const cacheKey = 'dados_crescimento';
+  const cached = dashboardCache.get<DadosCrescimento[]>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+  
+  const result = await buscarDadosCrescimento();
+  dashboardCache.set(cacheKey, result, 5); // Cache por 5 minutos (dados históricos)
+  return result;
+}
+
+async function buscarUsuariosCompletosComCache(): Promise<UsuarioCompleto[]> {
+  const cacheKey = 'usuarios_completos';
+  const cached = dashboardCache.get<UsuarioCompleto[]>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+  
+  const result = await buscarUsuariosCompletos();
+  dashboardCache.set(cacheKey, result, 1); // Cache por 1 minuto (dados dinâmicos)
+  return result;
+}
+
+async function buscarWorkspacesCompletosComCache(): Promise<WorkspaceCompleto[]> {
+  const cacheKey = 'workspaces_completos';
+  const cached = dashboardCache.get<WorkspaceCompleto[]>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+  
+  const result = await buscarWorkspacesCompletos();
+  dashboardCache.set(cacheKey, result, 1); // Cache por 1 minuto (dados dinâmicos)
+  return result;
+}
+
+/**
+ * Limpar cache quando dados são modificados - FASE 4: Invalidação inteligente
+ */
+export function invalidarCacheDashboard(): void {
+  dashboardCache.clear();
+  console.log('🧹 Cache do dashboard admin limpo');
+}
+
+/**
+ * Função principal - busca todos os dados do dashboard (FASE 4: Com cache inteligente)
  */
 export async function buscarDadosDashboardAdmin(): Promise<DashboardAdminDados> {
+  const cacheKey = 'dashboard_admin_complete';
+  
+  // FASE 4: Tentar buscar do cache primeiro
+  const cached = dashboardCache.get<DashboardAdminDados>(cacheKey);
+  if (cached) {
+    console.log('⚡ Dashboard admin carregado do cache');
+    return cached;
+  }
+  
   try {
+    const startTime = Date.now();
     console.log('🔄 Carregando dados do dashboard admin...');
 
-    // Executar apenas as queries necessárias em paralelo para melhor performance
+    // FASE 4: Executar queries com cache individual em paralelo
     const [kpis, crescimento, usuariosCompletos, workspacesCompletos] = await Promise.all([
-      buscarKPIMetricas(),
-      buscarDadosCrescimento(),
-      buscarUsuariosCompletos(),
-      buscarWorkspacesCompletos()
+      buscarKPIMetricasComCache(),
+      buscarDadosCrescimentoComCache(),
+      buscarUsuariosCompletosComCache(),
+      buscarWorkspacesCompletosComCache()
     ]);
 
     // Status do sistema (hardcoded por enquanto)
@@ -180,9 +332,7 @@ export async function buscarDadosDashboardAdmin(): Promise<DashboardAdminDados> 
       uptime: '99.8%'
     };
 
-    console.log('✅ Dashboard admin carregado com sucesso');
-
-    return {
+    const resultado = {
       kpis,
       crescimento,
       usuariosCompletos,
@@ -192,6 +342,14 @@ export async function buscarDadosDashboardAdmin(): Promise<DashboardAdminDados> 
       workspacesAtivos: [],
       statusSistema
     };
+    
+    // FASE 4: Cache do resultado completo por 1 minuto
+    dashboardCache.set(cacheKey, resultado, 1);
+    
+    const loadTime = Date.now() - startTime;
+    console.log(`✅ Dashboard admin carregado com sucesso em ${loadTime}ms`);
+
+    return resultado;
   } catch (error) {
     console.error('❌ Erro ao carregar dashboard admin:', error);
     throw error;

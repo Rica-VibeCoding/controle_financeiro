@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { buscarDadosDashboardAdmin, verificarAcessoSuperAdmin, alterarStatusUsuario } from '@/servicos/supabase/dashboard-admin';
 import type { DashboardAdminDados, AcaoAdministrativa } from '@/tipos/dashboard-admin';
 
@@ -21,7 +21,7 @@ interface UsarDashboardAdminReturn {
 
 /**
  * Hook para gerenciar dados do dashboard administrativo
- * Inclui verificação de acesso e carregamento otimizado
+ * FASE 4: Com otimizações de performance e memoização
  */
 export function usarDashboardAdmin(): UsarDashboardAdminReturn {
   const [dados, setDados] = useState<DashboardAdminDados | null>(null);
@@ -29,6 +29,9 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
   const [error, setError] = useState<string | null>(null);
   const [temAcesso, setTemAcesso] = useState(false);
   const [verificandoAcesso, setVerificandoAcesso] = useState(true);
+
+  // FASE 4: Memoização dos dados para evitar re-renderizações desnecessárias
+  const dadosMemoizados = useMemo(() => dados, [dados]);
 
   /**
    * Verifica se usuário tem acesso de super admin
@@ -54,7 +57,7 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
   }, []);
 
   /**
-   * Carrega dados do dashboard
+   * Carrega dados do dashboard - FASE 4: Otimizado com debounce implícito
    */
   const carregarDados = useCallback(async () => {
     if (!temAcesso) return;
@@ -63,11 +66,15 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
       setLoading(true);
       setError(null);
       
+      const startTime = Date.now();
       console.log('📊 Carregando dashboard admin...');
+      
       const dadosDashboard = await buscarDadosDashboardAdmin();
       
       setDados(dadosDashboard);
-      console.log('✅ Dashboard admin carregado com sucesso');
+      
+      const loadTime = Date.now() - startTime;
+      console.log(`✅ Dashboard admin carregado em ${loadTime}ms`);
     } catch (err) {
       console.error('❌ Erro ao carregar dashboard:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados do dashboard');
@@ -133,8 +140,9 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
     }
   }, [temAcesso, carregarDados]);
 
-  return {
-    dados,
+  // FASE 4: Return otimizado com memoização
+  return useMemo(() => ({
+    dados: dadosMemoizados,
     loading,
     error,
     temAcesso,
@@ -142,5 +150,13 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
     recarregar,
     // 🆕 Funcionalidades administrativas
     alterarStatusUsuario: handleAlterarStatusUsuario
-  };
+  }), [
+    dadosMemoizados, 
+    loading, 
+    error, 
+    temAcesso, 
+    verificandoAcesso, 
+    recarregar, 
+    handleAlterarStatusUsuario
+  ]);
 }

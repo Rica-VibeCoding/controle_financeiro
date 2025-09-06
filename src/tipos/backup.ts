@@ -21,6 +21,7 @@ export interface CategoriaExportacao {
   cor: string | null
   ativo: boolean
   created_at: string
+  workspace_id: string
 }
 
 export interface SubcategoriaExportacao {
@@ -29,6 +30,7 @@ export interface SubcategoriaExportacao {
   categoria_id: string | null
   ativo: boolean
   created_at: string
+  workspace_id: string
 }
 
 export interface ContaExportacao {
@@ -40,6 +42,7 @@ export interface ContaExportacao {
   created_at: string
   limite: number | null
   data_fechamento: number | null
+  workspace_id: string
 }
 
 export interface FormaPagamentoExportacao {
@@ -49,6 +52,7 @@ export interface FormaPagamentoExportacao {
   permite_parcelamento: boolean
   ativo: boolean
   created_at: string
+  workspace_id: string
 }
 
 export interface CentroCustoExportacao {
@@ -63,6 +67,7 @@ export interface CentroCustoExportacao {
   data_fim: string | null
   arquivado: boolean
   data_arquivamento: string | null
+  workspace_id: string
 }
 
 export interface TransacaoExportacao {
@@ -91,6 +96,7 @@ export interface TransacaoExportacao {
   created_at: string
   updated_at: string
   identificador_externo: string | null
+  workspace_id: string
 }
 
 export interface MetaMensalExportacao {
@@ -100,6 +106,7 @@ export interface MetaMensalExportacao {
   valor_meta: number
   data_criacao: string
   data_ultima_atualizacao: string
+  workspace_id: string
 }
 
 export interface EstadoExportacao {

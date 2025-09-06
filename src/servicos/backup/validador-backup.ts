@@ -60,7 +60,7 @@ export class ValidadorBackup {
   }
 
   private validarEstruturaCategorias(dados: any[], tabela: string): CategoriaExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at']
+    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at', 'workspace_id']
     const tiposValidos = ['receita', 'despesa', 'ambos']
     
     return dados.map((row, index) => {
@@ -86,13 +86,14 @@ export class ValidadorBackup {
         icone: row.icone || null,
         cor: row.cor || null,
         ativo,
-        created_at: row.created_at || new Date().toISOString()
+        created_at: row.created_at || new Date().toISOString(),
+        workspace_id: row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaSubcategorias(dados: any[], tabela: string): SubcategoriaExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'ativo', 'created_at']
+    const camposObrigatorios = ['id', 'nome', 'ativo', 'created_at', 'workspace_id']
     
     return dados.map((row, index) => {
       camposObrigatorios.forEach(campo => {
@@ -108,13 +109,14 @@ export class ValidadorBackup {
         nome: row.nome || '',
         categoria_id: row.categoria_id || null,
         ativo,
-        created_at: row.created_at || new Date().toISOString()
+        created_at: row.created_at || new Date().toISOString(),
+        workspace_id: row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaContas(dados: any[], tabela: string): ContaExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at']
+    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at', 'workspace_id']
     
     return dados.map((row, index) => {
       camposObrigatorios.forEach(campo => {
@@ -135,13 +137,14 @@ export class ValidadorBackup {
         ativo,
         created_at: row.created_at || new Date().toISOString(),
         limite,
-        data_fechamento: dataFechamento
+        data_fechamento: dataFechamento,
+        workspace_id: row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaFormasPagamento(dados: any[], tabela: string): FormaPagamentoExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at']
+    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at', 'workspace_id']
     
     return dados.map((row, index) => {
       camposObrigatorios.forEach(campo => {
@@ -159,13 +162,14 @@ export class ValidadorBackup {
         tipo: row.tipo || '',
         permite_parcelamento: permiteParcelamento,
         ativo,
-        created_at: row.created_at || new Date().toISOString()
+        created_at: row.created_at || new Date().toISOString(),
+        workspace_id: row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaCentrosCusto(dados: any[], tabela: string): CentroCustoExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'ativo', 'created_at']
+    const camposObrigatorios = ['id', 'nome', 'ativo', 'created_at', 'workspace_id']
     
     return dados.map((row, index) => {
       camposObrigatorios.forEach(campo => {
@@ -189,13 +193,14 @@ export class ValidadorBackup {
         data_inicio: row.data_inicio || null,
         data_fim: row.data_fim || null,
         arquivado,
-        data_arquivamento: row.data_arquivamento || null
+        data_arquivamento: row.data_arquivamento || null,
+        workspace_id: row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaTransacoes(dados: any[], tabela: string): TransacaoExportacao[] {
-    const camposObrigatorios = ['id', 'data', 'descricao', 'valor', 'tipo', 'conta_id', 'created_at']
+    const camposObrigatorios = ['id', 'data', 'descricao', 'valor', 'tipo', 'conta_id', 'created_at', 'workspace_id']
     const tiposValidos = ['receita', 'despesa', 'transferencia']
     
     return dados.map((row, index) => {
@@ -240,13 +245,14 @@ export class ValidadorBackup {
         observacoes: row.observacoes || null,
         created_at: row.created_at || new Date().toISOString(),
         updated_at: row.updated_at || new Date().toISOString(),
-        identificador_externo: row.identificador_externo || null
+        identificador_externo: row.identificador_externo || null,
+        workspace_id: row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaMetasMensais(dados: any[], tabela: string): MetaMensalExportacao[] {
-    const camposObrigatorios = ['id', 'categoria_id', 'mes_referencia', 'valor_meta', 'data_criacao']
+    const camposObrigatorios = ['id', 'categoria_id', 'mes_referencia', 'valor_meta', 'data_criacao', 'workspace_id']
     
     return dados.map((row, index) => {
       camposObrigatorios.forEach(campo => {
@@ -264,7 +270,8 @@ export class ValidadorBackup {
         mes_referencia: mesReferencia,
         valor_meta: valorMeta,
         data_criacao: row.data_criacao || new Date().toISOString(),
-        data_ultima_atualizacao: row.data_ultima_atualizacao || new Date().toISOString()
+        data_ultima_atualizacao: row.data_ultima_atualizacao || new Date().toISOString(),
+        workspace_id: row.workspace_id || ''
       }
     })
   }

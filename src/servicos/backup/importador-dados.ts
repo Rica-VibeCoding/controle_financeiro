@@ -18,8 +18,10 @@ export class ImportadorDados {
   private erros: string[] = []
   private advertencias: string[] = []
   private onProgresso?: (progresso: number, etapa: string) => void
+  private workspaceId: string
 
-  constructor(onProgresso?: (progresso: number, etapa: string) => void) {
+  constructor(workspaceId: string, onProgresso?: (progresso: number, etapa: string) => void) {
+    this.workspaceId = workspaceId
     this.onProgresso = onProgresso
   }
 
@@ -43,10 +45,11 @@ export class ImportadorDados {
 
     this.adicionarLog(`Limpeza ${nomeTabela}`, 'iniciado')
     
+    // Usar uma condição que sempre é verdadeira para deletar todos os registros
     const { error } = await supabase
       .from(nomeTabela)
       .delete()
-      .neq('id', 'impossible-id') // Deletar todos os registros
+      .gt('created_at', '1900-01-01') // Condição que pega todos os registros
 
     if (error) {
       this.adicionarLog(`Limpeza ${nomeTabela}`, 'erro', error.message)
@@ -72,7 +75,8 @@ export class ImportadorDados {
         icone: categoria.icone,
         cor: categoria.cor,
         ativo: categoria.ativo,
-        created_at: categoria.created_at
+        created_at: categoria.created_at,
+        workspace_id: this.workspaceId
       }))
 
       // Inserir dados
@@ -111,7 +115,8 @@ export class ImportadorDados {
         nome: subcategoria.nome,
         categoria_id: subcategoria.categoria_id,
         ativo: subcategoria.ativo,
-        created_at: subcategoria.created_at
+        created_at: subcategoria.created_at,
+        workspace_id: this.workspaceId
       }))
 
       const { error } = await supabase
@@ -152,7 +157,8 @@ export class ImportadorDados {
         ativo: conta.ativo,
         created_at: conta.created_at,
         limite: conta.limite,
-        data_fechamento: conta.data_fechamento
+        data_fechamento: conta.data_fechamento,
+        workspace_id: this.workspaceId
       }))
 
       const { error } = await supabase
@@ -191,7 +197,8 @@ export class ImportadorDados {
         tipo: forma.tipo,
         permite_parcelamento: forma.permite_parcelamento,
         ativo: forma.ativo,
-        created_at: forma.created_at
+        created_at: forma.created_at,
+        workspace_id: this.workspaceId
       }))
 
       const { error } = await supabase
@@ -235,7 +242,8 @@ export class ImportadorDados {
         data_inicio: centro.data_inicio,
         data_fim: centro.data_fim,
         arquivado: centro.arquivado,
-        data_arquivamento: centro.data_arquivamento
+        data_arquivamento: centro.data_arquivamento,
+        workspace_id: this.workspaceId
       }))
 
       const { error } = await supabase
@@ -300,7 +308,8 @@ export class ImportadorDados {
           observacoes: transacao.observacoes,
           created_at: transacao.created_at,
           updated_at: transacao.updated_at,
-          identificador_externo: transacao.identificador_externo
+          identificador_externo: transacao.identificador_externo,
+          workspace_id: this.workspaceId
         }))
 
         const { error } = await supabase
@@ -346,7 +355,8 @@ export class ImportadorDados {
         mes_referencia: meta.mes_referencia,
         valor_meta: meta.valor_meta,
         data_criacao: meta.data_criacao,
-        data_ultima_atualizacao: meta.data_ultima_atualizacao
+        data_ultima_atualizacao: meta.data_ultima_atualizacao,
+        workspace_id: this.workspaceId
       }))
 
       const { error } = await supabase

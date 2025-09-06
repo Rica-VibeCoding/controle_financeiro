@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(timeout 60 npm run build)"
     ],
     "ask": [],
     "deny": []

@@ -253,7 +253,13 @@ npx supabase gen types typescript --project-id nzgifjdewdfibcopolof > src/tipos/
 ### Deploy
 
 ```bash
-# Deploy no Vercel
+# Deploy recomendado (via GitHub - mais confiável)
+git add .
+git commit -m "mensagem do commit"
+git push origin main
+# Vercel faz deploy automático
+
+# Deploy direto (menos recomendado)
 vercel --prod
 
 # Preview deploy
@@ -1005,7 +1011,27 @@ Ver arquivo `docs/STATUS-DASHBOARD-ADMIN.md` para implementar:
 
 ### **🚨 Problemas Específicos do Sistema**
 
-#### **0. Problemas de Autenticação (NOVO)**
+#### **0. Problemas em Produção (NOVO - RESOLVIDO)**
+```bash
+# Problema: Chunks JavaScript 404, MIME types incorretos, Service Worker conflicts
+# Causa: Webpack splitChunks customizado + Service Worker cache corrompido
+
+# ✅ SOLUÇÃO IMPLEMENTADA:
+# 1. Removido splitChunks customizado do next.config.ts
+# 2. Headers MIME corretos para CSS/JS
+# 3. Service Worker desabilitado temporariamente
+# 4. Limpeza cache navegador: F12 > Application > Storage > Clear site data
+
+# ✅ Deploy correto:
+git add .
+git commit -m "correções produção"
+git push origin main  # Sempre usar GitHub auto-deploy
+
+# ✅ Se problemas persistirem no navegador:
+# F12 > Console > navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()))
+```
+
+#### **1. Problemas de Autenticação**
 ```bash
 # Problema: Erro 406 ou "Workspace não encontrado"
 # Causa: Cache corrompido ou políticas RLS com deadlock
@@ -1022,7 +1048,7 @@ npm run dev
 # Acesse: http://172.19.112.1:3000/auth/dev (se NEXT_PUBLIC_DEV_MODE=true)
 ```
 
-#### **1. Turbopack não funciona**
+#### **2. Turbopack não funciona**
 ```bash
 # Problema: --turbopack falha ou é lento
 # Solução: Fallback para webpack padrão
@@ -1035,7 +1061,7 @@ rm -rf node_modules/.cache
 npm run dev --turbopack
 ```
 
-#### **2. Importação CSV falha**
+#### **3. Importação CSV falha**
 ```bash
 # Problema: Erro "encoding inválido" ou "formato não reconhecido"
 
@@ -1049,7 +1075,7 @@ iconv -f ISO-8859-1 -t UTF-8 arquivo.csv > arquivo_utf8.csv
 head -1 arquivo.csv  # Deve ter vírgulas, não ponto-e-vírgula
 ```
 
-#### **3. PWA não instala no celular**
+#### **4. PWA não instala no celular**
 ```bash
 # Verificações obrigatórias:
 
@@ -1064,7 +1090,7 @@ ls -la public/icon-192.png
 # No Chrome mobile: Menu > "Instalar app" ou "Adicionar à tela inicial"
 ```
 
-#### **4. Sistema de Backup trava**
+#### **5. Sistema de Backup trava**
 ```bash
 # Problema: Exportação/importação para no meio
 
@@ -1082,7 +1108,7 @@ free -h
 unzip -t backup.zip
 ```
 
-#### **5. Performance lenta no Dashboard**
+#### **6. Performance lenta no Dashboard**
 ```bash
 # Problema: Cards demoram para carregar
 

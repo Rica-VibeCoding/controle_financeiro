@@ -196,14 +196,14 @@ export function CamposEssenciaisGenericos({
   }
 
   const renderizarCampo = (campo: CampoConfig) => {
-    const id = `campo-${campo.nome}`
-    const valor = dados[campo.nome] || ''
-    const temErro = erros.some(erro => erro.includes(campo.nome))
-    
-    // Verificar se campo é condicional
+    // Verificar se campo é condicional ANTES de gerar qualquer coisa
     if (campo.condicional && !campo.condicional(dados)) {
       return null
     }
+
+    const id = `campo-${tipo}-${campo.nome}`
+    const valor = dados[campo.nome] || ''
+    const temErro = erros.some(erro => erro.includes(campo.nome))
 
     if (carregando) {
       return (
@@ -214,7 +214,7 @@ export function CamposEssenciaisGenericos({
       )
     }
 
-    const labelTexto = campo.nome.charAt(0).toUpperCase() + campo.nome.slice(1).replace('_', ' ')
+    const labelTexto = campo.nome.charAt(0).toUpperCase() + campo.nome.slice(1).replace(/_/g, ' ')
     const label = (
       <Label htmlFor={id}>
         {labelTexto} {campo.obrigatorio && <span className="text-red-500">*</span>}
@@ -247,6 +247,7 @@ export function CamposEssenciaisGenericos({
           <div key={campo.nome}>
             {label}
             <Select
+              id={id}
               value={valor}
               onChange={(e) => onChange(campo.nome, e.target.value)}
               required={campo.obrigatorio}
@@ -265,6 +266,11 @@ export function CamposEssenciaisGenericos({
       case 'icone':
         return (
           <div key={campo.nome} className="md:col-span-2">
+            <div className="mb-2">
+              <span className="text-sm font-medium text-gray-700">
+                Ícone {campo.obrigatorio && <span className="text-red-500">*</span>}
+              </span>
+            </div>
             <IconePicker
               iconeSelecionado={valor}
               onIconeChange={(icone: string) => onChange(campo.nome, icone)}
@@ -293,6 +299,7 @@ export function CamposEssenciaisGenericos({
                 className="sr-only"
               />
               <Input
+                id={id}
                 type="text"
                 placeholder="#3B82F6"
                 value={valor}

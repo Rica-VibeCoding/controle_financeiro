@@ -228,7 +228,7 @@ export function usarBackupImportar() {
     setUltimoResultado(null)
 
     try {
-      const importador = new ImportadorDados(onProgresso)
+      const importador = new ImportadorDados(workspace.id, onProgresso)
       const resultado = await importador.importarDados(estado.dadosCarregados, configuracao)
 
       setLogs(importador.obterLogs())

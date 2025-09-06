@@ -10,9 +10,9 @@ export function useCategoriasData(periodo: Periodo) {
     workspace ? ['dashboard-categorias', workspace.id, periodo.inicio, periodo.fim] : null,
     () => obterCategoriasMetas(periodo, workspace!.id),
     {
-      refreshInterval: 60000, // 1 minuto
+      refreshInterval: 600000, // 10 minutos (dados de categorias mudam pouco)
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 120000, // 2 minutos
       errorRetryCount: 3,
       errorRetryInterval: 5000
     }

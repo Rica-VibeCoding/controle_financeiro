@@ -54,7 +54,11 @@ const cadastroItems = [
   }
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onLinkClick?: () => void
+}
+
+export function Sidebar({ onLinkClick }: SidebarProps) {
   const pathname = usePathname()
   const { workspace, user } = useAuth()
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
@@ -100,6 +104,7 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onLinkClick}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
               pathname === item.href
@@ -119,6 +124,7 @@ export function Sidebar() {
         {/* Configurações */}
         <Link
           href="/configuracoes"
+          onClick={onLinkClick}
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
             pathname === "/configuracoes"
@@ -134,6 +140,7 @@ export function Sidebar() {
         {isOwner && (
           <Link
             href="/configuracoes/usuarios"
+            onClick={onLinkClick}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
               pathname.startsWith("/configuracoes/usuarios")
@@ -149,6 +156,7 @@ export function Sidebar() {
         {/* Metas */}
         <Link
           href="/configuracoes/metas"
+          onClick={onLinkClick}
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
             pathname.startsWith("/configuracoes/metas")
@@ -188,6 +196,7 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onLinkClick}
                   className={cn(
                     "flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                     pathname.startsWith(item.href)
@@ -207,6 +216,7 @@ export function Sidebar() {
         {isSuperAdmin && (
           <Link
             href="/admin/dashboard"
+            onClick={onLinkClick}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mt-2",
               pathname.startsWith("/admin")

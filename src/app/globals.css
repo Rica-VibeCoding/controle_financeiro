@@ -398,3 +398,59 @@ body {
 .duration-200 {
   animation-duration: 200ms;
 }
+
+/* =================================================================== */
+/* FORÇA SEMPRE MODO CLARO - SOLUÇÃO DEFINITIVA SAFARI               */
+/* =================================================================== */
+/* Baseado em pesquisa da comunidade - Safari iOS ignora "only"      */
+
+/* Força modo claro (sem "only" que Safari ignora) */
+:root {
+  color-scheme: light !important;
+}
+
+/* Override completo quando detecta dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light !important;
+  }
+  
+  /* Fundo cinza claro para contraste com sidebar */
+  html, body {
+    background-color: #F8F9FA !important;
+    color: #000000 !important;
+  }
+  
+  /* Elementos específicos mantêm branco */
+  header, nav:not(.sidebar), main, section {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  /* Header mantém branco como no modo claro */
+  header {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #E5E7EB !important;
+  }
+  
+  /* Sidebar com opacidade otimizada e textos off-white */
+  aside.bg-sidebar {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+  }
+  
+  /* Textos da sidebar - especificidade MÁXIMA */
+  aside.bg-sidebar a,
+  aside.bg-sidebar button,
+  aside.bg-sidebar div, 
+  aside.bg-sidebar span,
+  aside.bg-sidebar * {
+    color: #6B7280 !important;
+  }
+  
+  /* Mantém cores funcionais dos valores */
+  .texto-receita, .text-green-600 { color: #10B981 !important; }
+  .texto-despesa, .text-red-600 { color: #EF4444 !important; }
+  .texto-transferencia, .text-blue-600 { color: #3B82F6 !important; }
+}

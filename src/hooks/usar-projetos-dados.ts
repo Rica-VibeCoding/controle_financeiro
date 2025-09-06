@@ -14,9 +14,9 @@ export function useProjetosData(filtros: FiltroProjetosPessoais = {}) {
     workspace ? ['projetos-pessoais', workspace.id, filtros] : null,
     () => obterProjetosPessoais(filtros, workspace!.id),
     {
-      refreshInterval: 60000, // 1 minuto (padrão dashboard)
+      refreshInterval: 600000, // 10 minutos (projetos mudam pouco)
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 120000, // 2 minutos
       errorRetryCount: 3,
       errorRetryInterval: 5000,
       // Cache mais agressivo para dados financeiros históricos
@@ -33,9 +33,9 @@ export function useProjetosDashboard() {
     workspace ? ['projetos-pessoais-dashboard', workspace.id] : null,
     () => obterProjetosPessoais({ apenas_ativos: true }, workspace!.id),
     {
-      refreshInterval: 60000,
+      refreshInterval: 600000, // 10 minutos (dashboard secundário)
       revalidateOnFocus: false,
-      dedupingInterval: 15000,
+      dedupingInterval: 120000, // 2 minutos
       // Prioridade alta para dados do dashboard
       suspense: false
     }

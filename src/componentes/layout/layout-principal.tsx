@@ -32,7 +32,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
               onClick={() => setSidebarOpen(false)}
             />
             <div className="fixed left-0 top-16 bottom-0 z-50 lg:hidden">
-              <Sidebar />
+              <Sidebar onLinkClick={() => setSidebarOpen(false)} />
             </div>
           </>
         )}

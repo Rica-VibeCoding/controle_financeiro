@@ -107,7 +107,7 @@ export function ModalCentroCusto({
     } else if (isOpen && !centroCustoId) {
       limparFormulario()
     }
-  }, [isOpen, centroCustoId, editando, inicializarEdicao, limparFormulario])
+  }, [isOpen, centroCustoId, editando]) // ← CORREÇÃO: Remover functions das dependências
 
   // Efeito para limpar formulário ao fechar
   useEffect(() => {
@@ -117,7 +117,7 @@ export function ModalCentroCusto({
         setMostrarPreview(false)
       }, 300)
     }
-  }, [isOpen, limparFormulario])
+  }, [isOpen]) // ← CORREÇÃO: Remover limparFormulario das dependências
 
   // Handlers
   const handleFechar = () => {

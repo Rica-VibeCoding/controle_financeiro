@@ -1,0 +1,33 @@
+/* Fix para modo escuro Safari mobile - APENAS elementos invisíveis */
+@media (prefers-color-scheme: dark) {
+  /* Override para iOS Safari especificamente */
+  html, body {
+    color-scheme: light !important;
+  }
+  
+  /* Força visibilidade de textos e elementos principais */
+  .header, header, 
+  button, 
+  .btn,
+  h1, h2, h3, h4, h5, h6,
+  p, span, div[class*="text-"],
+  .value, .amount, .description {
+    color: inherit !important;
+    background-color: inherit !important;
+    -webkit-text-fill-color: unset !important;
+  }
+  
+  /* Header específico sempre verde */
+  .header, header {
+    background-color: #10B981 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+  }
+}
+
+/* Fix específico para iOS */
+@supports (-webkit-touch-callout: none) {
+  * {
+    -webkit-text-fill-color: unset !important;
+  }
+}

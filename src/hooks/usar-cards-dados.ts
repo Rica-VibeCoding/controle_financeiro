@@ -10,9 +10,9 @@ export function useCardsData(periodo: Periodo) {
     workspace ? ['dashboard-cards', workspace.id, periodo.inicio, periodo.fim] : null,
     () => obterDadosCards(periodo, workspace!.id),
     {
-      refreshInterval: 60000, // 1 minuto 
+      refreshInterval: 300000, // 5 minutos (dados financeiros)
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 60000, // 1 minuto
       errorRetryCount: 3,
       errorRetryInterval: 5000
     }

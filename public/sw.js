@@ -1,6 +1,6 @@
-// Service Worker PWA Avançado - Versão 3.0
+// Service Worker PWA Avançado - Versão 3.1
 // Estratégia: Cache inteligente + Offline-first + Background Sync
-const CACHE_VERSION = 'v3.0'
+const CACHE_VERSION = 'v3.1'
 const CACHE_NAME = `controle-financeiro-assets-${CACHE_VERSION}`
 const RUNTIME_CACHE = `controle-financeiro-runtime-${CACHE_VERSION}`
 const OFFLINE_CACHE = `controle-financeiro-offline-${CACHE_VERSION}`
@@ -25,19 +25,16 @@ const STATIC_PATTERNS = [
   '.avif'
 ]
 
-// Assets essenciais para cache imediato
+// Assets essenciais para cache imediato (apenas os que existem)
 const ESSENTIAL_ASSETS = [
   '/',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/manifest.json'
 ]
 
-// Páginas para cache offline
+// Páginas para cache offline (apenas as que existem)
 const OFFLINE_PAGES = [
   '/',
-  '/auth/login',
-  '/offline'
+  '/auth/login'
 ]
 
 // Configuração de Background Sync
@@ -104,15 +101,33 @@ self.addEventListener('activate', (event) => {
         )
       }),
       
-      // Pré-cache de páginas críticas
-      caches.open(RUNTIME_CACHE).then(cache => {
-        return cache.addAll(OFFLINE_PAGES.map(url => 
-          new Request(url, { 
-            headers: { 'X-Preload-Cache': 'true' },
-            mode: 'cors',
-            credentials: 'same-origin'
-          })
-        ))
+      // Pré-cache de páginas críticas (com tratamento de erros individual)
+      caches.open(RUNTIME_CACHE).then(async (cache) => {
+        try {
+          // Tentar cache em lote primeiro
+          await cache.addAll(OFFLINE_PAGES.map(url => 
+            new Request(url, { 
+              headers: { 'X-Preload-Cache': 'true' },
+              mode: 'cors',
+              credentials: 'same-origin'
+            })
+          ))
+        } catch (error) {
+          console.warn('SW: Fallback para cache individual de páginas offline')
+          // Se falhar, cacheia individualmente (sem travar ativação)
+          for (const url of OFFLINE_PAGES) {
+            try {
+              await cache.add(new Request(url, {
+                headers: { 'X-Preload-Cache': 'true' },
+                mode: 'cors', 
+                credentials: 'same-origin'
+              }))
+            } catch (individualError) {
+              console.warn(`SW: Falha ao cachear página ${url}:`, individualError)
+              // Continua sem travar - página não será disponível offline
+            }
+          }
+        }
       })
     ])
     .then(() => {

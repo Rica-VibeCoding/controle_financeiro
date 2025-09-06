@@ -4,6 +4,14 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode,
 import { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/servicos/supabase/auth-client'
 import { atualizarUltimaAtividade } from '@/servicos/supabase/convites-simples'
+import { clearAuthData } from '@/utilitarios/clear-auth-selective'
+
+// Cache em memória para workspace (5 minutos)
+interface WorkspaceCache {
+  data: Workspace | null
+  timestamp: number
+  userId: string
+}
 
 // Definir Workspace inline para evitar dependências circulares
 interface Workspace {
@@ -35,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
   const lastActivityUpdate = useRef<number>(0)
+  const workspaceCache = useRef<WorkspaceCache | null>(null)
 
   // Função para atualizar atividade com throttling
   const trackUserActivity = useCallback(async (userId: string) => {
@@ -57,11 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isClient) return
 
     const supabase = createClient()
-    // Timeout de segurança reduzido - se não carregar em 5 segundos, força loading = false
+    // Timeout de segurança - se não carregar em 10 segundos, força loading = false  
     const timeoutId = setTimeout(() => {
       console.warn('⚠️ AuthProvider timeout - forçando loading = false')
       setLoading(false)
-    }, 5000)
+    }, 10000)
     
     // Carregar sessão inicial
     supabase.auth.getSession()
@@ -84,26 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             error.message?.includes('Refresh Token Not Found')) {
           console.warn('🔄 Refresh token inválido - limpando storage e redirecionando')
           
-          // Limpar todo o storage
-          if (typeof window !== 'undefined') {
-            localStorage.clear()
-            sessionStorage.clear()
-            
-            // Limpar cookies relacionados ao Supabase
-            const cookies = document.cookie.split(';')
-            cookies.forEach(cookie => {
-              const eqPos = cookie.indexOf('=')
-              const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
-              if (name.includes('supabase') || name.includes('sb-')) {
-                document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`
-              }
-            })
-            
-            // Redirecionar para login após limpeza
-            setTimeout(() => {
-              window.location.href = '/auth/login'
-            }, 100)
-          }
+          // Limpar apenas dados de auth (seletivo)
+          clearAuthData()
+          
+          // Redirecionar para login após limpeza
+          setTimeout(() => {
+            window.location.href = '/auth/login'
+          }, 100)
         } else {
           console.error('Erro ao carregar sessão:', error)
         }
@@ -139,66 +135,126 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      // Verificar cache (5 minutos)
+      const now = Date.now()
+      const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+      
+      if (workspaceCache.current?.userId === userId && 
+          now - workspaceCache.current.timestamp < CACHE_DURATION) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🚀 Workspace carregado do cache')
+        }
+        setWorkspace(workspaceCache.current.data)
+        return
+      }
+
       const supabase = createClient()
       
       if (process.env.NODE_ENV === 'development') {
         console.log('🔍 Carregando workspace para usuário:', userId)
       }
       
-      const { data, error } = await supabase
-        .from('fp_usuarios')
-        .select(`
-          workspace_id,
-          fp_workspaces!inner (
-            id,
-            nome,
-            owner_id,
-            plano,
-            ativo,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq('id', userId)
-        .single()
+      // AbortController para timeout de 3 segundos
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
 
-      if (error) {
-        // Códigos de erro que devem ser silenciados
-        const silentErrors = ['42P01', 'PGRST116', 'PGRST301']
+      try {
+        // Query 1: Buscar workspace_id do usuário
+        const userQuery = supabase
+          .from('fp_usuarios')
+          .select('workspace_id')
+          .eq('id', userId)
+          .abortSignal(controller.signal)
+          .single()
+
+        const { data: userData, error: userError } = await userQuery
+
+        if (userError) {
+          clearTimeout(timeoutId)
+          
+          // Códigos de erro que devem ser silenciados
+          const silentErrors = ['42P01', 'PGRST116', 'PGRST301']
+          
+          // Se erro 406 (Not Acceptable), pode ser usuário inválido
+          if (userError.message?.includes('406') || userError.message?.includes('Not Acceptable')) {
+            console.warn('❌ Usuário não encontrado na base de dados:', userId)
+            console.warn('💡 Fazendo logout e redirecionando...')
+            
+            // Fazer logout completo via Supabase
+            const supabase = createClient()
+            await supabase.auth.signOut()
+            
+            // Limpar apenas dados de auth (seletivo)
+            clearAuthData()
+            
+            // Usar replace para evitar loops de redirect
+            window.location.replace('/auth/login')
+            return
+          }
+          
+          if (!silentErrors.includes(userError.code || '')) {
+            console.error('Erro ao carregar dados do usuário:', userError)
+          }
+          return
+        }
+
+        if (!userData?.workspace_id) {
+          console.warn('❌ Workspace ID não encontrado para usuário:', userId)
+          clearTimeout(timeoutId)
+          return
+        }
+
+        // Query 2: Buscar dados do workspace
+        const workspaceQuery = supabase
+          .from('fp_workspaces')
+          .select('id, nome, owner_id, plano, ativo, created_at, updated_at')
+          .eq('id', userData.workspace_id)
+          .abortSignal(controller.signal)
+          .single()
+
+        const { data: workspaceData, error: workspaceError } = await workspaceQuery
+
+        clearTimeout(timeoutId)
+
+        if (workspaceError) {
+          const silentErrors = ['42P01', 'PGRST116', 'PGRST301']
+          
+          if (!silentErrors.includes(workspaceError.code || '')) {
+            console.error('Erro ao carregar workspace:', workspaceError)
+          }
+          return
+        }
+
+        if (workspaceData) {
+          const workspace = workspaceData as Workspace
+          setWorkspace(workspace)
+          
+          // Atualizar cache
+          workspaceCache.current = {
+            data: workspace,
+            timestamp: now,
+            userId
+          }
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ Workspace carregado:', workspace.nome)
+          }
+        } else {
+          console.warn('❌ Workspace não encontrado para usuário:', userId)
+        }
+
+      } catch (queryError: any) {
+        clearTimeout(timeoutId)
         
-        // Se erro 406 (Not Acceptable), pode ser usuário inválido
-        if (error.message?.includes('406') || error.message?.includes('Not Acceptable')) {
-          console.warn('❌ Usuário não encontrado na base de dados:', userId)
-          console.warn('💡 Fazendo logout e redirecionando...')
-          
-          // Fazer logout completo via Supabase
-          const supabase = createClient()
-          await supabase.auth.signOut()
-          
-          // Limpar caches
-          localStorage.clear()
-          sessionStorage.clear()
-          
-          // Usar replace para evitar loops de redirect
-          window.location.replace('/auth/login')
+        // Tratar timeout específico do AbortController
+        if (queryError.name === 'AbortError') {
+          console.warn('⏱️ Timeout ao carregar workspace (3s) - continuando sem workspace')
           return
         }
         
-        if (!silentErrors.includes(error.code || '')) {
-          console.error('Erro ao carregar workspace:', error)
-        }
-        return
+        throw queryError
       }
-
-      if (data?.fp_workspaces && !Array.isArray(data.fp_workspaces)) {
-        setWorkspace(data.fp_workspaces as Workspace)
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Workspace carregado:', data.fp_workspaces.nome)
-        }
-      } else {
-        console.warn('❌ Workspace não encontrado para usuário:', userId)
-      }
+      
     } catch (error: any) {
       // Silenciar erros de tabela inexistente completamente
       const silentCodes = ['42P01', 'PGRST116', 'PGRST301']
@@ -216,14 +272,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setWorkspace(null)
       setLoading(true)
       
+      // Limpar cache do workspace
+      workspaceCache.current = null
+      
       const supabase = createClient()
       await supabase.auth.signOut()
       
-      // Limpar storage
-      if (typeof window !== 'undefined') {
-        localStorage.clear()
-        sessionStorage.clear()
-      }
+      // Limpar apenas dados de auth (seletivo)
+      clearAuthData()
       
       // Redirect imediato sem setTimeout
       window.location.replace('/auth/login')

@@ -43,6 +43,9 @@ const nextConfig: NextConfig = {
       '@tailwindcss/oxide': '@tailwindcss/oxide'
     })
 
+    // TEMPORARIAMENTE REMOVIDO - Causando problemas de chunk naming em produção
+    // Deixar Next.js gerenciar chunks automaticamente
+    /*
     config.optimization.splitChunks = {
       chunks: 'all',
       cacheGroups: {
@@ -66,6 +69,7 @@ const nextConfig: NextConfig = {
         }
       }
     }
+    */
     return config
   },
 
@@ -113,10 +117,10 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload',
           }] : []),
-          // Cache apropriado por ambiente
+          // Cache apropriado por ambiente (menos agressivo)
           {
             key: 'Cache-Control',
-            value: isProd ? 'public, max-age=31536000, immutable' : 'private, max-age=0, no-cache',
+            value: isProd ? 'public, max-age=3600, s-maxage=86400' : 'private, max-age=0, no-cache',
           },
         ],
       },
@@ -153,6 +157,44 @@ const nextConfig: NextConfig = {
           {
             key: 'Expires',
             value: '0',
+          },
+        ],
+      },
+      // Headers para arquivos CSS (corrigir MIME type)
+      {
+        source: '/_next/static/css/(.*\\.css)',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/css; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Headers para arquivos JavaScript (corrigir MIME type)
+      {
+        source: '/_next/static/(.*\\.js)',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Headers para assets estáticos
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

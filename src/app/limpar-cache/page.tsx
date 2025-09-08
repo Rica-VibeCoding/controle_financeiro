@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/componentes/ui/button'
 import { Card } from '@/componentes/ui/card'
 import { AlertTriangle, CheckCircle, Trash2, RefreshCw } from 'lucide-react'
@@ -8,26 +8,6 @@ import { AlertTriangle, CheckCircle, Trash2, RefreshCw } from 'lucide-react'
 export default function LimparCachePage() {
   const [status, setStatus] = useState<string>('')
   const [limpo, setLimpo] = useState(false)
-  const [serviceWorkers, setServiceWorkers] = useState<number>(0)
-  const [caches, setCaches] = useState<string[]>([])
-
-  useEffect(() => {
-    verificarStatus()
-  }, [])
-
-  const verificarStatus = async () => {
-    // Verificar Service Workers
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations()
-      setServiceWorkers(registrations.length)
-    }
-
-    // Verificar Caches
-    if ('caches' in window) {
-      const cacheNames = await caches.keys()
-      setCaches(cacheNames)
-    }
-  }
 
   const limparTudo = async () => {
     setStatus('🔄 Iniciando limpeza...')
@@ -45,12 +25,16 @@ export default function LimparCachePage() {
 
       // 2. Limpar todos os caches
       if ('caches' in window) {
-        const cacheNames = await caches.keys()
-        for (const cacheName of cacheNames) {
-          await caches.delete(cacheName)
-          console.log('✅ Cache removido:', cacheName)
+        try {
+          const cacheNames = await caches.keys()
+          for (const cacheName of cacheNames) {
+            await caches.delete(cacheName)
+            console.log('✅ Cache removido:', cacheName)
+          }
+          setStatus('✅ Caches limpos')
+        } catch (error) {
+          console.warn('Erro ao limpar caches:', error)
         }
-        setStatus('✅ Caches limpos')
       }
 
       // 3. Limpar localStorage (exceto dados importantes)
@@ -71,12 +55,16 @@ export default function LimparCachePage() {
 
       // 5. Limpar IndexedDB (se usado)
       if ('indexedDB' in window) {
-        const databases = await indexedDB.databases?.() || []
-        for (const db of databases) {
-          if (db.name) {
-            indexedDB.deleteDatabase(db.name)
-            console.log('✅ IndexedDB removido:', db.name)
+        try {
+          const databases = await (indexedDB as any).databases?.() || []
+          for (const db of databases) {
+            if (db.name) {
+              indexedDB.deleteDatabase(db.name)
+              console.log('✅ IndexedDB removido:', db.name)
+            }
           }
+        } catch (error) {
+          console.warn('Erro ao limpar IndexedDB:', error)
         }
       }
 
@@ -118,18 +106,6 @@ export default function LimparCachePage() {
             </div>
           </div>
 
-          {/* Status Atual */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <h2 className="font-semibold text-gray-700">Status Atual:</h2>
-            <ul className="space-y-1 text-sm text-gray-600">
-              <li>• Service Workers registrados: {serviceWorkers}</li>
-              <li>• Caches armazenados: {caches.length}</li>
-              {caches.map((cache, i) => (
-                <li key={i} className="ml-4 text-xs">→ {cache}</li>
-              ))}
-            </ul>
-          </div>
-
           {/* Aviso */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex gap-2">
@@ -140,6 +116,7 @@ export default function LimparCachePage() {
                   <li>• Você será deslogado do sistema</li>
                   <li>• Configurações locais serão perdidas</li>
                   <li>• A página será recarregada automaticamente</li>
+                  <li>• Remove Service Workers e caches problemáticos</li>
                 </ul>
               </div>
             </div>

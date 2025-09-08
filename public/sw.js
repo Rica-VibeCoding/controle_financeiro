@@ -1,5 +1,46 @@
-// Service Worker PWA Avançado - Versão 3.1
-// Estratégia: Cache inteligente + Offline-first + Background Sync
+// Service Worker DESATIVADO TEMPORARIAMENTE - Causando travamentos
+// Problema: Conflito com chunks dinâmicos do Next.js + MIME types incorretos
+// TODO: Reativar após resolver problemas de performance
+
+// DESREGISTRAR SERVICE WORKER EXISTENTE
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      // Limpar TODOS os caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            console.log('🗑️ Removendo cache:', cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+      }),
+      // Tomar controle de todas as páginas
+      clients.claim()
+    ]).then(() => {
+      console.log('✅ Service Worker desativado e caches limpos');
+    })
+  );
+});
+
+// Interceptar fetch apenas para desregistrar
+self.addEventListener('fetch', (event) => {
+  // Não fazer cache, deixar requisições passarem direto
+  return;
+});
+
+// Auto-desregistrar após ativação
+setTimeout(() => {
+  self.registration.unregister().then(() => {
+    console.log('🔴 Service Worker auto-desregistrado');
+  });
+}, 1000);
+
+/* CÓDIGO ORIGINAL COMENTADO - NÃO REMOVER
 const CACHE_VERSION = 'v3.1'
 const CACHE_NAME = `controle-financeiro-assets-${CACHE_VERSION}`
 const RUNTIME_CACHE = `controle-financeiro-runtime-${CACHE_VERSION}`

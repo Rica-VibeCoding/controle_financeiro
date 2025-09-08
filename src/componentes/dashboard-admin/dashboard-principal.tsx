@@ -172,26 +172,27 @@ export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuar
 
   return (
     <div className="space-y-6">
-      {/* Header Limpo e Produtivo */}
+      {/* Header Otimizado para Mobile */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
+            <h1 className="text-xl md:text-2xl font-semibold text-gray-900 tracking-tight">
               Dashboard Administrativo
             </h1>
           </div>
           
-          {/* Actions Header */}
-          <div className="flex items-center space-x-3">
-            <div className="text-xs text-gray-500 px-3 py-1.5 bg-gray-100 rounded-full">
-              Atualizado há {Math.floor((Date.now() - Date.now()) / 60000) || 0} min
+          {/* Actions Header Compactas */}
+          <div className="flex items-center space-x-2">
+            <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded-full">
+              <span className="hidden sm:inline">Atualizado </span>há {Math.floor((Date.now() - Date.now()) / 60000) || 0}min
             </div>
             <button
               onClick={onRecarregar}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              title="Atualizar dados"
             >
-              <Icone name="refresh-ccw" className="w-4 h-4 mr-2" />
-              Atualizar
+              <Icone name="refresh-ccw" className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Atualizar</span>
             </button>
           </div>
         </div>

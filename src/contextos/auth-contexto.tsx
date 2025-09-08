@@ -66,11 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isClient) return
 
     const supabase = createClient()
-    // Timeout de segurança - se não carregar em 10 segundos, força loading = false  
+    // Timeout aumentado para 30 segundos - sistema demora ~10s para carregar chunks
     const timeoutId = setTimeout(() => {
-      console.warn('⚠️ AuthProvider timeout - forçando loading = false')
+      console.warn('⚠️ AuthProvider timeout após 30s - forçando loading = false')
       setLoading(false)
-    }, 10000)
+    }, 30000) // Aumentado de 10s para 30s
     
     // Carregar sessão inicial
     supabase.auth.getSession()
@@ -127,13 +127,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [isClient])
 
-  const loadWorkspace = useCallback(async (userId: string) => {
-    try {
-      // Validar que o userId é um UUID válido
-      if (!userId || userId.length !== 36) {
-        console.warn('UserId inválido para carregar workspace:', userId)
-        return
-      }
+  const loadWorkspace = useCallback(async (userId: string, retries = 3) => {
+    // Validar que o userId é um UUID válido
+    if (!userId || userId.length !== 36) {
+      console.warn('UserId inválido para carregar workspace:', userId)
+      return
+    }
+    
+    // Loop de tentativas com retry
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
 
       // Verificar cache (5 minutos)
       const now = Date.now()
@@ -154,9 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('🔍 Carregando workspace para usuário:', userId)
       }
       
-      // AbortController para timeout de 3 segundos
+      // AbortController para timeout de 5 segundos (aumentado de 3s)
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
 
       try {
         // Query 1: Buscar workspace_id do usuário
@@ -248,20 +251,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Tratar timeout específico do AbortController
         if (queryError.name === 'AbortError') {
-          console.warn('⏱️ Timeout ao carregar workspace (3s) - continuando sem workspace')
+          console.warn(`⏱️ Timeout ao carregar workspace (5s) - tentativa ${attempt + 1}/${retries}`)
+          
+          // Se não for última tentativa, tentar novamente
+          if (attempt < retries - 1) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 5000) // Backoff exponencial
+            console.log(`🔄 Tentando novamente em ${delay}ms...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+            continue // Próxima tentativa
+          }
+          
+          console.warn('❌ Timeout após todas as tentativas - continuando sem workspace')
           return
         }
         
         throw queryError
       }
       
+      // Se chegou aqui, sucesso - sair do loop
+      return
+      
     } catch (error: any) {
-      // Silenciar erros de tabela inexistente completamente
-      const silentCodes = ['42P01', 'PGRST116', 'PGRST301']
-      if (!silentCodes.includes(error?.code)) {
-        console.error('Erro ao carregar workspace:', error)
+      // Se for última tentativa, logar erro
+      if (attempt === retries - 1) {
+        // Silenciar erros de tabela inexistente completamente
+        const silentCodes = ['42P01', 'PGRST116', 'PGRST301']
+        if (!silentCodes.includes(error?.code)) {
+          console.error(`Erro ao carregar workspace após ${retries} tentativas:`, error)
+        }
+      } else {
+        // Não é última tentativa - aguardar e tentar novamente
+        const delay = Math.min(1000 * Math.pow(2, attempt), 5000)
+        console.warn(`🔄 Erro na tentativa ${attempt + 1}/${retries}. Tentando novamente em ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
+    } // Fim do loop for
   }, [])
 
   const signOut = useCallback(async () => {

@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)"
+      "Read(//mnt/c/Users/ricar/OneDrive/Documentos/ShareX/Screenshots/2025-09/**)"
     ],
     "ask": [],
     "deny": []

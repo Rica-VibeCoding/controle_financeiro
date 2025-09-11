@@ -153,10 +153,16 @@ const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransa
  */
 export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: ModalLancamentoProps) {
   const isEdicao = !!transacaoId
-  const { workspace } = useAuth()
+  
+  // Verificações defensivas para os hooks
+  const authContext = useAuth()
+  const workspace = authContext?.workspace
 
-  // Dados auxiliares do contexto global
-  const { dados: dadosAuxiliares, loading: loadingAuxiliares, obterSubcategorias } = useDadosAuxiliares()
+  // Dados auxiliares do contexto global com verificação defensiva
+  const dadosAuxiliaresContext = useDadosAuxiliares()
+  const dadosAuxiliares = dadosAuxiliaresContext?.dados
+  const loadingAuxiliares = dadosAuxiliaresContext?.loading || false
+  const obterSubcategorias = dadosAuxiliaresContext?.obterSubcategorias
 
   // Estado das abas
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('essencial')
@@ -207,13 +213,14 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       setMensagem(null)
       setAbaAtiva('essencial')
       setDados(ESTADO_INICIAL)
+      setSalvando(false) // Reset estado de salvamento
     }
   }, [isOpen, transacaoId, workspace])
 
   // Carregar subcategorias quando categoria muda
   useEffect(() => {
     async function carregarSubcategorias() {
-      if (!dados.categoria_id) {
+      if (!dados.categoria_id || !obterSubcategorias) {
         setSubcategorias([])
         return
       }
@@ -230,11 +237,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
     carregarSubcategorias()
   }, [dados.categoria_id, obterSubcategorias])
 
-  // Filtrar categorias por tipo (otimizado)
+  // Filtrar categorias por tipo (otimizado) com verificação defensiva
   const categoriasFiltradas = useMemo(() => 
-    dadosAuxiliares.categorias.filter(cat => 
+    dadosAuxiliares?.categorias?.filter(cat => 
       cat.tipo === dados.tipo || cat.tipo === 'ambos'
-    ), [dadosAuxiliares.categorias, dados.tipo]
+    ) || [], [dadosAuxiliares?.categorias, dados.tipo]
   )
 
   /**
@@ -366,6 +373,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       }
 
       onSuccess?.()
+      setSalvando(false) // Reset estado antes de fechar
       onClose()
     } catch (error) {
       console.error('Erro ao salvar:', error)
@@ -448,11 +456,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   required
                 >
                   <option value="">Selecione uma conta</option>
-                  {dadosAuxiliares.contas.map(conta => (
+                  {dadosAuxiliares?.contas?.map(conta => (
                     <option key={conta.id} value={conta.id}>
                       {conta.nome}{conta.banco ? ` - ${conta.banco}` : ''} ({formatarTipoConta(conta.tipo)})
                     </option>
-                  ))}
+                  )) || []}
                 </Select>
               </div>
             </div>
@@ -478,11 +486,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                     required
                   >
                     <option value="">Selecione a conta destino</option>
-                    {dadosAuxiliares.contas.filter(c => c.id !== dados.conta_id).map(conta => (
+                    {dadosAuxiliares?.contas?.filter(c => c.id !== dados.conta_id).map(conta => (
                       <option key={conta.id} value={conta.id}>
                         {conta.nome}{conta.banco ? ` - ${conta.banco}` : ''} ({formatarTipoConta(conta.tipo)})
                       </option>
-                    ))}
+                    )) || []}
                   </Select>
                 </div>
               ) : (
@@ -564,11 +572,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   onChange={(e) => atualizarCampo('forma_pagamento_id', e.target.value)}
                 >
                   <option value="">Selecione uma forma</option>
-                  {dadosAuxiliares.formasPagamento.map(forma => (
+                  {dadosAuxiliares?.formasPagamento?.map(forma => (
                     <option key={forma.id} value={forma.id}>
                       {forma.nome} ({forma.tipo})
                     </option>
-                  ))}
+                  )) || []}
                 </Select>
               </div>
 
@@ -591,11 +599,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                 onChange={(e) => atualizarCampo('centro_custo_id', e.target.value)}
               >
                 <option value="">Selecione um centro</option>
-                {dadosAuxiliares.centrosCusto.map(centro => (
+                {dadosAuxiliares?.centrosCusto?.map(centro => (
                   <option key={centro.id} value={centro.id}>
                     {centro.nome}
                   </option>
-                ))}
+                )) || []}
               </Select>
             </div>
 

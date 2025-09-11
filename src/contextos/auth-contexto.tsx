@@ -72,40 +72,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }, 30000) // Aumentado de 10s para 30s
     
-    // Carregar sessão inicial
-    supabase.auth.getSession()
-      .then(({ data: { session } }: { data: { session: Session | null } }) => {
+    // Função assíncrona para carregar sessão com tratamento robusto
+    const loadInitialSession = async () => {
+      try {
+        // Tentar obter sessão
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
         clearTimeout(timeoutId)
+        
+        // Se houver erro específico, tratar
+        if (error) {
+          // Erros de token são agora tratados silenciosamente no auth-client
+          // mas vamos adicionar uma verificação adicional
+          if (error.message?.includes('refresh_token') || 
+              error.message?.includes('Invalid Refresh Token')) {
+            console.warn('🔄 Sessão inválida detectada - redirecionando para login')
+            setLoading(false)
+            window.location.replace('/auth/login')
+            return
+          }
+          
+          // Para outros erros, apenas logar e continuar
+          console.warn('Erro não crítico ao carregar sessão:', error.message)
+        }
+        
+        // Processar sessão (pode ser null se não houver)
         setSession(session)
         setUser(session?.user ?? null)
+        
         if (session?.user) {
-          loadWorkspace(session.user.id).finally(() => setLoading(false))
-          trackUserActivity(session.user.id)
-        } else {
-          setLoading(false)
+          await loadWorkspace(session.user.id)
+          await trackUserActivity(session.user.id)
         }
-      })
-      .catch((error: Error) => {
+      } catch (error: any) {
         clearTimeout(timeoutId)
         
-        // Tratamento específico para erro de refresh token
-        if (error.message?.includes('Invalid Refresh Token') || 
-            error.message?.includes('Refresh Token Not Found')) {
-          console.warn('🔄 Refresh token inválido - limpando storage e redirecionando')
-          
-          // Limpar apenas dados de auth (seletivo)
-          clearAuthData()
-          
-          // Redirecionar para login após limpeza
-          setTimeout(() => {
-            window.location.href = '/auth/login'
-          }, 100)
-        } else {
-          console.error('Erro ao carregar sessão:', error)
-        }
+        // Tratamento de fallback para qualquer erro não capturado
+        console.warn('⚠️ Erro ao inicializar auth:', error?.message || 'Erro desconhecido')
         
+        // Se for erro de autenticação, limpar e redirecionar
+        if (error?.message?.includes('auth') || 
+            error?.message?.includes('token') ||
+            error?.message?.includes('session')) {
+          clearAuthData()
+          // Pequeno delay para garantir limpeza
+          setTimeout(() => {
+            window.location.replace('/auth/login')
+          }, 100)
+        }
+      } finally {
+        // Sempre desabilitar loading ao final
         setLoading(false)
-      })
+      }
+    }
+    
+    // Executar carregamento inicial
+    loadInitialSession()
 
     // Escutar mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -144,18 +166,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (workspaceCache.current?.userId === userId && 
           now - workspaceCache.current.timestamp < CACHE_DURATION) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🚀 Workspace carregado do cache')
-        }
+        // Workspace carregado do cache
         setWorkspace(workspaceCache.current.data)
         return
       }
 
       const supabase = createClient()
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 Carregando workspace para usuário:', userId)
-      }
+      // Carregando workspace para usuário
       
       // AbortController para timeout de 5 segundos (aumentado de 3s)
       const controller = new AbortController()
@@ -239,9 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             userId
           }
           
-          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ Workspace carregado:', workspace.nome)
-          }
+          // Workspace carregado com sucesso
         } else {
           console.warn('❌ Workspace não encontrado para usuário:', userId)
         }
@@ -256,7 +272,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Se não for última tentativa, tentar novamente
           if (attempt < retries - 1) {
             const delay = Math.min(1000 * Math.pow(2, attempt), 5000) // Backoff exponencial
-            console.log(`🔄 Tentando novamente em ${delay}ms...`)
+            // Tentando novamente com backoff exponencial
             await new Promise(resolve => setTimeout(resolve, delay))
             continue // Próxima tentativa
           }

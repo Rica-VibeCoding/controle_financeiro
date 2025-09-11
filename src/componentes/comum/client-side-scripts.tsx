@@ -27,11 +27,19 @@ export function ClientSideScripts() {
     }
   }, [])
 
-  // Script 2: Service Worker registration seguro (TEMPORARIAMENTE DESABILITADO)
+  // Script 2: Limpeza forçada do Service Worker
   useEffect(() => {
-    // DESABILITADO - Causando problemas de MIME type em produção
-    // TODO: Reabilitar após corrigir headers MIME no Vercel
-    console.log('Service Worker temporariamente desabilitado para correção de MIME types')
+    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+      // Forçar desregistro de qualquer Service Worker ativo
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+          console.log('🔴 Desregistrando Service Worker:', registration.scope)
+          registration.unregister()
+        })
+      }).catch(error => {
+        console.log('Erro ao desregistrar Service Workers:', error)
+      })
+    }
     
     /*
     if ('serviceWorker' in navigator && typeof window !== 'undefined') {

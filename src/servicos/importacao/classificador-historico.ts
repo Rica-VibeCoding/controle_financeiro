@@ -21,23 +21,31 @@ export async function buscarClassificacaoHistorica(
       .eq('descricao', descricao)
       .eq('conta_id', conta_id)
       .not('categoria_id', 'is', null)
-      .not('subcategoria_id', 'is', null)
       .not('forma_pagamento_id', 'is', null)
+      // subcategoria_id pode ser null - não filtrar
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
-
-    if (error || !data) {
+      // Remover .single() para evitar erro 406 quando não há dados
+      
+    // Verificar se há dados retornados
+    if (error || !data || data.length === 0) {
+      console.log('🔍 Classificação histórica não encontrada para:', descricao.substring(0, 30))
       return null
     }
 
+    const primeiroRegistro = data[0]
+
     return {
-      categoria_id: data.categoria_id,
-      subcategoria_id: data.subcategoria_id,
-      forma_pagamento_id: data.forma_pagamento_id
+      categoria_id: primeiroRegistro.categoria_id,
+      subcategoria_id: primeiroRegistro.subcategoria_id,
+      forma_pagamento_id: primeiroRegistro.forma_pagamento_id
     }
   } catch (error) {
-    console.error('Erro ao buscar classificação histórica:', error)
+    console.error('❌ Erro ao buscar classificação histórica:', {
+      error,
+      descricao: descricao.substring(0, 30),
+      conta_id
+    })
     return null // Fallback silencioso - não bloqueia importação
   }
 }

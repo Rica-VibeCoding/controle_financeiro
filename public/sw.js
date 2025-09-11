@@ -14,7 +14,7 @@ self.addEventListener('activate', (event) => {
       caches.keys().then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
-            console.log('🗑️ Removendo cache:', cacheName);
+            // Removendo cache
             return caches.delete(cacheName);
           })
         );
@@ -27,11 +27,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Interceptar fetch apenas para desregistrar
-self.addEventListener('fetch', (event) => {
-  // Não fazer cache, deixar requisições passarem direto
-  return;
-});
+// NÃO interceptar fetch - deixar tudo passar direto
+// Service Worker completamente passivo
 
 // Auto-desregistrar após ativação
 setTimeout(() => {

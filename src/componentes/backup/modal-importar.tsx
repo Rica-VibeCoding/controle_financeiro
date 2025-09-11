@@ -282,6 +282,26 @@ export function ModalImportar({ isOpen, onClose }: ModalImportarProps) {
                   </div>
                 )}
 
+                {/* Info sobre cross-workspace */}
+                {estado.resumoValidacao?.crossWorkspaceDetected && (
+                  <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                    <div className="flex items-center gap-2">
+                      <Database className="w-5 h-5 text-blue-500" />
+                      <span className="font-medium text-blue-700">
+                        Backup de Outro Workspace Detectado
+                      </span>
+                    </div>
+                    <p className="text-sm text-blue-600 mt-1">
+                      Este backup foi criado em outro workspace. Os dados serão automaticamente convertidos para o seu workspace atual.
+                    </p>
+                    {estado.resumoValidacao.workspacesOriginais && (
+                      <div className="text-xs text-blue-500 mt-1">
+                        Workspaces originais: {estado.resumoValidacao.workspacesOriginais.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {temErrosValidacao && (
                   <div className="bg-red-50 p-4 rounded-lg mb-4">
                     <div className="flex items-center gap-2">

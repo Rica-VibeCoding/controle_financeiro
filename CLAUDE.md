@@ -20,3 +20,9 @@
 ## Comandos Customizados
 - `qcheck` - Revisão rápida de código e best practices
 - `qplan` - Analise consistência antes de implementar mudanças
+
+## Sistema de Transações (Janeiro 2025)
+- **NOVA ARQUITETURA**: Sistema de abas único em `/transacoes`
+- **PERFORMANCE**: Navegação instantânea (state interno)
+- **UX MELHORADA**: Indicadores visuais + loading otimizado
+- **DOCUMENTAÇÃO**: Ver `docs/SISTEMA-TRANSACOES-ABAS.md`

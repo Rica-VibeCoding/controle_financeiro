@@ -16,6 +16,7 @@ interface DashboardPrincipalProps {
   onRecarregar: () => void;
   // 🆕 NOVA funcionalidade administrativa
   onToggleUsuario: (id: string, ativo: boolean) => Promise<import('@/tipos/dashboard-admin').AcaoAdministrativa>;
+  onDeletarUsuario: (id: string) => Promise<import('@/tipos/dashboard-admin').AcaoAdministrativa>;
 }
 
 /**
@@ -76,7 +77,7 @@ function formatarCrescimentoUsuarios(crescimentoPercentual: number, totalUsuario
  * FASE 3: Sistema de navegação organizado
  * Layout otimizado com conteúdo separado por contexto
  */
-export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuario }: DashboardPrincipalProps) {
+export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuario, onDeletarUsuario }: DashboardPrincipalProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'usuarios');
@@ -246,6 +247,7 @@ export function DashboardPrincipal({ dados, loading, onRecarregar, onToggleUsuar
             usuarios={usuariosCompletos}
             loading={loading}
             onToggleUsuario={onToggleUsuario}
+            onDeletarUsuario={onDeletarUsuario}
           />
         </TabPanel>
 

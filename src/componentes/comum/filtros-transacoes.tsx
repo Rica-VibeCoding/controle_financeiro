@@ -25,7 +25,7 @@ export function FiltrosTransacoes({
   carregando = false 
 }: FiltrosTransacoesProps) {
   const { dados: dadosAuxiliares } = useDadosAuxiliares()
-  const { categorias, contas } = dadosAuxiliares
+  const { categorias, contas, centrosCusto } = dadosAuxiliares
   const [expandido, setExpandido] = useState(false)
 
   const handleChange = (campo: keyof FiltrosTransacao, valor: string | number | boolean | undefined) => {
@@ -39,7 +39,7 @@ export function FiltrosTransacoes({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="py-4 px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Icone name="filter" className="w-4 h-4" aria-hidden="true" />
@@ -69,7 +69,8 @@ export function FiltrosTransacoes({
       
       {expandido && (
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Filtros principais - 4 colunas em uma linha */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Busca por Descrição */}
             <div className="space-y-2">
               <Label htmlFor="busca">Buscar por descrição</Label>
@@ -80,35 +81,6 @@ export function FiltrosTransacoes({
                 onChange={(e) => handleChange('busca', e.target.value)}
                 disabled={carregando}
               />
-            </div>
-
-            {/* Tipo */}
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo</Label>
-              <Select
-                value={filtros.tipo || ''}
-                onChange={(e) => handleChange('tipo', e.target.value)}
-                disabled={carregando}
-              >
-                <option value="">Todos os tipos</option>
-                <option value="receita">Receita</option>
-                <option value="despesa">Despesa</option>
-                <option value="transferencia">Transferência</option>
-              </Select>
-            </div>
-
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={filtros.status || ''}
-                onChange={(e) => handleChange('status', e.target.value)}
-                disabled={carregando}
-              >
-                <option value="">Todos os status</option>
-                <option value="previsto">Previsto</option>
-                <option value="realizado">Realizado</option>
-              </Select>
             </div>
 
             {/* Categoria */}
@@ -145,23 +117,27 @@ export function FiltrosTransacoes({
               </Select>
             </div>
 
-            {/* Recorrente */}
+            {/* Centro de Custo */}
             <div className="space-y-2">
-              <Label htmlFor="recorrente">Recorrência</Label>
+              <Label htmlFor="centro_custo">Centro de Custo</Label>
               <Select
-                value={filtros.recorrente === undefined ? '' : filtros.recorrente.toString()}
-                onChange={(e) => handleChange('recorrente', e.target.value === '' ? undefined : e.target.value === 'true')}
+                value={filtros.centro_custo_id || ''}
+                onChange={(e) => handleChange('centro_custo_id', e.target.value)}
                 disabled={carregando}
               >
-                <option value="">Todas</option>
-                <option value="true">Apenas recorrentes</option>
-                <option value="false">Apenas únicas</option>
+                <option value="">Todos os centros de custo</option>
+                {centrosCusto.map((centro) => (
+                  <option key={centro.id} value={centro.id}>
+                    {centro.nome}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>
 
-          {/* Filtros de Data */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Filtros de Data e Valor - Mesma linha para economizar espaço */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="data_inicio">Data início</Label>
               <Input
@@ -182,10 +158,6 @@ export function FiltrosTransacoes({
                 disabled={carregando}
               />
             </div>
-          </div>
-
-          {/* Filtros de Valor */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="valor_min">Valor mínimo</Label>
               <Input

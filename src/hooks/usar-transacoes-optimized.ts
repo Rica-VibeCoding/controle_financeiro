@@ -16,6 +16,7 @@ import {
   excluirTransacao 
 } from '@/servicos/supabase/transacoes'
 import { useAuth } from '@/contextos/auth-contexto'
+import { obterConfigSWR } from '@/utilitarios/swr-config'
 import type {
   FiltrosTransacao,
   ParametrosPaginacao,
@@ -72,33 +73,16 @@ export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseT
     paginacao
   ] : null
   
-  // Hook SWR com configuração otimizada
+  // Hook SWR com configuração híbrida otimizada
   const { data, error, isLoading, mutate: revalidate } = useSWR<RespostaPaginada<TransacaoComRelacoes>>(
     chave,
     () => obterTransacoes(filtros, paginacao, workspace!.id),
-    {
-      refreshInterval: 300000,        // 5 minutos (dados financeiros críticos)
-      revalidateOnFocus: false,       // Não recarregar ao focar aba
-      revalidateOnReconnect: false,   // Não recarregar ao reconectar
-      dedupingInterval: 60000,        // 1 minuto de cache para requests idênticos
-      errorRetryCount: 3,             // 3 tentativas em caso de erro
-      errorRetryInterval: 5000,       // 5s entre tentativas
-      revalidateOnMount: true,        // Sempre carregar na primeira montagem
-      // Cache mais agressivo para dados históricos
-      fallbackData: undefined
-    }
+    obterConfigSWR('criticos') // Transações são dados críticos
   )
   
-  // Função para invalidar cache relacionado
+  // Função otimizada para invalidar apenas cache relacionado específico
   const invalidateRelatedCache = async () => {
-    // Invalidar todas as queries de transações para este workspace
-    await mutate(
-      (key: any) => Array.isArray(key) && key[0] === 'transacoes' && key[1] === workspace?.id,
-      undefined,
-      { revalidate: false }
-    )
-    
-    // Invalidar caches relacionados do dashboard
+    // Invalidar caches relacionados do dashboard (mais leve)
     await mutate(
       (key: any) => Array.isArray(key) && key[0]?.includes('dashboard') && key[1] === workspace?.id,
       undefined,
@@ -134,9 +118,9 @@ export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseT
       // Fazer request real
       await criarTransacao(transacao, workspace.id)
       
-      // Invalidar cache e recarregar dados reais
-      await invalidateRelatedCache()
+      // Recarregar dados reais e invalidar cache relacionado
       await revalidate()
+      await invalidateRelatedCache()
       
     } catch (error) {
       // Em caso de erro, reverter update otimista
@@ -166,9 +150,9 @@ export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseT
       // Fazer request real
       await atualizarTransacao(id, dados, workspace.id)
       
-      // Invalidar cache e recarregar dados reais
-      await invalidateRelatedCache()
+      // Recarregar dados reais e invalidar cache relacionado
       await revalidate()
+      await invalidateRelatedCache()
       
     } catch (error) {
       // Em caso de erro, reverter update otimista
@@ -197,9 +181,9 @@ export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseT
       // Fazer request real
       await excluirTransacao(id, workspace.id)
       
-      // Invalidar cache e recarregar dados reais
-      await invalidateRelatedCache()
+      // Recarregar dados reais e invalidar cache relacionado
       await revalidate()
+      await invalidateRelatedCache()
       
     } catch (error) {
       // Em caso de erro, reverter update otimista

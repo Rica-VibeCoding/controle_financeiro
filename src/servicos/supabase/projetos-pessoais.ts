@@ -7,7 +7,8 @@ import {
   ProjetosPessoaisData, 
   CalculosFinanceiros,
   FiltroProjetosPessoais,
-  StatusProjeto
+  StatusProjeto,
+  TransacaoProjeto
 } from '@/tipos/projetos-pessoais'
 import { CentroCusto } from '@/tipos/database'
 
@@ -78,17 +79,20 @@ async function converterParaProjetoPessoal(
   // 1. Calcular financeiros do projeto
   const calculos = await calcularFinanceirosProjeto(centro.id, filtros, workspaceId)
   
-  // 2. Determinar modo de cálculo
+  // 2. Buscar últimas transações para tooltip
+  const ultimasTransacoes = await buscarUltimasTransacoesProjeto(centro.id, filtros, workspaceId)
+  
+  // 3. Determinar modo de cálculo
   const modoCalculo = (centro.valor_orcamento && centro.valor_orcamento > 0) 
     ? 'orcamento' : 'roi'
   
-  // 3. Calcular status baseado no modo
+  // 4. Calcular status baseado no modo
   const status = calcularStatusProjeto(calculos, centro.valor_orcamento, modoCalculo)
   
-  // 4. Formatar valores para UI
+  // 5. Formatar valores para UI
   const formatados = formatarValoresProjeto(calculos, centro.valor_orcamento)
 
-  // 5. Retornar projeto completo (CentroCusto + cálculos)
+  // 6. Retornar projeto completo (CentroCusto + cálculos)
   return {
     ...centro, // todos os campos do centro de custo
     total_receitas: calculos.receitas,
@@ -102,6 +106,7 @@ async function converterParaProjetoPessoal(
       : null,
     status_cor: status.cor,
     status_descricao: status.descricao,
+    ultimasTransacoes,
     ...formatados
   }
 }
@@ -118,7 +123,15 @@ async function calcularFinanceirosProjeto(
     .from('fp_transacoes')
     .select('valor, tipo')
     .eq('centro_custo_id', centroId)
-    .eq('status', 'realizado')
+    
+  // Filtro de status condicional baseado na configuração do usuário
+  if (filtros.incluir_pendentes) {
+    // Incluir tanto realizadas quanto previstas (pendentes)
+    query = query.in('status', ['realizado', 'previsto'])
+  } else {
+    // Apenas realizadas (comportamento padrão)
+    query = query.eq('status', 'realizado')
+  }
 
   // Aplicar filtro de período se fornecido
   if (filtros.periodo_inicio) {
@@ -147,6 +160,58 @@ async function calcularFinanceirosProjeto(
   const resultado = receitas - despesas
 
   return { receitas, despesas, resultado }
+}
+
+// Buscar últimas 20 transações do projeto para tooltip
+async function buscarUltimasTransacoesProjeto(
+  centroId: string,
+  filtros: FiltroProjetosPessoais,
+  workspaceId: string
+): Promise<TransacaoProjeto[]> {
+  
+  const cliente = getSupabaseClient()
+  let query = cliente
+    .from('fp_transacoes')
+    .select('descricao, data, valor, tipo')
+    .eq('centro_custo_id', centroId)
+    
+  // Filtro de status condicional baseado na configuração do usuário
+  if (filtros.incluir_pendentes) {
+    // Incluir tanto realizadas quanto previstas (pendentes)
+    query = query.in('status', ['realizado', 'previsto'])
+  } else {
+    // Apenas realizadas (comportamento padrão)
+    query = query.eq('status', 'realizado')
+  }
+
+  // Aplicar filtro de período se fornecido
+  if (filtros.periodo_inicio) {
+    query = query.gte('data', filtros.periodo_inicio)
+  }
+  if (filtros.periodo_fim) {
+    query = query.lte('data', filtros.periodo_fim)
+  }
+  
+  query = query
+    .eq('workspace_id', workspaceId)
+    .order('data', { ascending: false })
+    .limit(20)
+
+  const { data: transacoes, error } = await query
+
+  if (error) {
+    console.error('Erro ao buscar transações do projeto:', error)
+    return []
+  }
+  
+  if (!transacoes) return []
+
+  return transacoes.map(t => ({
+    descricao: t.descricao,
+    data: t.data,
+    valor: Number(t.valor),
+    tipo: t.tipo as 'receita' | 'despesa'
+  }))
 }
 
 // Calcular status visual do projeto

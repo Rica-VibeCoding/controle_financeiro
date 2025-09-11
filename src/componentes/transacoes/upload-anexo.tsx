@@ -6,6 +6,7 @@ import { Input } from '@/componentes/ui/input'
 import { Label } from '@/componentes/ui/label'
 import { LoadingText } from '@/componentes/comum/loading'
 import { Icone } from '@/componentes/ui/icone'
+import { useConfirmDialog } from '@/componentes/ui/confirm-dialog'
 import { AnexosService } from '@/servicos/supabase/anexos'
 
 interface UploadAnexoProps {
@@ -27,6 +28,8 @@ export function UploadAnexo({
   const [preview, setPreview] = useState<string | null>(null)
   const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const { confirm, ConfirmDialog } = useConfirmDialog()
 
   // Selecionar arquivo
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,22 +81,28 @@ export function UploadAnexo({
   }
 
   // Remover anexo atual
-  const handleRemover = async () => {
+  const handleRemover = () => {
     if (!anexoAtual) return
 
-    const confirmar = window.confirm('Deseja remover este anexo?')
-    if (!confirmar) return
-
-    try {
-      const fileName = AnexosService.extrairNomeArquivo(anexoAtual)
-      if (fileName) {
-        await AnexosService.excluirAnexo(fileName)
+    confirm({
+      title: 'Remover Anexo',
+      description: 'Tem certeza que deseja remover este anexo? Esta ação não pode ser desfeita.',
+      type: 'warning',
+      confirmText: 'Remover',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        try {
+          const fileName = AnexosService.extrairNomeArquivo(anexoAtual)
+          if (fileName) {
+            await AnexosService.excluirAnexo(fileName)
+          }
+          onUploadSuccess('', '') // URL vazia = remover
+        } catch (error) {
+          const mensagem = error instanceof Error ? error.message : 'Erro ao remover anexo'
+          onUploadError(mensagem)
+        }
       }
-      onUploadSuccess('', '') // URL vazia = remover
-    } catch (error) {
-      const mensagem = error instanceof Error ? error.message : 'Erro ao remover anexo'
-      onUploadError(mensagem)
-    }
+    })
   }
 
   // Abrir seletor de arquivo
@@ -243,6 +252,8 @@ export function UploadAnexo({
         </div>
       )}
 
+      {/* Modal de Confirmação */}
+      <ConfirmDialog />
     </div>
   )
 }

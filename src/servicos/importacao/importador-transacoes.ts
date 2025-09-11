@@ -1,10 +1,12 @@
 import { criarTransacao } from '@/servicos/supabase/transacoes'
 import type { NovaTransacao } from '@/tipos/database'
-import { TransacaoImportada, ResultadoImportacao } from '@/tipos/importacao'
+import { TransacaoImportada, TransacaoClassificada, ResultadoImportacao } from '@/tipos/importacao'
+import { FormatoCSV } from './detector-formato'
 
 export async function importarTransacoes(
-  transacoes: TransacaoImportada[],
-  workspaceId: string
+  transacoes: TransacaoImportada[] | TransacaoClassificada[],
+  workspaceId: string,
+  formatoOrigem?: FormatoCSV
 ): Promise<ResultadoImportacao> {
   if (!transacoes || transacoes.length === 0) {
     throw new Error('Nenhuma transação fornecida para importação')
@@ -32,6 +34,24 @@ export async function importarTransacoes(
         throw new Error('Valor deve ser maior que zero')
       }
 
+      // Verificar se é TransacaoClassificada (tem classificação)
+      const transacaoClassificada = transacao as TransacaoClassificada
+      const temClassificacao = transacaoClassificada.categoria_id || 
+                              transacaoClassificada.classificacao_automatica
+
+      // FASE 2: Status vem da FASE 1 (baseado no tipo da conta)
+      // Usar status da transação ou fallback para 'realizado'
+      const statusAutomatico: 'previsto' | 'realizado' = 
+        transacao.status || 'realizado'
+      
+      // Debug log para acompanhar lógica de status
+      console.log('💳 STATUS BASEADO EM CONTA:', {
+        formato: formatoOrigem?.nome || 'CSV Genérico',
+        statusDefinido: statusAutomatico,
+        origem: 'tipo_da_conta',
+        descricao: transacao.descricao.substring(0, 30)
+      })
+
       const dadosParaSalvar: NovaTransacao = {
         data: transacao.data,
         descricao: transacao.descricao.trim(),
@@ -39,7 +59,27 @@ export async function importarTransacoes(
         tipo: transacao.tipo,
         conta_id: transacao.conta_id,
         identificador_externo: transacao.identificador_externo,
-        status: 'realizado'
+        workspace_id: workspaceId,
+        status: statusAutomatico,
+        // Incluir dados de classificação se disponível
+        categoria_id: transacaoClassificada.categoria_id || 
+                     transacaoClassificada.classificacao_automatica?.categoria_id || null,
+        subcategoria_id: transacaoClassificada.subcategoria_id || 
+                        transacaoClassificada.classificacao_automatica?.subcategoria_id || null,
+        forma_pagamento_id: transacaoClassificada.forma_pagamento_id || 
+                           transacaoClassificada.classificacao_automatica?.forma_pagamento_id || null
+      }
+      
+      // Debug logs para acompanhar classificação
+      if (temClassificacao) {
+        console.log('✅ TRANSAÇÃO COM CLASSIFICAÇÃO:', {
+          descricao: transacao.descricao.substring(0, 30),
+          categoria_id: dadosParaSalvar.categoria_id,
+          subcategoria_id: dadosParaSalvar.subcategoria_id,
+          forma_pagamento_id: dadosParaSalvar.forma_pagamento_id
+        })
+      } else {
+        console.log('⚠️ TRANSAÇÃO SEM CLASSIFICAÇÃO:', transacao.descricao.substring(0, 30))
       }
       
       console.log('🔍 DEBUG - Dados enviados para criarTransacao:', dadosParaSalvar)

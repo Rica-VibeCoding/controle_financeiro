@@ -179,6 +179,8 @@ export interface ResumoValidacao {
   }
   errosValidacao: ErroValidacao[]
   advertencias: string[]
+  crossWorkspaceDetected?: boolean
+  workspacesOriginais?: string[]
 }
 
 export interface ErroValidacao {

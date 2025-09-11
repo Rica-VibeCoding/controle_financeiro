@@ -20,7 +20,7 @@ Um sistema moderno e intuitivo para controle de finanças pessoais, desenvolvido
 
 Sistema completo de controle financeiro pessoal com funcionalidades avançadas como:
 
-- ✅ **Transações** - Receitas, despesas e transferências
+- ✅ **Transações** - Sistema de abas único (receitas, despesas, previstas, recorrentes)
 - ✅ **Parcelamento** - Compras divididas automaticamente
 - ✅ **Recorrência** - Transações que se repetem
 - ✅ **Metas** - Controle de orçamento por categoria

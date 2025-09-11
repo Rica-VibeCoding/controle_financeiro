@@ -85,7 +85,7 @@ export function usarBackupImportar() {
 
     try {
       const validador = new ValidadorBackup()
-      const resumo = await validador.validarArquivoBackup(arquivoSelecionado)
+      const resumo = await validador.validarArquivoBackup(arquivoSelecionado, workspace?.id)
       
       if (!resumo.arquivoValido) {
         setEstado(prev => ({
@@ -98,7 +98,7 @@ export function usarBackupImportar() {
       }
 
       // Carregar dados do arquivo
-      const dados = await validador.carregarDadosDoArquivo(arquivoSelecionado)
+      const dados = await validador.carregarDadosDoArquivo(arquivoSelecionado, workspace?.id)
 
       setEstado(prev => ({
         ...prev,

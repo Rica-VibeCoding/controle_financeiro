@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ModalBase } from '@/componentes/modais/modal-base'
 import { Button } from '@/componentes/ui/button'
 import { TransacaoClassificada, DadosClassificacao } from '@/tipos/importacao'
+import { FormatoCSV } from '@/servicos/importacao/detector-formato'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
 interface ModalClassificacaoProps {
@@ -11,13 +12,15 @@ interface ModalClassificacaoProps {
   onClose: () => void
   transacao: TransacaoClassificada | null
   onClassificar: (dados: DadosClassificacao) => void
+  formatoOrigem?: FormatoCSV
 }
 
 export function ModalClassificacaoRapida({
   isOpen,
   onClose,
   transacao,
-  onClassificar
+  onClassificar,
+  formatoOrigem
 }: ModalClassificacaoProps) {
   const [categoria, setCategoria] = useState('')
   const [subcategoria, setSubcategoria] = useState('')
@@ -34,16 +37,41 @@ export function ModalClassificacaoRapida({
       setSubcategoria('')
       setSubcategorias([])
       
-      // PRE-SELECIONAR FORMA DE PAGAMENTO baseada no formato origem
-      if (transacao.formato_origem === 'Cartão de crédito') {
-        // ID do "Crédito" na tabela fp_formas_pagamento
-        setFormaPagamento('777c439c-614d-41e0-b3bf-833d2abcf846')
-        console.log('💳 Pré-selecionado: Cartão de Crédito para transação de cartão')
-      } else {
-        setFormaPagamento('')
+      // FASE 2: PRE-SELECIONAR FORMA DE PAGAMENTO PADRÃO
+      // Simplificado - sempre tenta pré-selecionar a primeira forma ativa
+      let formaSelecionada = ''
+      
+      const formaAtiva = dados.formasPagamento.find(f => f.ativo)
+      if (formaAtiva) {
+        formaSelecionada = formaAtiva.id
+        console.log('💳 Pré-selecionado forma padrão:', formaAtiva.nome, 'ID:', formaAtiva.id)
       }
+      
+      // Fallback: tentar lógica antiga baseada em formato_origem (compatibilidade)
+      if (!formaSelecionada && transacao.formato_origem) {
+        if (transacao.formato_origem.toLowerCase().includes('cartão')) {
+          const cartaoForm = dados.formasPagamento.find(f => 
+            f.tipo === 'credito' && f.ativo
+          )
+          if (cartaoForm) {
+            formaSelecionada = cartaoForm.id
+            console.log('🔄 FALLBACK → Cartão detectado via formato_origem:', cartaoForm.nome)
+          }
+        }
+      }
+      
+      setFormaPagamento(formaSelecionada)
+      
+      // Debug completo para acompanhar lógica
+      console.log('🎯 PRÉ-SELEÇÃO DEBUG:', {
+        formatoOrigem: formatoOrigem?.nome,
+        tipoOrigem: formatoOrigem?.tipoOrigem,
+        formato_origem_transacao: transacao.formato_origem,
+        formaSelecionada: formaSelecionada,
+        formasDisponiveis: dados.formasPagamento.map(f => ({ nome: f.nome, tipo: f.tipo, id: f.id }))
+      })
     }
-  }, [isOpen, transacao])
+  }, [isOpen, transacao, formatoOrigem, dados.formasPagamento])
 
   // Carregar subcategorias quando categoria mudar
   useEffect(() => {
@@ -61,13 +89,13 @@ export function ModalClassificacaoRapida({
   }, [categoria, obterSubcategorias])
 
   const handleSalvar = () => {
-    if (!categoria || !subcategoria || !formaPagamento) {
-      return // Validação básica
+    if (!categoria || !formaPagamento) {
+      return // Validação básica - subcategoria é opcional
     }
 
     onClassificar({
       categoria_id: categoria,
-      subcategoria_id: subcategoria,
+      subcategoria_id: subcategoria || null, // Pode ser vazio
       forma_pagamento_id: formaPagamento
     })
 
@@ -134,7 +162,7 @@ export function ModalClassificacaoRapida({
         {/* Subcategoria */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Subcategoria *
+            Subcategoria
           </label>
           <select
             value={subcategoria}
@@ -143,7 +171,7 @@ export function ModalClassificacaoRapida({
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
           >
             <option value="">
-              {categoria ? 'Selecione uma subcategoria' : 'Primeiro selecione uma categoria'}
+              {categoria ? 'Subcategoria (opcional)' : 'Primeiro selecione uma categoria'}
             </option>
             {subcategorias.map(sub => (
               <option key={sub.id} value={sub.id}>
@@ -183,7 +211,7 @@ export function ModalClassificacaoRapida({
           </Button>
           <Button 
             onClick={handleSalvar}
-            disabled={!categoria || !subcategoria || !formaPagamento}
+            disabled={!categoria || !formaPagamento}
             type="button"
           >
             Aplicar Classificação

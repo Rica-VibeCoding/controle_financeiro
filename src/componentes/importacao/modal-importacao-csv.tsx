@@ -15,7 +15,8 @@ import {
   TransacaoImportada,
   TransacaoClassificada,
   ResumoClassificacao,
-  DadosClassificacao
+  DadosClassificacao,
+  StatusTransacao
 } from '@/tipos/importacao'
 import { detectarTipoLancamento } from '@/servicos/importacao/detector-tipos-lancamento'
 import {
@@ -24,6 +25,7 @@ import {
 } from '@/servicos/importacao/classificador-historico'
 import { logger } from '@/utilitarios/logger'
 import { useAuth } from '@/contextos/auth-contexto'
+import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
 interface ModalImportacaoCSVProps {
   isOpen: boolean
@@ -37,9 +39,12 @@ export function ModalImportacaoCSV({
   onSuccess
 }: ModalImportacaoCSVProps) {
   const { workspace } = useAuth()
+  const { dados } = useDadosAuxiliares()
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [contaSelecionada, setContaSelecionada] = useState('')
   const [carregando, setCarregando] = useState(false)
+  // FASE 1: Estado para status padrão baseado no tipo da conta
+  const [statusPadrao, setStatusPadrao] = useState<StatusTransacao>('realizado')
   const [dadosProcessados, setDadosProcessados] = useState<any[]>([])
   const [transacoesMapeadas, setTransacoesMapeadas] = useState<TransacaoImportada[]>([])
   const [duplicadas, setDuplicadas] = useState<TransacaoImportada[]>([])
@@ -96,13 +101,24 @@ export function ModalImportacaoCSV({
       // 1. Detectar formato e mapear dados (código atual)
       const formato = detectarFormato(dadosProcessados)
       setFormatoDetectado(formato)
-      const transacoesMap = formato.mapeador(dadosProcessados, contaSelecionada)
+      
+      // FASE 2: Buscar tipo da conta selecionada para corrigir lógica de receita/despesa
+      const contaInfo = dados.contas?.find(c => c.id === contaSelecionada)
+      const tipoContaSelecionada = contaInfo?.tipo as any
+      
+      const transacoesMap = formato.mapeador(dadosProcessados, contaSelecionada, tipoContaSelecionada)
+      
+      // FASE 1: Aplicar status padrão baseado no tipo da conta
+      const transacoesComStatus = transacoesMap.map(transacao => ({
+        ...transacao,
+        status: statusPadrao
+      }))
       
       // 2. NOVO: Classificação inteligente
       const transacoesClassificadas: TransacaoClassificada[] = []
       
       // Versão otimizada: buscar classificações em lote
-      const dadosParaBusca = transacoesMap.map(t => ({
+      const dadosParaBusca = transacoesComStatus.map(t => ({
         descricao: t.descricao,
         conta_id: t.conta_id
       }))
@@ -110,7 +126,7 @@ export function ModalImportacaoCSV({
       const classificacoesEncontradas = await buscarClassificacoesEmLote(dadosParaBusca)
       
       // Processar cada transação
-      for (const transacao of transacoesMap) {
+      for (const transacao of transacoesComStatus) {
         const chave = `${transacao.descricao}|${transacao.conta_id}`
         const classificacao = classificacoesEncontradas.get(chave)
         
@@ -207,7 +223,7 @@ export function ModalImportacaoCSV({
 
     setCarregando(true)
     try {
-      const resultado = await importarTransacoes(transacoesParaImportar, workspace.id)
+      const resultado = await importarTransacoes(transacoesParaImportar, workspace.id, formatoDetectado)
       
       if (resultado.erros.length === 0) {
         sucesso(`✅ ${resultado.importadas} transações importadas com sucesso!`)
@@ -286,6 +302,7 @@ export function ModalImportacaoCSV({
   const handleFechar = () => {
     setArquivo(null)
     setContaSelecionada('')
+    setStatusPadrao('realizado') // FASE 1: Reset status padrão
     setDadosProcessados([])
     setTransacoesMapeadas([])
     setDuplicadas([])
@@ -316,6 +333,7 @@ export function ModalImportacaoCSV({
             resumoClassificacao={resumoClassificacao}
             onClassificarTransacao={handleClassificarTransacao}
             onToggleSelecaoTransacao={handleToggleSelecaoTransacao}
+            formatoOrigem={formatoDetectado}
           />
         ) : (
           <>
@@ -324,6 +342,7 @@ export function ModalImportacaoCSV({
           contaSelecionada={contaSelecionada}
           onContaChange={setContaSelecionada}
           desabilitado={carregando}
+          onStatusPadraoChange={setStatusPadrao}
         />
 
         {/* Upload de Arquivo */}

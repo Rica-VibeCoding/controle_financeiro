@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icone } from '@/componentes/ui/icone';
 import { DropdownMenu } from '@/componentes/ui/dropdown-menu';
 import { ConfirmModal } from '@/componentes/ui/confirm-modal';
+import { ModalDeletarUsuario } from './modal-deletar-usuario';
 import type { UsuarioCompleto, AcaoAdministrativa } from '@/tipos/dashboard-admin';
 
 /**
@@ -34,17 +35,24 @@ interface TabelaGestaoUsuariosProps {
   usuarios: UsuarioCompleto[];
   loading?: boolean;
   onToggleUsuario: (id: string, ativo: boolean) => Promise<AcaoAdministrativa>;
+  onDeletarUsuario: (id: string) => Promise<AcaoAdministrativa>;
 }
 
 /**
  * Tabela COMPLETA para gestão de usuários
  * Inclui filtros, busca, paginação e controles administrativos
  */
-export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuario }: TabelaGestaoUsuariosProps) {
+export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuario, onDeletarUsuario }: TabelaGestaoUsuariosProps) {
   const [filtro, setFiltro] = useState<'todos' | 'ativos' | 'inativos'>('todos');
   const [busca, setBusca] = useState('');
   const [processando, setProcessando] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    usuario: UsuarioCompleto | null;
+  }>({ isOpen: false, usuario: null });
+  
+  // 🆕 Estado para modal de deleção
+  const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     usuario: UsuarioCompleto | null;
   }>({ isOpen: false, usuario: null });
@@ -93,6 +101,57 @@ export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuari
 
   const handleCancelToggle = () => {
     setConfirmModal({ isOpen: false, usuario: null });
+  };
+
+  // 🆕 Funções para modal de deleção
+  const handleRequestDelete = (usuario: UsuarioCompleto) => {
+    setDeleteModal({ isOpen: true, usuario });
+  };
+
+  const handleConfirmDelete = async (usuarioId: string): Promise<AcaoAdministrativa> => {
+    setProcessando(usuarioId);
+    
+    try {
+      const resultado = await onDeletarUsuario(usuarioId);
+      if (!resultado.sucesso) {
+        // Erro será tratado pelo modal
+      }
+      return resultado;
+    } catch (error) {
+      return {
+        sucesso: false,
+        mensagem: 'Erro ao deletar usuário',
+        cenario: 'erro'
+      };
+    } finally {
+      setProcessando(null);
+      setDeleteModal({ isOpen: false, usuario: null });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModal({ isOpen: false, usuario: null });
+  };
+
+  // 🆕 Função para detectar cenário do usuário
+  const detectarCenarioUsuario = (usuario: UsuarioCompleto): 'owner_unico' | 'owner_multiplo' | 'member' => {
+    if (usuario.role === 'member') {
+      return 'member';
+    }
+    
+    if (usuario.role === 'owner') {
+      // Contar outros owners no mesmo workspace
+      const outrosOwners = usuarios.filter(u => 
+        u.workspaceId === usuario.workspaceId && 
+        u.role === 'owner' && 
+        u.id !== usuario.id &&
+        u.ativo
+      ).length;
+      
+      return outrosOwners > 0 ? 'owner_multiplo' : 'owner_unico';
+    }
+    
+    return 'member';
   };
 
   const obterCorStatus = (status: UsuarioCompleto['atividadeStatus']) => {
@@ -249,6 +308,14 @@ export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuari
                         onClick: () => handleRequestToggle(usuario),
                         disabled: processando === usuario.id || usuario.superAdmin,
                         variant: usuario.ativo ? 'destructive' : 'default'
+                      },
+                      // 🆕 Botão de deleção permanente
+                      {
+                        label: 'Deletar Permanentemente',
+                        icon: 'trash-2',
+                        onClick: () => handleRequestDelete(usuario),
+                        disabled: processando === usuario.id || usuario.superAdmin,
+                        variant: 'destructive'
                       }
                     ]}
                     disabled={processando === usuario.id || usuario.superAdmin}
@@ -281,6 +348,20 @@ export function TabelaGestaoUsuarios({ usuarios, loading = false, onToggleUsuari
         variant={confirmModal.usuario?.ativo ? 'destructive' : 'default'}
         icon={confirmModal.usuario?.ativo ? 'user-minus' : 'user-plus'}
         loading={processando === confirmModal.usuario?.id}
+      />
+
+      {/* 🆕 Modal de Deleção Permanente */}
+      <ModalDeletarUsuario
+        isOpen={deleteModal.isOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        usuario={deleteModal.usuario}
+        cenarioDetectado={deleteModal.usuario ? detectarCenarioUsuario(deleteModal.usuario) : undefined}
+        dadosPerdidos={deleteModal.usuario && detectarCenarioUsuario(deleteModal.usuario) === 'owner_unico' ? {
+          transacoes: deleteModal.usuario.totalTransacoes || 0,
+          categorias: 0, // Será calculado pela função SQL
+          contas: 0      // Será calculado pela função SQL
+        } : undefined}
       />
     </div>
   );

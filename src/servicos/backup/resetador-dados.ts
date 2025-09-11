@@ -9,8 +9,10 @@ import type {
 
 export class ResetadorDados {
   private onProgresso?: (progresso: number, etapa: string) => void
+  private workspaceId: string
 
-  constructor(onProgresso?: (progresso: number, etapa: string) => void) {
+  constructor(workspaceId: string, onProgresso?: (progresso: number, etapa: string) => void) {
+    this.workspaceId = workspaceId
     this.onProgresso = onProgresso
   }
 
@@ -129,7 +131,7 @@ export class ResetadorDados {
         try {
           this.atualizarProgresso(10, 'Criando backup de segurança...')
           
-          const exportador = new ExportadorDados()
+          const exportador = new ExportadorDados(this.workspaceId)
           const configExportacao: ConfiguracaoExportacao = {
             incluirCategorias: configuracao.incluirCategorias,
             incluirSubcategorias: configuracao.incluirSubcategorias,

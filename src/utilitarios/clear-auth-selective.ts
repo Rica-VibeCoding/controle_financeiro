@@ -31,25 +31,38 @@ export function clearSupabaseAuth(): void {
     localStorage.removeItem(key)
   })
 
-  // Limpar todas as chaves que começam com 'sb-' ou 'supabase'
-  const allKeys = Object.keys(localStorage)
+  // Limpar todas as chaves que começam com 'sb-' ou 'supabase' ou contém 'auth'
+  const allKeys: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key) allKeys.push(key)
+  }
+  
   allKeys.forEach(key => {
     if (key.startsWith('sb-') || 
         key.startsWith('supabase') || 
-        key.includes('auth-token')) {
+        key.includes('auth-token') ||
+        key.includes('refresh_token') ||
+        key.includes('auth.token')) {
       localStorage.removeItem(key)
     }
   })
 
-  // Limpar sessionStorage apenas das chaves relacionadas
-  const sessionKeys = [
-    'supabase.auth.token',
-    'auth-state',
-    'workspace-data'
-  ]
+  // Limpar sessionStorage de forma similar
+  const sessionAllKeys: string[] = []
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i)
+    if (key) sessionAllKeys.push(key)
+  }
   
-  sessionKeys.forEach(key => {
-    sessionStorage.removeItem(key)
+  sessionAllKeys.forEach(key => {
+    if (key.startsWith('sb-') || 
+        key.startsWith('supabase') || 
+        key.includes('auth-token') ||
+        key.includes('refresh_token') ||
+        key.includes('auth.token')) {
+      sessionStorage.removeItem(key)
+    }
   })
 }
 

@@ -4,8 +4,7 @@ export interface FiltrosTransacao {
   categoria_id?: string;
   subcategoria_id?: string;
   conta_id?: string;
-  tipo?: 'receita' | 'despesa' | 'transferencia';
-  status?: 'previsto' | 'realizado';
+  centro_custo_id?: string;
   valor_min?: number;
   valor_max?: number;
   recorrente?: boolean;

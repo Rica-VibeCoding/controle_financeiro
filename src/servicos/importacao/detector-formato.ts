@@ -1,11 +1,18 @@
 import { TransacaoImportada } from '@/tipos/importacao'
-import { formatosSuportados } from './mapeadores'
+import { mapearLinhasGenerico, validarFormatoCSV, obterInfoFormato } from './mapeador-generico'
+
+/**
+ * FASE 2 - Detector de Formato Simplificado
+ * 
+ * Substitui a detecção automática complexa por validação simples
+ * usando o mapeador genérico único.
+ */
 
 export interface FormatoCSV {
   nome: string
   icone: string
-  detector: (headers: string[]) => number
-  mapeador: (dados: unknown[], contaId: string) => TransacaoImportada[]
+  mapeador: (dados: unknown[], contaId: string, tipoConta?: any) => TransacaoImportada[]
+  tipoOrigem: 'generico' // FASE 2: Sempre genérico
 }
 
 export function detectarFormato(dados: unknown[]): FormatoCSV {
@@ -13,22 +20,52 @@ export function detectarFormato(dados: unknown[]): FormatoCSV {
     throw new Error('CSV vazio ou inválido')
   }
   
-  const headers = Object.keys(dados[0] as Record<string, unknown>).map(h => h.trim())
-  
-  let melhorFormato = formatosSuportados[0]
-  let melhorScore = 0
-  
-  for (const formato of formatosSuportados) {
-    const score = formato.detector(headers)
-    if (score > melhorScore) {
-      melhorScore = score
-      melhorFormato = formato
-    }
+  // FASE 2: Validação simples usando mapeador genérico
+  if (!validarFormatoCSV(dados)) {
+    const headers = Object.keys(dados[0] as Record<string, unknown>).join(', ')
+    throw new Error(
+      `Formato CSV não suportado. ` +
+      `Certifique-se de que o arquivo contém as colunas: data, valor e descrição. ` +
+      `Colunas encontradas: ${headers}`
+    )
   }
   
-  if (melhorScore < 50) {
-    throw new Error(`Formato CSV não reconhecido. Headers encontrados: ${headers.join(', ')}`)
-  }
+  // Obter informações sobre o formato para apresentação
+  const info = obterInfoFormato(dados)
   
-  return melhorFormato
+  // Retornar formato único genérico
+  return {
+    nome: obterNomeFormato(info.formatoDetectado),
+    icone: obterIconeFormato(info.formatoDetectado),
+    mapeador: mapearLinhasGenerico,
+    tipoOrigem: 'generico'
+  }
+}
+
+/**
+ * Obtém nome amigável baseado no formato detectado
+ */
+function obterNomeFormato(formatoDetectado: string): string {
+  switch (formatoDetectado) {
+    case 'nubank_conta':
+      return 'Nubank Conta'
+    case 'nubank_cartao':
+      return 'Nubank Cartão'
+    default:
+      return 'CSV Genérico'
+  }
+}
+
+/**
+ * Obtém ícone baseado no formato detectado
+ */
+function obterIconeFormato(formatoDetectado: string): string {
+  switch (formatoDetectado) {
+    case 'nubank_conta':
+      return '💜🏦'
+    case 'nubank_cartao':
+      return '💜💳'
+    default:
+      return '📊'
+  }
 }

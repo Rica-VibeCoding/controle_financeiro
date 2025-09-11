@@ -8,6 +8,7 @@ import { ModalExportar } from '@/componentes/backup/modal-exportar'
 import { ModalImportar } from '@/componentes/backup/modal-importar'
 import { ModalReset } from '@/componentes/backup/modal-reset'
 import { useAuth } from '@/contextos/auth-contexto'
+import { PageGuard } from '@/componentes/ui/page-guard'
 import { getSupabaseClient } from '@/servicos/supabase/cliente'
 
 export default function ConfiguracoesPage() {
@@ -39,7 +40,7 @@ export default function ConfiguracoesPage() {
   }, [workspace?.id])
 
   return (
-    <>
+    <PageGuard permissaoNecessaria="backup">
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
@@ -55,9 +56,6 @@ export default function ConfiguracoesPage() {
                 <Icone name="users" className="w-4 h-4" aria-hidden="true" />
                 Gerenciar Equipe
               </CardTitle>
-              <CardDescription>
-                Convide e gerencie usuários do seu workspace
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -81,15 +79,13 @@ export default function ConfiguracoesPage() {
           </Card>
         )}
 
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Icone name="list" className="w-4 h-4" aria-hidden="true" />
               Metas e Orçamento
             </CardTitle>
-            <CardDescription>
-              Configure suas metas mensais de gastos por categoria
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
@@ -109,9 +105,6 @@ export default function ConfiguracoesPage() {
               <Icone name="folder" className="w-4 h-4" aria-hidden="true" />
               Backup e Dados
             </CardTitle>
-            <CardDescription>
-              Gerencie seus dados e configurações
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -159,6 +152,6 @@ export default function ConfiguracoesPage() {
         isOpen={modalResetAberto}
         onClose={() => setModalResetAberto(false)}
       />
-    </>
+    </PageGuard>
   )
 }

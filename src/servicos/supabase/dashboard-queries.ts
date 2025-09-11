@@ -666,13 +666,13 @@ export async function obterCartoesCredito(periodo: Periodo, workspaceId: string)
     // Para cada cartão, calcular valor usado e buscar últimas transações
     const cartoesComTransacoes = await Promise.all(
       (cartoes || []).map(async (cartao) => {
-        // Buscar despesas do cartão (valor usado) no período específico
+        // Buscar despesas do cartão (valor usado) no período específico - INCLUI previstas e realizadas
         const queryDespesas = supabase
           .from('fp_transacoes')
           .select('valor')
           .eq('conta_id', cartao.id)
           .eq('tipo', 'despesa')
-          .eq('status', 'realizado')
+          .in('status', ['realizado', 'previsto'])
           .gte('data', periodo.inicio)
           .lte('data', periodo.fim)
         
@@ -685,12 +685,12 @@ export async function obterCartoesCredito(periodo: Periodo, workspaceId: string)
           return acc + Number(despesa.valor || 0)
         }, 0) || 0
 
-        // Buscar últimas 5 transações para o hover (no período específico)
+        // Buscar últimas 5 transações para o hover (no período específico) - INCLUI previstas e realizadas
         const queryTransacoes = supabase
           .from('fp_transacoes')
           .select('descricao, valor, data, tipo')
           .eq('conta_id', cartao.id)
-          .eq('status', 'realizado')
+          .in('status', ['realizado', 'previsto'])
           .gte('data', periodo.inicio)
           .lte('data', periodo.fim)
           .order('data', { ascending: false })

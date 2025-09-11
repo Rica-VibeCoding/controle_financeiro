@@ -5,7 +5,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { buscarDadosDashboardAdmin, verificarAcessoSuperAdmin, alterarStatusUsuario } from '@/servicos/supabase/dashboard-admin';
+import { buscarDadosDashboardAdmin, verificarAcessoSuperAdmin, alterarStatusUsuario, deletarUsuarioPermanente } from '@/servicos/supabase/dashboard-admin';
 import type { DashboardAdminDados, AcaoAdministrativa } from '@/tipos/dashboard-admin';
 
 interface UsarDashboardAdminReturn {
@@ -17,6 +17,7 @@ interface UsarDashboardAdminReturn {
   recarregar: () => Promise<void>;
   // 🆕 Funcionalidades administrativas
   alterarStatusUsuario: (usuarioId: string, ativo: boolean) => Promise<AcaoAdministrativa>;
+  deletarUsuario: (usuarioId: string) => Promise<AcaoAdministrativa>;
 }
 
 /**
@@ -125,6 +126,46 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
   }, [temAcesso, carregarDados]);
 
   /**
+   * 🆕 Função para deletar usuário permanentemente
+   * Detecta automaticamente o cenário e age de acordo:
+   * - owner_unico: Deleta workspace inteiro (DESTRUTIVO)
+   * - owner_multiplo: Deleta apenas usuário (MODERADO)
+   * - member: Remove acesso (MÍNIMO)
+   */
+  const handleDeletarUsuario = useCallback(async (usuarioId: string): Promise<AcaoAdministrativa> => {
+    if (!temAcesso) {
+      return {
+        sucesso: false,
+        mensagem: 'Acesso negado: permissão insuficiente',
+        cenario: 'erro'
+      };
+    }
+
+    try {
+      console.log(`🗑️ Iniciando deleção permanente do usuário ${usuarioId}...`);
+      
+      const resultado = await deletarUsuarioPermanente(usuarioId);
+      
+      if (resultado.sucesso) {
+        console.log(`✅ Usuário deletado com sucesso - Cenário: ${resultado.cenario}`);
+        // Recarregar dados após deleção
+        await carregarDados();
+      } else {
+        console.error(`❌ Falha ao deletar usuário:`, resultado.mensagem);
+      }
+      
+      return resultado;
+    } catch (error) {
+      console.error('❌ Erro ao deletar usuário:', error);
+      return {
+        sucesso: false,
+        mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+        cenario: 'erro'
+      };
+    }
+  }, [temAcesso, carregarDados]);
+
+  /**
    * Effect para verificar acesso na inicialização
    */
   useEffect(() => {
@@ -149,7 +190,8 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
     verificandoAcesso,
     recarregar,
     // 🆕 Funcionalidades administrativas
-    alterarStatusUsuario: handleAlterarStatusUsuario
+    alterarStatusUsuario: handleAlterarStatusUsuario,
+    deletarUsuario: handleDeletarUsuario
   }), [
     dadosMemoizados, 
     loading, 
@@ -157,6 +199,7 @@ export function usarDashboardAdmin(): UsarDashboardAdminReturn {
     temAcesso, 
     verificandoAcesso, 
     recarregar, 
-    handleAlterarStatusUsuario
+    handleAlterarStatusUsuario,
+    handleDeletarUsuario
   ]);
 }

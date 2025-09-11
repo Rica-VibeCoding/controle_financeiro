@@ -25,6 +25,20 @@ module.exports = {
         sans: ['var(--font-geist-sans)'],
         mono: ['var(--font-geist-mono)'],
       },
+      keyframes: {
+        "slide-down-and-fade": {
+          from: { opacity: "0", transform: "translateY(-2px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-up-and-fade": {
+          from: { opacity: "1", transform: "translateY(0)" },
+          to: { opacity: "0", transform: "translateY(-2px)" },
+        },
+      },
+      animation: {
+        "slide-down-and-fade": "slide-down-and-fade 0.3s ease-out",
+        "slide-up-and-fade": "slide-up-and-fade 0.3s ease-out",
+      },
     },
   },
   plugins: [],

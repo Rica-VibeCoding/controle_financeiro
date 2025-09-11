@@ -26,7 +26,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
   }, [toast.id, toast.duration, onRemove])
 
   const variantStyles = {
-    default: 'bg-background border-border',
+    default: 'bg-white border-gray-200',
     success: 'bg-green-50 border-green-200 text-green-800',
     error: 'bg-red-50 border-red-200 text-red-800',
     warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'

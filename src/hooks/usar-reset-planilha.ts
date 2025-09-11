@@ -51,7 +51,7 @@ export function usarResetPlanilha() {
     try {
       setEstado(prev => ({ ...prev, erro: null }))
       
-      const resetador = new ResetadorDados()
+      const resetador = new ResetadorDados(workspace?.id || '')
       const preview = await resetador.gerarPreview(configuracao)
       
       setEstado(prev => ({
@@ -85,7 +85,7 @@ export function usarResetPlanilha() {
         erro: null
       }))
 
-      const resetador = new ResetadorDados(atualizarProgresso)
+      const resetador = new ResetadorDados(workspace?.id || '', atualizarProgresso)
       const resultado = await resetador.resetarDados(configuracao)
 
       if (resultado.sucesso) {

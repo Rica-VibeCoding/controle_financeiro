@@ -27,7 +27,8 @@ type AtualizarTransacao = Partial<NovaTransacao>
 export async function obterTransacoes(
   filtros: FiltrosTransacao = {},
   paginacao: ParametrosPaginacao = { pagina: 1, limite: 50 },
-  workspaceId: string
+  workspaceId: string,
+  filtrosFixos?: { tipo?: 'receita' | 'despesa' | 'transferencia', status?: 'previsto' | 'realizado' }
 ): Promise<RespostaPaginada<TransacaoComRelacoes>> {
   let query = supabase
     .from('fp_transacoes')
@@ -43,6 +44,14 @@ export async function obterTransacoes(
 
   // Aplicar filtro workspace_id (obrigatório)
   query = query.eq('workspace_id', workspaceId)
+
+  // Aplicar filtros fixos (tipo e status quando especificados)
+  if (filtrosFixos?.tipo) {
+    query = query.eq('tipo', filtrosFixos.tipo)
+  }
+  if (filtrosFixos?.status) {
+    query = query.eq('status', filtrosFixos.status)
+  }
 
   // Aplicar filtros
   if (filtros.data_inicio) {
@@ -60,11 +69,8 @@ export async function obterTransacoes(
   if (filtros.conta_id) {
     query = query.eq('conta_id', filtros.conta_id)
   }
-  if (filtros.tipo) {
-    query = query.eq('tipo', filtros.tipo)
-  }
-  if (filtros.status) {
-    query = query.eq('status', filtros.status)
+  if (filtros.centro_custo_id) {
+    query = query.eq('centro_custo_id', filtros.centro_custo_id)
   }
   if (filtros.valor_min !== undefined) {
     query = query.gte('valor', filtros.valor_min)
@@ -308,17 +314,33 @@ export async function calcularSaldoTotal(workspaceId: string): Promise<number> {
 export async function criarTransacaoParcelada(
   transacaoBase: NovaTransacao,
   numeroParcelas: number,
-  workspaceId: string
+  workspaceId: string,
+  datasPersonalizadas?: string[]
 ): Promise<Transacao[]> {
   const grupoParcelamento = Date.now() // ID único para agrupar (BIGINT)
-  const valorParcela = Number((transacaoBase.valor / numeroParcelas).toFixed(2))
+  
+  // Cálculo correto de distribuição de centavos
+  const valorTotalCentavos = Math.round(transacaoBase.valor * 100)
+  const valorBaseCentavos = Math.floor(valorTotalCentavos / numeroParcelas)
+  const centavosRestantes = valorTotalCentavos % numeroParcelas
   
   const parcelas: NovaTransacao[] = []
   const dataBase = new Date(transacaoBase.data)
   
   for (let i = 1; i <= numeroParcelas; i++) {
-    const dataParcela = new Date(dataBase)
-    dataParcela.setMonth(dataParcela.getMonth() + (i - 1))
+    // Calcular valor da parcela distribuindo centavos restantes
+    const centavosExtra = i <= centavosRestantes ? 1 : 0
+    const valorParcelaCentavos = valorBaseCentavos + centavosExtra
+    const valorParcela = valorParcelaCentavos / 100
+    
+    // Usar data personalizada se fornecida, senão calcular automaticamente
+    let dataParcela: Date
+    if (datasPersonalizadas && datasPersonalizadas[i - 1]) {
+      dataParcela = new Date(datasPersonalizadas[i - 1])
+    } else {
+      dataParcela = new Date(dataBase)
+      dataParcela.setMonth(dataParcela.getMonth() + (i - 1))
+    }
     
     // 1ª parcela: status escolhido pelo usuário, demais: sempre "previsto"
     const statusParcela = i === 1 ? transacaoBase.status : 'previsto'
@@ -446,6 +468,7 @@ export async function processarRecorrencia(transacaoBase: Transacao, workspaceId
     subcategoria_id: transacaoCorrigida.subcategoria_id,
     forma_pagamento_id: transacaoCorrigida.forma_pagamento_id,
     centro_custo_id: transacaoCorrigida.centro_custo_id,
+    workspace_id: workspaceId,
     status: 'previsto', // Conforme PRD - sempre nasce previsto
     parcela_atual: 1,
     total_parcelas: 1,

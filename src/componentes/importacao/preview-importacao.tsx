@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TransacaoImportada, TransacaoClassificada, ResumoClassificacao, DadosClassificacao } from '@/tipos/importacao'
+import { FormatoCSV } from '@/servicos/importacao/detector-formato'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { CardsResumoClassificacao } from './cards-resumo-classificacao'
 import { LinhaTransacaoClassificada } from './linha-transacao-classificada'
@@ -20,6 +21,7 @@ interface PreviewImportacaoProps {
   resumoClassificacao?: ResumoClassificacao
   onClassificarTransacao?: (transacao: TransacaoClassificada, dados: DadosClassificacao) => void
   onToggleSelecaoTransacao?: (transacao: TransacaoClassificada, selecionada: boolean) => void
+  formatoOrigem?: FormatoCSV
 }
 
 export function PreviewImportacao({
@@ -31,7 +33,8 @@ export function PreviewImportacao({
   transacoesClassificadas,
   resumoClassificacao,
   onClassificarTransacao,
-  onToggleSelecaoTransacao
+  onToggleSelecaoTransacao,
+  formatoOrigem
 }: PreviewImportacaoProps) {
   
   const [transacaoParaClassificar, setTransacaoParaClassificar] = 
@@ -183,6 +186,7 @@ export function PreviewImportacao({
           onClose={() => setTransacaoParaClassificar(null)}
           transacao={transacaoParaClassificar}
           onClassificar={(dados) => handleClassificarTransacao(transacaoParaClassificar!, dados)}
+          formatoOrigem={formatoOrigem}
         />
       )}
 

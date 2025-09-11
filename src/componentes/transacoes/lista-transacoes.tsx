@@ -1,17 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentes/ui/table'
 import { TableContainer } from '@/componentes/ui/table-container'
-import { LoadingPage } from '@/componentes/comum/loading'
+import { LoadingPage, LoadingTransacoes } from '@/componentes/comum/loading'
 import { ModalExcluirTransacao } from './modal-excluir-transacao'
 import { ModalExcluirGrupoParcelas } from './modal-excluir-grupo-parcelas'
 import { Transacao } from '@/tipos/database'
-import { usarTransacoes } from '@/hooks/usar-transacoes'
 import { excluirTransacao, excluirGrupoParcelamento } from '@/servicos/supabase/transacoes'
-import type { FiltrosTransacao, ParametrosPaginacao } from '@/tipos/filtros'
 import { usarToast } from '@/hooks/usar-toast'
 import { useAuth } from '@/contextos/auth-contexto'
 
@@ -24,24 +22,30 @@ interface TransacaoComRelacoes extends Transacao {
   centro_custo?: { nome: string; cor: string }
 }
 
-interface ListaTransacoesProps {
-  filtros?: FiltrosTransacao
-  parametrosPaginacao?: ParametrosPaginacao
+// Interface antiga removida - componente agora é puro
+
+interface ListaTransacoesPurasProps {
+  transacoes: TransacaoComRelacoes[]
+  loading: boolean
+  error?: string | null
   aoEditar?: (transacao: Transacao) => void
   aoExcluir?: (transacao: Transacao) => void
-  aoFiltrosChange?: (total: number) => void
+  aoRecarregar?: () => void
 }
 
+/**
+ * Componente puro para exibir lista de transações
+ * Não gerencia estado próprio - recebe dados via props
+ */
 export function ListaTransacoes({
-  filtros = {},
-  parametrosPaginacao = { pagina: 1, limite: 20, ordenacao: 'data', direcao: 'desc' },
+  transacoes,
+  loading,
+  error,
   aoEditar,
   aoExcluir,
-  aoTotalChange
-}: ListaTransacoesProps & { aoTotalChange?: (total: number) => void }) {
+  aoRecarregar
+}: ListaTransacoesPurasProps) {
   const { workspace } = useAuth()
-  const { transacoes, loading, error, totalTransacoes, carregar } = usarTransacoes()
-  const transacoesComRelacoes = transacoes as TransacaoComRelacoes[]
   const { sucesso, erro } = usarToast()
   
   // Estados para modais
@@ -57,24 +61,7 @@ export function ListaTransacoes({
     carregando: boolean
   }>({ isOpen: false, transacao: null, carregando: false })
 
-  useEffect(() => {
-    const carregarTransacoes = async () => {
-      await carregar(
-        parametrosPaginacao.limite,
-        (parametrosPaginacao.pagina - 1) * parametrosPaginacao.limite,
-        filtros
-      )
-    }
-
-    carregarTransacoes()
-  }, [filtros, parametrosPaginacao, carregar])
-
-  // Notificar mudanças no total
-  useEffect(() => {
-    if (aoTotalChange) {
-      aoTotalChange(totalTransacoes)
-    }
-  }, [totalTransacoes, aoTotalChange])
+  // Componente puro - não gerencia carregamento próprio
 
   // Formatar valor
   const formatarValor = (valor: number, tipo: string) => {
@@ -134,11 +121,9 @@ export function ListaTransacoes({
       await excluirTransacao(transacao.id, workspace.id)
       
       // Recarregar lista após exclusão
-      await carregar(
-        parametrosPaginacao.limite,
-        (parametrosPaginacao.pagina - 1) * parametrosPaginacao.limite,
-        filtros
-      )
+      if (aoRecarregar) {
+        aoRecarregar()
+      }
       
       // Fechar modal
       setModalExcluir({ isOpen: false, transacao: null, carregando: false })
@@ -182,11 +167,9 @@ export function ListaTransacoes({
       await excluirGrupoParcelamento(transacao.grupo_parcelamento, workspace.id)
       
       // Recarregar lista após exclusão do grupo
-      await carregar(
-        parametrosPaginacao.limite,
-        (parametrosPaginacao.pagina - 1) * parametrosPaginacao.limite,
-        filtros
-      )
+      if (aoRecarregar) {
+        aoRecarregar()
+      }
       
       // Fechar modal
       setModalExcluirGrupo({ isOpen: false, transacao: null, carregando: false })
@@ -202,7 +185,7 @@ export function ListaTransacoes({
   }
 
   if (loading) {
-    return <LoadingPage />
+    return <LoadingTransacoes />
   }
 
   return (
@@ -221,7 +204,7 @@ export function ListaTransacoes({
           <TableHeader>
             <TableRow className="border-b bg-gray-50/50">
               <TableHead className="w-[80px] font-semibold sticky left-0 bg-gray-50/50 z-20">Data</TableHead>
-              <TableHead className="w-[140px] font-semibold">Descrição</TableHead>
+              <TableHead className="w-[300px] font-semibold">Descrição</TableHead>
               <TableHead className="w-[100px] font-semibold text-right whitespace-nowrap">Valor</TableHead>
               <TableHead className="w-[120px] font-semibold hidden sm:table-cell">Categoria</TableHead>
               <TableHead className="w-[130px] font-semibold hidden md:table-cell">Conta</TableHead>
@@ -230,18 +213,41 @@ export function ListaTransacoes({
             </TableRow>
           </TableHeader>
           <TableBody>
-              {transacoesComRelacoes.length === 0 ? (
+              {transacoes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    <div className="space-y-2">
-                      <div className="text-4xl">📊</div>
-                      <div>Nenhuma transação encontrada</div>
-                      <div className="text-sm">Adicione sua primeira transação para começar</div>
+                  <TableCell colSpan={7} className="text-center py-12">
+                    <div className="space-y-4">
+                      <div className="text-6xl opacity-50">📊</div>
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium text-foreground">Nenhuma transação encontrada</h3>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                          Comece adicionando sua primeira transação ou ajuste os filtros para encontrar o que procura
+                        </p>
+                      </div>
+                      <div className="flex gap-2 justify-center pt-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => aoEditar?.({} as Transacao)}
+                          className="gap-2"
+                        >
+                          <Icone name="plus-circle" className="w-4 h-4" />
+                          Nova Transação
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.location.reload()}
+                          className="gap-2"
+                        >
+                          <Icone name="refresh-ccw" className="w-4 h-4" />
+                          Limpar Filtros
+                        </Button>
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                transacoesComRelacoes.map((transacao) => (
+                transacoes.map((transacao) => (
                   <TableRow key={transacao.id} className="hover:bg-gray-50/50">
                     {/* Data - sempre visível e fixo na esquerda */}
                     <TableCell className="text-sm whitespace-nowrap sticky left-0 bg-white z-10">
@@ -251,7 +257,7 @@ export function ListaTransacoes({
                     {/* Descrição - sempre visível */}
                     <TableCell>
                       <div className="text-sm">
-                        <div className="line-clamp-2" title={transacao.descricao}>
+                        <div className="line-clamp-2 max-w-[270px] overflow-hidden" title={transacao.descricao}>
                           {transacao.descricao}
                         </div>
                         {transacao.observacoes && (

@@ -5,6 +5,8 @@ import useSWR from 'swr'
 import { obterProjetosPessoais } from '@/servicos/supabase/projetos-pessoais'
 import { useAuth } from '@/contextos/auth-contexto'
 import { ProjetosPessoaisData, FiltroProjetosPessoais } from '@/tipos/projetos-pessoais'
+import { usarProjetosModo } from './usar-projetos-modo'
+import { obterConfigSWR } from '@/utilitarios/swr-config'
 
 // Hook principal para dados de projetos pessoais
 export function useProjetosData(filtros: FiltroProjetosPessoais = {}) {
@@ -13,33 +15,28 @@ export function useProjetosData(filtros: FiltroProjetosPessoais = {}) {
   return useSWR<ProjetosPessoaisData>(
     workspace ? ['projetos-pessoais', workspace.id, filtros] : null,
     () => obterProjetosPessoais(filtros, workspace!.id),
-    {
-      refreshInterval: 600000, // 10 minutos (projetos mudam pouco)
-      revalidateOnFocus: false,
-      dedupingInterval: 120000, // 2 minutos
-      errorRetryCount: 3,
-      errorRetryInterval: 5000,
-      // Cache mais agressivo para dados financeiros históricos
-      revalidateOnMount: true
-    }
+    obterConfigSWR('otimizada')
   )
 }
 
 // Hook específico para o card do dashboard (sem filtros de período)
 export function useProjetosDashboard() {
   const { workspace } = useAuth()
+  const { mostrarPendentes } = usarProjetosModo()
   
-  return useSWR<ProjetosPessoaisData>(
-    workspace ? ['projetos-pessoais-dashboard', workspace.id] : null,
-    () => obterProjetosPessoais({ apenas_ativos: true }, workspace!.id),
-    {
-      refreshInterval: 600000, // 10 minutos (dashboard secundário)
-      revalidateOnFocus: false,
-      dedupingInterval: 120000, // 2 minutos
-      // Prioridade alta para dados do dashboard
-      suspense: false
-    }
+  const swrResult = useSWR<ProjetosPessoaisData>(
+    workspace ? ['projetos-pessoais-dashboard', workspace.id, mostrarPendentes] : null,
+    () => obterProjetosPessoais({ 
+      apenas_ativos: true,
+      incluir_pendentes: mostrarPendentes
+    }, workspace!.id),
+    obterConfigSWR('otimizada')
   )
+
+  return {
+    ...swrResult,
+    revalidar: swrResult.mutate
+  }
 }
 
 // Hook para projetos com filtro de período específico
@@ -58,11 +55,10 @@ export function useProjetosPeriodo(
       incluir_arquivados
     }, workspace!.id),
     {
-      refreshInterval: 120000, // 2 minutos para dados históricos
-      revalidateOnFocus: false,
-      dedupingInterval: 30000,
+      ...obterConfigSWR('otimizada'),
       // Cache mais duradouro para consultas históricas
-      revalidateOnMount: false
+      revalidateOnMount: false,
+      refreshInterval: 1800000 // 30 min para dados históricos
     }
   )
 }

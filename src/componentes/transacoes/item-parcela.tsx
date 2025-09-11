@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent } from '@/componentes/ui/card'
+import { useConfirmDialog } from '@/componentes/ui/confirm-dialog'
 import { Transacao } from '@/tipos/database'
 import { usarTransacoes } from '@/hooks/usar-transacoes'
 
@@ -19,6 +20,7 @@ export function ItemParcela({
   aoVerParcelas 
 }: ItemParcelaProps) {
   const { excluirGrupoParcelamento } = usarTransacoes()
+  const { confirm, ConfirmDialog } = useConfirmDialog()
   const [expandido, setExpandido] = useState(false)
 
   // Formatar valor
@@ -35,21 +37,25 @@ export function ItemParcela({
   }
 
   // Excluir grupo de parcelas
-  const handleExcluirGrupo = async () => {
+  const handleExcluirGrupo = () => {
     if (!transacao.grupo_parcelamento) return
 
-    const confirmar = window.confirm(
-      `Deseja excluir TODAS as ${transacao.total_parcelas} parcelas desta compra?\n\n` +
-      `Esta ação não pode ser desfeita.`
-    )
+    confirm({
+      title: 'Excluir Parcelamento',
+      description: `Deseja excluir todas as ${transacao.total_parcelas} parcelas desta compra?
 
-    if (confirmar) {
-      try {
-        await excluirGrupoParcelamento(transacao.grupo_parcelamento)
-      } catch (error) {
-        console.error('Erro ao excluir parcelas:', error)
+Esta ação não pode ser desfeita.`,
+      type: 'danger',
+      confirmText: 'Excluir Todas',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        try {
+          await excluirGrupoParcelamento(transacao.grupo_parcelamento!)
+        } catch (error) {
+          console.error('Erro ao excluir parcelas:', error)
+        }
       }
-    }
+    })
   }
 
   // Ver todas as parcelas
@@ -180,6 +186,9 @@ export function ItemParcela({
           </div>
         )}
       </div>
+      
+      {/* Modal de Confirmação */}
+      <ConfirmDialog />
     </div>
   )
 }

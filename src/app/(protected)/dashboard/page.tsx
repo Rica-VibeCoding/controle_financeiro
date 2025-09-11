@@ -5,6 +5,7 @@ import { CardMetrica } from '@/componentes/dashboard/card-metrica'
 import { SeletorPeriodo } from '@/componentes/dashboard/seletor-periodo'
 import { useCardsData } from '@/hooks/usar-cards-dados'
 import { usePeriodoContexto } from '@/contextos/periodo-contexto'
+import { PageGuard } from '@/componentes/ui/page-guard'
 
 // Lazy load componentes pesados
 const GraficoTendencia = dynamic(() => import('@/componentes/dashboard/grafico-tendencia').then(mod => ({ default: mod.GraficoTendencia })), {
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const { data: cards, error, isLoading } = useCardsData(periodo)
 
   return (
+    <PageGuard permissaoNecessaria="dashboard">
       <div className="max-w-[1440px] mx-auto px-2 sm:px-3 lg:px-4 pt-0 pb-6">
 
         <div className="mb-4 flex items-center justify-between">
@@ -129,5 +131,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+    </PageGuard>
   )
 }

@@ -17,8 +17,10 @@ import type {
 export class ExportadorDados {
   private logs: LogExportacao[] = []
   private onProgresso?: (progresso: number, etapa: string) => void
+  private workspaceId: string
 
-  constructor(onProgresso?: (progresso: number, etapa: string) => void) {
+  constructor(workspaceId: string, onProgresso?: (progresso: number, etapa: string) => void) {
+    this.workspaceId = workspaceId
     this.onProgresso = onProgresso
   }
 
@@ -43,6 +45,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_categorias')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .eq('ativo', true)
       .order('nome')
 
@@ -61,6 +64,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_subcategorias')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .eq('ativo', true)
       .order('nome')
 
@@ -79,6 +83,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_contas')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .eq('ativo', true)
       .order('nome')
 
@@ -97,6 +102,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_formas_pagamento')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .eq('ativo', true)
       .order('nome')
 
@@ -115,6 +121,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_centros_custo')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .eq('ativo', true)
       .order('nome')
 
@@ -133,6 +140,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_transacoes')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .order('data', { ascending: false })
 
     if (error) {
@@ -150,6 +158,7 @@ export class ExportadorDados {
     const { data, error } = await supabase
       .from('fp_metas_mensais')
       .select('*')
+      .eq('workspace_id', this.workspaceId)
       .order('mes_referencia', { ascending: false })
 
     if (error) {
@@ -166,7 +175,8 @@ export class ExportadorDados {
       return `# ${nomeTabela} - Nenhum registro encontrado\n`
     }
 
-    const headers = Object.keys(dados[0])
+    // Remover workspace_id para tornar o backup independente do workspace
+    const headers = Object.keys(dados[0]).filter(header => header !== 'workspace_id')
     const csvHeaders = headers.join(',')
     
     const csvRows = dados.map(row => {

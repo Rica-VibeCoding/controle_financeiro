@@ -32,6 +32,7 @@ export interface UsuarioCompleto {
   workspaceId: string;
   ativo: boolean;
   superAdmin: boolean;
+  role?: 'owner' | 'member';
   createdAt: string;
   lastActivity: string;
   totalTransacoes: number;
@@ -59,6 +60,17 @@ export interface AcaoAdministrativa {
   sucesso: boolean;
   mensagem: string;
   usuarioEmail?: string;
+  // 🆕 Campos específicos para deleção de usuários
+  cenario?: 'member' | 'owner_unico' | 'owner_multiplo' | 'erro';
+  dadosPerdidos?: {
+    transacoes: number;
+    categorias: number;
+    contas: number;
+    metas: number;
+    convites: number;
+    workspaceName: string;
+    usuarioNome: string;
+  };
 }
 
 // ✅ MANTER tipos antigos para compatibilidade

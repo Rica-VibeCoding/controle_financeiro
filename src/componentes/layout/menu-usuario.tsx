@@ -5,6 +5,7 @@ import { useAuth } from '@/contextos/auth-contexto'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { useRouter } from 'next/navigation'
+import { ProtectedNavItem } from '@/componentes/ui/protected-link'
 
 export function MenuUsuario() {
   const { user, workspace, signOut } = useAuth()
@@ -127,13 +128,15 @@ export function MenuUsuario() {
 
           {/* Menu Items */}
           <div className="py-1">
-            <button
-              onClick={handleConfiguracoes}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-            >
-              <Icone name="settings" className="w-4 h-4" />
-              Configurações
-            </button>
+            <ProtectedNavItem permissaoNecessaria="configuracoes">
+              <button
+                onClick={handleConfiguracoes}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Icone name="settings" className="w-4 h-4" />
+                Configurações
+              </button>
+            </ProtectedNavItem>
             
             {/* Gerenciar Equipe - apenas para owners */}
             {isOwner && (

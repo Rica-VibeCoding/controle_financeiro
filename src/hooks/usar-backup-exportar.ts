@@ -48,14 +48,43 @@ export function usarBackupExportar() {
   }, [])
 
   const downloadArquivo = useCallback((arquivo: Blob, nomeArquivo: string) => {
-    const url = URL.createObjectURL(arquivo)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = nomeArquivo
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    try {
+      // Abordagem robusta que evita conflitos com Service Worker
+      const url = URL.createObjectURL(arquivo)
+      const link = document.createElement('a')
+      
+      // Definir atributos antes de adicionar ao DOM
+      link.href = url
+      link.download = nomeArquivo
+      link.style.display = 'none'
+      link.target = '_blank'
+      
+      // Adicionar ao DOM, clicar e remover
+      document.body.appendChild(link)
+      
+      // Usar timeout para evitar conflitos
+      setTimeout(() => {
+        link.click()
+        
+        // Limpar após um pequeno delay
+        setTimeout(() => {
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        }, 100)
+      }, 10)
+      
+    } catch (error) {
+      console.error('Erro no download do arquivo:', error)
+      // Fallback: usar data URL
+      const reader = new FileReader()
+      reader.onload = () => {
+        const link = document.createElement('a')
+        link.href = reader.result as string
+        link.download = nomeArquivo
+        link.click()
+      }
+      reader.readAsDataURL(arquivo)
+    }
   }, [])
 
   const exportarDados = useCallback(async (): Promise<boolean> => {
@@ -74,7 +103,7 @@ export function usarBackupExportar() {
     setUltimoResumo(null)
 
     try {
-      const exportador = new ExportadorDados(onProgresso)
+      const exportador = new ExportadorDados(workspace.id, onProgresso)
       const { arquivo, resumo } = await exportador.exportarTodosDados(configuracao)
       
       // Gerar nome do arquivo com timestamp

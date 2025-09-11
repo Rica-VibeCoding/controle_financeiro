@@ -1,16 +1,3 @@
-export interface LinhaCSV {
-  Data: string
-  Valor: string
-  Identificador: string
-  Descrição: string
-}
-
-export interface LinhaCartao {
-  date: string
-  title: string
-  amount: string
-}
-
 export interface TransacaoImportada {
   data: string
   valor: number
@@ -18,10 +5,8 @@ export interface TransacaoImportada {
   descricao: string
   conta_id: string
   tipo: 'receita' | 'despesa'
+  status?: 'previsto' | 'realizado' // FASE 1: Status baseado no tipo da conta
 }
-
-// Union type para suportar múltiplos formatos
-export type LinhaCSVUniversal = LinhaCSV | LinhaCartao
 
 export interface ResultadoImportacao {
   total: number
@@ -31,12 +16,34 @@ export interface ResultadoImportacao {
 }
 
 // ============================================
+// FASE 1 - STATUS BASEADO NO TIPO DA CONTA
+// ============================================
+
+export type TipoConta = 'conta_corrente' | 'conta_poupanca' | 'cartao_credito' | 'cartao_debito' | 'dinheiro' | 'investimento'
+
+export type StatusTransacao = 'previsto' | 'realizado'
+
+export interface ConfiguracaoStatusConta {
+  tipoConta: TipoConta
+  statusPadrao: StatusTransacao
+  descricao: string
+}
+
+export interface ContaComStatusPadrao {
+  id: string
+  nome: string
+  tipo: TipoConta
+  statusPadrao: StatusTransacao
+  descricaoStatus: string
+}
+
+// ============================================
 // NOVOS TIPOS - MOTOR DE CLASSIFICAÇÃO
 // ============================================
 
 export interface DadosClassificacao {
   categoria_id: string
-  subcategoria_id: string
+  subcategoria_id: string | null // Subcategoria é opcional
   forma_pagamento_id: string
 }
 
@@ -53,7 +60,7 @@ export interface TransacaoClassificada extends TransacaoImportada {
   classificacao_automatica?: DadosClassificacao
   status_classificacao: 'reconhecida' | 'pendente' | 'duplicada'
   categoria_id?: string
-  subcategoria_id?: string
+  subcategoria_id?: string | null // Pode ser null (opcional)
   forma_pagamento_id?: string
   formato_origem?: string // Para identificar se veio de cartão, nubank, etc.
   sinalizacao?: SinalizacaoLancamento

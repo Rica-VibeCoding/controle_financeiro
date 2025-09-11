@@ -6,9 +6,9 @@ import { TransacoesProvider } from '@/contextos/transacoes-contexto'
 import { ModaisProvider } from '@/contextos/modais-contexto'
 import { DadosAuxiliaresProvider } from '@/contextos/dados-auxiliares-contexto'
 import { PeriodoProvider } from '@/contextos/periodo-contexto'
-import { SWRConfig } from 'swr'
 import { ToastProvider } from '@/contextos/toast-contexto'
 import { ClientSideScripts } from '@/componentes/comum/client-side-scripts'
+import { SWRProvider } from '@/componentes/comum/swr-provider'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,16 +69,7 @@ export default function RootLayout({
       >
         <ClientSideScripts />
         <AuthProvider>
-          <SWRConfig
-            value={{
-              revalidateOnFocus: false,
-              revalidateOnReconnect: false,
-              refreshInterval: 0,
-              dedupingInterval: 10000,
-              errorRetryCount: 3,
-              errorRetryInterval: 5000
-            }}
-          >
+          <SWRProvider>
             <DadosAuxiliaresProvider>
               <PeriodoProvider>
                 <ModaisProvider>
@@ -90,7 +81,7 @@ export default function RootLayout({
                 </ModaisProvider>
               </PeriodoProvider>
             </DadosAuxiliaresProvider>
-          </SWRConfig>
+          </SWRProvider>
         </AuthProvider>
       </body>
     </html>

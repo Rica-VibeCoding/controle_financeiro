@@ -15,15 +15,20 @@ import type {
 export class ValidadorBackup {
   private erros: ErroValidacao[] = []
   private advertencias: string[] = []
+  private workspaceDestinoId?: string
+  private workspacesOriginais = new Set<string>()
+  private crossWorkspaceDetected = false
 
   private adicionarErro(tabela: string, mensagem: string, linha?: number, campo?: string) {
-    this.erros.push({
+    const erro = {
       tabela,
       linha,
       campo,
       mensagem,
-      tipo: 'erro'
-    })
+      tipo: 'erro' as const
+    }
+    console.log('❌ DEBUG: Novo erro adicionado:', erro)
+    this.erros.push(erro)
   }
 
   private adicionarAdvertencia(mensagem: string) {
@@ -44,7 +49,7 @@ export class ValidadorBackup {
         if (value.startsWith('"') && value.endsWith('"')) {
           value = value.slice(1, -1).replace(/""/g, '"')
         }
-        return value === '' ? null : value
+        return value === '' ? '' : value
       })
 
       if (values.length === headers.length) {
@@ -60,18 +65,18 @@ export class ValidadorBackup {
   }
 
   private validarEstruturaCategorias(dados: any[], tabela: string): CategoriaExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at', 'workspace_id']
+    const camposEssenciais = ['id'] // Apenas ID é realmente obrigatório
     const tiposValidos = ['receita', 'despesa', 'ambos']
     
     return dados.map((row, index) => {
-      // Validar campos obrigatórios
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      // Validar apenas campos verdadeiramente essenciais
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
-      // Validar tipo
+      // Validar tipo apenas se presente
       if (row.tipo && !tiposValidos.includes(row.tipo)) {
         this.adicionarErro(tabela, `Tipo '${row.tipo}' inválido`, index + 1, 'tipo')
       }
@@ -87,18 +92,18 @@ export class ValidadorBackup {
         cor: row.cor || null,
         ativo,
         created_at: row.created_at || new Date().toISOString(),
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaSubcategorias(dados: any[], tabela: string): SubcategoriaExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'ativo', 'created_at', 'workspace_id']
+    const camposEssenciais = ['id']
     
     return dados.map((row, index) => {
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
@@ -110,18 +115,18 @@ export class ValidadorBackup {
         categoria_id: row.categoria_id || null,
         ativo,
         created_at: row.created_at || new Date().toISOString(),
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaContas(dados: any[], tabela: string): ContaExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at', 'workspace_id']
+    const camposEssenciais = ['id']
     
     return dados.map((row, index) => {
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
@@ -138,18 +143,18 @@ export class ValidadorBackup {
         created_at: row.created_at || new Date().toISOString(),
         limite,
         data_fechamento: dataFechamento,
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaFormasPagamento(dados: any[], tabela: string): FormaPagamentoExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'tipo', 'ativo', 'created_at', 'workspace_id']
+    const camposEssenciais = ['id']
     
     return dados.map((row, index) => {
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
@@ -163,18 +168,18 @@ export class ValidadorBackup {
         permite_parcelamento: permiteParcelamento,
         ativo,
         created_at: row.created_at || new Date().toISOString(),
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaCentrosCusto(dados: any[], tabela: string): CentroCustoExportacao[] {
-    const camposObrigatorios = ['id', 'nome', 'ativo', 'created_at', 'workspace_id']
+    const camposEssenciais = ['id']
     
     return dados.map((row, index) => {
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
@@ -194,19 +199,19 @@ export class ValidadorBackup {
         data_fim: row.data_fim || null,
         arquivado,
         data_arquivamento: row.data_arquivamento || null,
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaTransacoes(dados: any[], tabela: string): TransacaoExportacao[] {
-    const camposObrigatorios = ['id', 'data', 'descricao', 'valor', 'tipo', 'conta_id', 'created_at', 'workspace_id']
+    const camposEssenciais = ['id', 'valor'] // Apenas ID e valor são realmente obrigatórios
     const tiposValidos = ['receita', 'despesa', 'transferencia']
     
     return dados.map((row, index) => {
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
@@ -246,18 +251,18 @@ export class ValidadorBackup {
         created_at: row.created_at || new Date().toISOString(),
         updated_at: row.updated_at || new Date().toISOString(),
         identificador_externo: row.identificador_externo || null,
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
   private validarEstruturaMetasMensais(dados: any[], tabela: string): MetaMensalExportacao[] {
-    const camposObrigatorios = ['id', 'categoria_id', 'mes_referencia', 'valor_meta', 'data_criacao', 'workspace_id']
+    const camposEssenciais = ['id']
     
     return dados.map((row, index) => {
-      camposObrigatorios.forEach(campo => {
-        if (!row[campo]) {
-          this.adicionarErro(tabela, `Campo obrigatório '${campo}' ausente`, index + 1, campo)
+      camposEssenciais.forEach(campo => {
+        if (!row[campo] || row[campo].toString().trim() === '') {
+          this.adicionarErro(tabela, `Campo essencial '${campo}' ausente ou vazio`, index + 1, campo)
         }
       })
 
@@ -271,18 +276,25 @@ export class ValidadorBackup {
         valor_meta: valorMeta,
         data_criacao: row.data_criacao || new Date().toISOString(),
         data_ultima_atualizacao: row.data_ultima_atualizacao || new Date().toISOString(),
-        workspace_id: row.workspace_id || ''
+        workspace_id: this.workspaceDestinoId || row.workspace_id || ''
       }
     })
   }
 
-  async validarArquivoBackup(arquivo: File): Promise<ResumoValidacao> {
+  async validarArquivoBackup(arquivo: File, workspaceDestinoId?: string): Promise<ResumoValidacao> {
     this.erros = []
     this.advertencias = []
+    this.workspaceDestinoId = workspaceDestinoId
+    this.workspacesOriginais.clear()
+    this.crossWorkspaceDetected = false
+
+    console.log('🔍 DEBUG: Iniciando validação do arquivo:', arquivo.name)
+    console.log('🔍 DEBUG: Workspace destino:', workspaceDestinoId)
 
     try {
       // Validar se é um arquivo ZIP
       if (!arquivo.name.endsWith('.zip')) {
+        console.log('❌ DEBUG: Arquivo não é ZIP')
         this.adicionarErro('arquivo', 'Arquivo deve ser um ZIP')
         return this.gerarResumo()
       }
@@ -290,6 +302,8 @@ export class ValidadorBackup {
       // Carregar ZIP
       const zip = new JSZip()
       const zipContent = await zip.loadAsync(arquivo)
+
+      console.log('📦 DEBUG: ZIP carregado com sucesso')
 
       const tabelasEncontradas: string[] = []
       let totalRegistros = 0
@@ -301,20 +315,65 @@ export class ValidadorBackup {
 
         const tabelaNome = fileName.replace('.csv', '')
         tabelasEncontradas.push(tabelaNome)
+        console.log(`📄 DEBUG: Processando arquivo: ${fileName}`)
 
         const csvContent = await file.async('text')
+        console.log(`📄 DEBUG: Conteúdo CSV (${fileName}):`, csvContent.substring(0, 200) + '...')
+        
         const dados = this.parseCSV(csvContent)
+        console.log(`📄 DEBUG: Dados parseados (${fileName}):`, dados.length, 'registros')
+        console.log(`📄 DEBUG: Primeiro registro:`, dados[0])
         
         registrosPorTabela[tabelaNome] = dados.length
         totalRegistros += dados.length
 
+        // Detectar workspaces originais
+        dados.forEach(row => {
+          if (row.workspace_id) {
+            this.workspacesOriginais.add(row.workspace_id)
+          }
+        })
+
         // Validar estrutura específica de cada tabela
+        console.log(`🔍 DEBUG: Validando estrutura de: ${tabelaNome}`)
         this.validarEstruturaPorTabela(dados, tabelaNome)
+        console.log(`🔍 DEBUG: Erros após validação de ${tabelaNome}:`, this.erros.length)
       }
 
       if (tabelasEncontradas.length === 0) {
+        console.log('❌ DEBUG: Nenhum arquivo CSV encontrado')
         this.adicionarErro('arquivo', 'Nenhum arquivo CSV encontrado no ZIP')
       }
+
+      // Verificar se é importação cross-workspace
+      if (this.workspaceDestinoId && this.workspacesOriginais.size > 0) {
+        const workspacesArray = Array.from(this.workspacesOriginais)
+        const isDifferentWorkspace = !workspacesArray.includes(this.workspaceDestinoId)
+        
+        console.log('🔄 DEBUG: Cross-workspace check:', {
+          workspaceDestino: this.workspaceDestinoId,
+          workspacesOriginais: workspacesArray,
+          isDifferent: isDifferentWorkspace
+        })
+        
+        if (isDifferentWorkspace) {
+          this.crossWorkspaceDetected = true
+          this.adicionarAdvertencia(
+            `Backup de workspace diferente detectado. Dados serão convertidos para o workspace atual.`
+          )
+          this.adicionarAdvertencia(
+            `Workspaces originais: ${workspacesArray.join(', ')}`
+          )
+        }
+      }
+
+      console.log('📊 DEBUG: Resumo final da validação:', {
+        arquivoValido: this.erros.length === 0,
+        totalErros: this.erros.length,
+        totalAdvertencias: this.advertencias.length,
+        erros: this.erros,
+        advertencias: this.advertencias
+      })
 
       return {
         arquivoValido: this.erros.length === 0,
@@ -322,7 +381,9 @@ export class ValidadorBackup {
         totalRegistros,
         registrosPorTabela,
         errosValidacao: this.erros,
-        advertencias: this.advertencias
+        advertencias: this.advertencias,
+        crossWorkspaceDetected: this.crossWorkspaceDetected,
+        workspacesOriginais: Array.from(this.workspacesOriginais)
       }
 
     } catch (error) {
@@ -331,7 +392,8 @@ export class ValidadorBackup {
     }
   }
 
-  async carregarDadosDoArquivo(arquivo: File): Promise<DadosImportacao> {
+  async carregarDadosDoArquivo(arquivo: File, workspaceDestinoId?: string): Promise<DadosImportacao> {
+    this.workspaceDestinoId = workspaceDestinoId
     const dados: DadosImportacao = {}
 
     try {
@@ -345,7 +407,7 @@ export class ValidadorBackup {
         const csvContent = await file.async('text')
         const registros = this.parseCSV(csvContent)
 
-        // Mapear dados para estruturas tipadas
+        // Mapear dados para estruturas tipadas e converter workspace_id se necessário
         switch (tabelaNome) {
           case 'fp_categorias':
             dados.categorias = this.validarEstruturaCategorias(registros, tabelaNome)

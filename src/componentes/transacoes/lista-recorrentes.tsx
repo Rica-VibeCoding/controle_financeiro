@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { LoadingText } from '@/componentes/comum/loading'
+import { useConfirmDialog } from '@/componentes/ui/confirm-dialog'
 import { Transacao } from '@/tipos/database'
 import { usarTransacoes } from '@/hooks/usar-transacoes'
 
@@ -12,20 +13,50 @@ export function ListaRecorrentes() {
   const { 
     buscarTransacoesRecorrentes, 
     processarRecorrenciasVencidas, 
-    excluirRecorrencia, 
-    loading 
+    excluirRecorrencia
   } = usarTransacoes()
   
+  const { confirm, ConfirmDialog } = useConfirmDialog()
+  
   const [recorrentes, setRecorrentes] = useState<Transacao[]>([])
+  const [loading, setLoading] = useState(false)
   const [processando, setProcessando] = useState(false)
 
   // Carregar transações recorrentes
   useEffect(() => {
     async function carregarRecorrentes() {
-      const dados = await buscarTransacoesRecorrentes()
-      setRecorrentes(dados)
+      try {
+        setLoading(true)
+        const dados = await buscarTransacoesRecorrentes()
+        setRecorrentes(dados)
+      } catch (error) {
+        console.error('Erro ao carregar recorrentes:', error)
+      } finally {
+        setLoading(false)
+      }
     }
     carregarRecorrentes()
+  }, [buscarTransacoesRecorrentes])
+
+  // Escutar evento customizado para atualizar após mudanças
+  useEffect(() => {
+    const handleAtualizarTransacoes = async () => {
+      try {
+        setLoading(true)
+        const dados = await buscarTransacoesRecorrentes()
+        setRecorrentes(dados)
+      } catch (error) {
+        console.error('Erro ao atualizar recorrentes:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    window.addEventListener('atualizarTransacoes', handleAtualizarTransacoes)
+    
+    return () => {
+      window.removeEventListener('atualizarTransacoes', handleAtualizarTransacoes)
+    }
   }, [buscarTransacoesRecorrentes])
 
   // Processar recorrências vencidas
@@ -44,25 +75,28 @@ export function ListaRecorrentes() {
   }
 
   // Excluir recorrência (hard delete)
-  const handleExcluirRecorrencia = async (id: string, descricao: string) => {
-    const confirmar = window.confirm(
-      `⚠️ EXCLUIR recorrência de "${descricao}"?\n\n` +
-      '• Configuração será REMOVIDA definitivamente\n' +
-      '• Transações já criadas serão MANTIDAS\n' +
-      '• Esta ação NÃO pode ser desfeita\n\n' +
-      'Confirma a exclusão?'
-    )
+  const handleExcluirRecorrencia = (id: string, descricao: string) => {
+    confirm({
+      title: 'Excluir Transação Recorrente',
+      description: `Deseja excluir a recorrência "${descricao}"?
 
-    if (confirmar) {
-      try {
-        await excluirRecorrencia(id)
-        // Recarregar lista
-        const dados = await buscarTransacoesRecorrentes()
-        setRecorrentes(dados)
-      } catch (error) {
-        console.error('Erro ao excluir recorrência:', error)
+• Configuração será removida definitivamente
+• Transações já criadas serão mantidas
+• Esta ação não pode ser desfeita`,
+      type: 'danger',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        try {
+          await excluirRecorrencia(id)
+          // Recarregar lista
+          const dados = await buscarTransacoesRecorrentes()
+          setRecorrentes(dados)
+        } catch (error) {
+          console.error('Erro ao excluir recorrência:', error)
+        }
       }
-    }
+    })
   }
 
   // Formatar data
@@ -116,25 +150,32 @@ export function ListaRecorrentes() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <Button 
-            onClick={handleProcessarRecorrencias}
-            disabled={processando}
-            size="sm"
-            className="bg-green-600 hover:bg-green-700"
-          >
-            {processando ? 'Processando...' : 'Processar Vencidas'}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <Button 
+              onClick={handleProcessarRecorrencias}
+              disabled={processando}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {processando ? 'Processando...' : 'Processar Vencidas'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
         {recorrentes.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <div className="text-4xl mb-2" aria-hidden="true"><Icone name="refresh-ccw" className="w-6 h-6" /></div>
-            <p>Nenhuma transação recorrente cadastrada</p>
-            <p className="text-sm">Crie uma transação e marque como recorrente</p>
+          <div className="text-center py-12">
+            <div className="space-y-4">
+              <div className="text-6xl opacity-50">🔄</div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-foreground">Nenhuma transação recorrente</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Antes do primeiro lançamento, crie a sua primeira conta em Cadastros/Contas.
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -211,19 +252,13 @@ export function ListaRecorrentes() {
               </div>
             ))}
 
-            {/* Informações úteis */}
-            <div className="bg-blue-50 p-3 rounded text-sm text-blue-800 mt-4">
-              <p className="font-medium">Dicas sobre transações recorrentes:</p>
-              <ul className="mt-1 space-y-1 text-xs">
-                <li>• <strong>Vencidas:</strong> Use "Processar Vencidas" para gerar as previstas</li>
-                <li>• <strong>Automático:</strong> Transações são criadas como "previsto"</li>
-                <li>• <strong>Manual:</strong> Marque como "realizado" após efetuar o pagamento</li>
-                <li>• <strong>Excluir:</strong> Remove configuração (mantém transações criadas)</li>
-              </ul>
-            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      {/* Modal de Confirmação */}
+      <ConfirmDialog />
+    </>
   )
 }

@@ -194,6 +194,8 @@ export interface Database {
           anexo_url: string | null
           observacoes: string | null
           identificador_externo: string | null
+          contato_id: string | null
+          workspace_id: string
           created_at: string
           updated_at: string
         }
@@ -221,6 +223,8 @@ export interface Database {
           anexo_url?: string | null
           observacoes?: string | null
           identificador_externo?: string | null
+          contato_id?: string | null
+          workspace_id: string
           created_at?: string
           updated_at?: string
         }
@@ -248,6 +252,8 @@ export interface Database {
           anexo_url?: string | null
           observacoes?: string | null
           identificador_externo?: string | null
+          contato_id?: string | null
+          workspace_id?: string
           created_at?: string
           updated_at?: string
         }

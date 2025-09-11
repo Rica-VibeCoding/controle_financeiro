@@ -189,6 +189,7 @@ export function prepararTransacaoParaInsercao(transacao: Partial<NovaTransacao>)
     valor: transacaoLimpa.valor || 0,
     tipo: transacaoLimpa.tipo || 'despesa',
     conta_id: transacaoLimpa.conta_id || '',
+    workspace_id: transacaoLimpa.workspace_id || '',
     status: transacaoLimpa.status || 'previsto',
     parcela_atual: transacaoLimpa.parcela_atual || 1,
     total_parcelas: transacaoLimpa.total_parcelas || 1,
@@ -204,7 +205,8 @@ export function prepararTransacaoParaInsercao(transacao: Partial<NovaTransacao>)
     observacoes: transacaoLimpa.observacoes,
     frequencia_recorrencia: transacaoLimpa.frequencia_recorrencia,
     proxima_recorrencia: transacaoLimpa.proxima_recorrencia,
-    identificador_externo: transacaoLimpa.identificador_externo
+    identificador_externo: transacaoLimpa.identificador_externo,
+    contato_id: transacaoLimpa.contato_id
   }
 
   return transacaoCompleta

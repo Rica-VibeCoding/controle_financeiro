@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
+import { PageGuard } from '@/componentes/ui/page-guard'
 
 export default function RelatoriosPage() {
   const router = useRouter()
   
   return (
+    <PageGuard permissaoNecessaria="relatorios">
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Relatórios</h1>
@@ -125,5 +127,6 @@ export default function RelatoriosPage() {
           </CardContent>
         </Card>
       </div>
+    </PageGuard>
   )
 }

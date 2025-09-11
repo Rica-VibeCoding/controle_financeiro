@@ -101,14 +101,14 @@ export const CardSaldosContas = memo(function CardSaldosContas() {
                   {formatarValor(conta.saldo)}
                 </div>
 
-                {/* Tooltip com últimas movimentações (hover) */}
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                {/* Tooltip com últimas movimentações (hover) - Z-index alto para ficar acima de outros elementos */}
+                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl p-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-[9999] max-w-[calc(100vw-2rem)]">
                   <div className="text-xs font-medium text-gray-900 mb-2">
                     Últimas movimentações:
                   </div>
                   {conta.ultimasMovimentacoes && conta.ultimasMovimentacoes.length > 0 ? (
-                    <div className="space-y-1">
-                      {conta.ultimasMovimentacoes.slice(0, 5).map((mov, movIndex) => (
+                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                      {conta.ultimasMovimentacoes.slice(0, 20).map((mov, movIndex) => (
                         <div key={movIndex} className="flex justify-between items-center text-xs">
                           <div className="flex-1 truncate mr-2">
                             <span className="text-gray-700">{mov.descricao}</span>

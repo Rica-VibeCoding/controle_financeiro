@@ -134,6 +134,7 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
 
   // Estados locais
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
+  const [datasParcelasEditaveis, setDatasParcelasEditaveis] = useState<string[]>([])
   const [salvando, setSalvando] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null)
@@ -144,8 +145,16 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
   }, [dados.valor, numeroParcelas])
 
   const datasParcelas = useMemo(() => {
-    return dados.data ? calcularDatasParcelas(dados.data, numeroParcelas) : []
-  }, [dados.data, numeroParcelas])
+    if (!dados.data) return []
+    
+    // Se tem datas editadas, usar elas
+    if (datasParcelasEditaveis.length === numeroParcelas) {
+      return datasParcelasEditaveis
+    }
+    
+    // Senão, calcular automaticamente
+    return calcularDatasParcelas(dados.data, numeroParcelas)
+  }, [dados.data, numeroParcelas, datasParcelasEditaveis])
 
   // Reset modal quando abrir/fechar
   useEffect(() => {
@@ -153,12 +162,19 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
       setAbaAtiva('essencial')
       setDados(ESTADO_INICIAL)
       setNumeroParcelas(2)
+      setDatasParcelasEditaveis([])
     } else {
       // Reset apenas quando fechar
       setSubcategorias([])
       setMensagem(null)
+      setDatasParcelasEditaveis([])
     }
   }, [isOpen])
+
+  // Limpar datas editaveis quando numero de parcelas muda
+  useEffect(() => {
+    setDatasParcelasEditaveis([])
+  }, [numeroParcelas])
 
   // Carregar subcategorias quando categoria muda
   useEffect(() => {
@@ -206,6 +222,39 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
       // Limpar data de vencimento se status mudou para realizado
       ...(campo === 'status' && valor === 'realizado' ? { data_vencimento: '' } : {})
     }))
+    
+    // Limpar datas editaveis se data inicial mudou
+    if (campo === 'data') {
+      setDatasParcelasEditaveis([])
+    }
+  }, [])
+
+  /**
+   * Edita a data de uma parcela especifica
+   * @param index - Indice da parcela (0-based)
+   * @param novaData - Nova data em formato YYYY-MM-DD
+   */
+  const handleEditarDataParcela = useCallback((index: number, novaData: string) => {
+    setDatasParcelasEditaveis(prev => {
+      // Se ainda nao tem array editavel, criar baseado no automatico
+      const novasDatas = prev.length === numeroParcelas
+        ? [...prev]
+        : dados.data ? calcularDatasParcelas(dados.data, numeroParcelas) : []
+      
+      // Atualizar data especifica
+      if (novasDatas[index]) {
+        novasDatas[index] = novaData
+      }
+      
+      return novasDatas
+    })
+  }, [dados.data, numeroParcelas])
+
+  /**
+   * Reseta datas para calculo automatico
+   */
+  const handleResetDatasAutomaticas = useCallback(() => {
+    setDatasParcelasEditaveis([])
   }, [])
 
   /**
@@ -330,7 +379,12 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
     try {
       setSalvando(true)
       
-      await criarTransacaoParcelada(dados as NovaTransacao, numeroParcelas, workspace.id)
+      await criarTransacaoParcelada(
+        dados as NovaTransacao, 
+        numeroParcelas, 
+        workspace.id,
+        datasParcelasEditaveis.length > 0 ? datasParcelasEditaveis : undefined
+      )
 
       setMensagem({ 
         tipo: 'sucesso', 
@@ -575,24 +629,67 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
 
             {datasParcelas.length > 0 && valorParcela > 0 && (
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <Icone name="list" className="w-4 h-4" aria-hidden="true" />
-                  Cronograma das Parcelas
-                </h5>
+                <div className="flex justify-between items-center mb-3">
+                  <h5 className="font-medium text-gray-900 flex items-center gap-2">
+                    <Icone name="list" className="w-4 h-4" aria-hidden="true" />
+                    📅 Cronograma das Parcelas (Clique nas datas para editar)
+                  </h5>
+                  
+                  {/* Botao Reset para datas automaticas */}
+                  {datasParcelasEditaveis.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetDatasAutomaticas}
+                      className="text-xs text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+                      title="Recalcular datas automaticamente"
+                    >
+                      <Icone name="refresh-ccw" className="w-3 h-3" />
+                      Recalcular
+                    </button>
+                  )}
+                </div>
+                
                 <div className="max-h-40 overflow-y-auto space-y-1 text-sm">
                   {datasParcelas.slice(0, 12).map((data, index) => (
-                    <div key={index} className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                      <span>Parcela {index + 1}/{numeroParcelas}</span>
-                      <span>{formatarData(data)}</span>
-                      <span className="font-medium">R$ {valorParcela.toFixed(2).replace('.', ',')}</span>
+                    <div key={index} className="flex justify-between items-center py-1 border-b border-gray-200 last:border-0 gap-2">
+                      <span className="text-gray-600 text-xs shrink-0">
+                        Parcela {index + 1}/{numeroParcelas}
+                      </span>
+                      
+                      {/* 🆕 NOVO: Input editavel para data da parcela */}
+                      <input
+                        type="date"
+                        value={data}
+                        onChange={(e) => handleEditarDataParcela(index, e.target.value)}
+                        className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-32 text-center hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        title={`📅 Clique para editar a data da parcela ${index + 1}`}
+                        placeholder="Selecionar data"
+                      />
+                      
+                      <span className="font-medium text-xs shrink-0">
+                        R$ {valorParcela.toFixed(2).replace('.', ',')}
+                      </span>
                     </div>
                   ))}
                   {numeroParcelas > 12 && (
-                    <p className="text-gray-500 text-center pt-2">
-                      ... e mais {numeroParcelas - 12} parcelas
-                    </p>
+                    <div className="text-gray-500 text-center pt-2 text-xs">
+                      <p>... e mais {numeroParcelas - 12} parcelas</p>
+                      <p className="text-gray-400 mt-1">
+                        💡 Scroll para ver todas as parcelas quando houver mais de 12
+                      </p>
+                    </div>
                   )}
                 </div>
+                
+                {/* Indicador de edicao */}
+                {datasParcelasEditaveis.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-gray-300">
+                    <p className="text-xs text-blue-600 flex items-center gap-1">
+                      <Icone name="pencil" className="w-3 h-3" />
+                      Cronograma personalizado - datas editadas manualmente
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

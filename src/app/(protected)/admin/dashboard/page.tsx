@@ -17,7 +17,8 @@ export default function DashboardAdminPage() {
     temAcesso, 
     verificandoAcesso, 
     recarregar,
-    alterarStatusUsuario // ← NOVA funcionalidade
+    alterarStatusUsuario, // ← NOVA funcionalidade
+    deletarUsuario // ← NOVA funcionalidade de deleção
   } = usarDashboardAdmin();
 
   // Loading inicial - verificando acesso
@@ -103,6 +104,7 @@ export default function DashboardAdminPage() {
         loading={loading}
         onRecarregar={recarregar}
         onToggleUsuario={alterarStatusUsuario} // ← NOVA funcionalidade
+        onDeletarUsuario={deletarUsuario} // ← NOVA funcionalidade de deleção
       />
     </LayoutContainer>
   );

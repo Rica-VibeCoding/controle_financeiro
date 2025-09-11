@@ -34,46 +34,116 @@ export function createClient() {
   const url = getValidUrl()
   const key = getValidKey()
   
+  // Validar se as funções existem antes de usar
+  if (!url || !key) {
+    throw new Error('Erro na configuração do Supabase - URL ou Key inválidos')
+  }
+  
   // Log apenas uma vez na primeira criação
   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log('🔧 AUTH CLIENT: Usando cliente @supabase/ssr unificado')
   }
   
-  clientInstance = createBrowserClient(url, key, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
+  try {
+    clientInstance = createBrowserClient(url, key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    })
+  } catch (error) {
+    console.error('🚨 Erro ao criar cliente Supabase:', error)
+    throw new Error('Falha na inicialização do cliente Supabase')
+  }
+
+  // Função auxiliar para limpar dados de auth
+  const cleanupAuthData = () => {
+    // Limpar storage
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (key.includes('supabase') || key.includes('sb-'))) {
+        keysToRemove.push(key)
+      }
     }
-  })
+    keysToRemove.forEach(key => localStorage.removeItem(key))
+    
+    // Limpar sessionStorage
+    const sessionKeysToRemove: string[] = []
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i)
+      if (key && (key.includes('supabase') || key.includes('sb-'))) {
+        sessionKeysToRemove.push(key)
+      }
+    }
+    sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key))
+    
+    // Limpar cookies do Supabase
+    const cookies = document.cookie.split(';')
+    cookies.forEach(cookie => {
+      const eqPos = cookie.indexOf('=')
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
+      if (name.includes('supabase') || name.includes('sb-')) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`
+      }
+    })
+  }
 
   // Interceptar erros de refresh token e limpar storage automaticamente
   if (typeof window !== 'undefined') {
-    const originalRequest = clientInstance.auth.refreshSession.bind(clientInstance.auth)
+    // Interceptar getSession para tratar erros silenciosamente
+    const originalGetSession = clientInstance.auth.getSession.bind(clientInstance.auth)
+    clientInstance.auth.getSession = async () => {
+      try {
+        const result = await originalGetSession()
+        
+        // Se não há sessão mas há dados de auth no storage, limpar
+        if (!result.data.session) {
+          const hasAuthData = localStorage.getItem('supabase.auth.token') || 
+                            sessionStorage.getItem('supabase.auth.token')
+          if (hasAuthData) {
+            console.warn('🧹 Sessão inválida detectada - limpando dados antigos')
+            cleanupAuthData()
+          }
+        }
+        
+        return result
+      } catch (error: any) {
+        // Tratar erro de refresh token silenciosamente
+        if (error.message?.includes('Invalid Refresh Token') || 
+            error.message?.includes('Refresh Token Not Found') ||
+            error.message?.includes('refresh_token')) {
+          
+          console.warn('🔄 Token inválido - fazendo limpeza silenciosa')
+          cleanupAuthData()
+          
+          // Retornar sessão nula ao invés de lançar erro
+          return { data: { session: null }, error: null }
+        }
+        // Para outros erros, propagar normalmente
+        throw error
+      }
+    }
     
+    // Interceptar refreshSession também
+    const originalRefreshSession = clientInstance.auth.refreshSession.bind(clientInstance.auth)
     clientInstance.auth.refreshSession = async () => {
       try {
-        return await originalRequest()
+        const result = await originalRefreshSession()
+        return result
       } catch (error: any) {
-        // Se erro de refresh token, limpar tudo
+        // Se erro de refresh token, limpar e retornar sessão nula
         if (error.message?.includes('Invalid Refresh Token') || 
-            error.message?.includes('Refresh Token Not Found')) {
+            error.message?.includes('Refresh Token Not Found') ||
+            error.message?.includes('refresh_token')) {
           
-          console.warn('🧹 Limpeza automática: refresh token inválido detectado')
+          console.warn('🧹 Refresh token inválido - limpando e retornando sessão nula')
+          cleanupAuthData()
           
-          // Limpar storage completamente
-          localStorage.clear()
-          sessionStorage.clear()
-          
-          // Limpar cookies do Supabase
-          const cookies = document.cookie.split(';')
-          cookies.forEach(cookie => {
-            const eqPos = cookie.indexOf('=')
-            const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
-            if (name.includes('supabase') || name.includes('sb-')) {
-              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`
-            }
-          })
+          // Retornar sessão nula ao invés de lançar erro
+          return { data: { session: null }, error: null }
         }
         throw error
       }

@@ -31,18 +31,22 @@ const config = {
     'node_modules/(?!(.*\\.mjs$))',
   ],
   
-  // Coverage configuration - focando apenas nos utilitários que funcionam
+  // Coverage configuration - incluindo componentes de permissões
   collectCoverageFrom: [
     'src/utilitarios/**/*.{ts,tsx}',
     'src/componentes/ui/**/*.{ts,tsx}',
+    'src/componentes/usuarios/**/*.{ts,tsx}',
+    'src/tipos/permissoes.ts',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
   ],
   
-  // Test file patterns - apenas os que funcionam por enquanto
+  // Test file patterns - incluindo componentes para testes de permissões
   testMatch: [
     '<rootDir>/src/utilitarios/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/utilitarios/**/*.{test,spec}.{js,jsx,ts,tsx}',
+    '<rootDir>/src/componentes/**/__tests__/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/src/componentes/**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
   
   // Coverage thresholds baixos para começar

@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contextos/auth-contexto'
 import { supabaseClient } from '@/servicos/supabase/auth-client'
 import { criarLinkConvite, desativarConvite, removerUsuarioWorkspace, alterarRoleUsuario } from '@/servicos/supabase/convites-simples'
+import { atualizarPermissoesUsuario } from '@/servicos/supabase/permissoes-service'
+import { ModalPermissoes } from '@/componentes/usuarios/modal-permissoes'
+import type { PermissoesUsuario, ResultadoPermissoes } from '@/tipos/permissoes'
 import { Usuario, ConviteLink } from '@/tipos/auth'
 import { Icone } from '@/componentes/ui/icone'
 import { useToast } from '@/contextos/toast-contexto'
 import { useConfirmDialog } from '@/componentes/ui/confirm-dialog'
-import { Breadcrumbs, useBreadcrumbs } from '@/componentes/ui/breadcrumbs'
 import { formatarUltimaAtividade, isUsuarioInativo, obterCorIndicadorAtividade } from '@/utilitarios/formatacao-data'
 
 interface UsuarioCompleto extends Usuario {
@@ -21,14 +22,14 @@ export default function UsuariosPage() {
   const { workspace, user } = useAuth()
   const { sucesso, erro } = useToast()
   const { confirm, ConfirmDialog } = useConfirmDialog()
-  const pathname = usePathname()
-  const breadcrumbs = useBreadcrumbs(pathname)
   const [usuarios, setUsuarios] = useState<UsuarioCompleto[]>([])
   const [convites, setConvites] = useState<ConviteLink[]>([])
   const [carregandoUsuarios, setCarregandoUsuarios] = useState(true)
   const [enviandoConvite, setEnviandoConvite] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
   const [novoConviteId, setNovoConviteId] = useState<string | null>(null)
+  const [modalPermissoesAberto, setModalPermissoesAberto] = useState(false)
+  const [usuarioPermissoesSelecionado, setUsuarioPermissoesSelecionado] = useState<UsuarioCompleto | null>(null)
 
   const carregarUsuarios = useCallback(async () => {
     if (!workspace) return
@@ -44,6 +45,7 @@ export default function UsuariosPage() {
           email,
           role,
           ativo,
+          permissoes,
           last_activity,
           created_at,
           updated_at
@@ -317,6 +319,41 @@ export default function UsuariosPage() {
     })
   }
 
+  // Handlers para modal de permissões
+  const handleAbrirPermissoes = (usuario: UsuarioCompleto) => {
+    if (usuario.role === 'owner') {
+      erro('Ação não permitida', 'Não é possível alterar permissões de proprietários.')
+      return
+    }
+    
+    setUsuarioPermissoesSelecionado(usuario)
+    setModalPermissoesAberto(true)
+  }
+
+  const handleFecharPermissoes = () => {
+    setModalPermissoesAberto(false)
+    setUsuarioPermissoesSelecionado(null)
+  }
+
+  const handleSalvarPermissoes = async (usuarioId: string, permissoes: PermissoesUsuario): Promise<ResultadoPermissoes> => {
+    if (!workspace) {
+      return { success: false, error: 'Workspace não encontrado' }
+    }
+
+    const resultado = await atualizarPermissoesUsuario(usuarioId, workspace.id, permissoes)
+    
+    if (resultado.success) {
+      // Atualizar usuário na lista local
+      setUsuarios(prev => prev.map(u => 
+        u.id === usuarioId 
+          ? { ...u, permissoes }
+          : u
+      ))
+    }
+    
+    return resultado
+  }
+
   if (!isOwner) {
     return (
       <div className="p-6">
@@ -337,89 +374,79 @@ export default function UsuariosPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      {/* Breadcrumbs */}
-      <div className="mb-6">
-        <Breadcrumbs items={breadcrumbs} />
-      </div>
-
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2">Gerenciar Usuários</h1>
-        <p className="text-muted-foreground">
-          Gerencie os usuários do workspace "{workspace?.nome}"
-        </p>
-      </div>
-
-      {/* Criar Novo Convite */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Icone name="user-plus" className="w-5 h-5" />
-          Convidar Novo Usuário
-        </h2>
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground mb-3">
-              Crie um link de convite que pode ser compartilhado com novos usuários.
-              O link expira em 7 dias.
-            </p>
-          </div>
-          <button
-            onClick={handleCriarConvite}
-            disabled={enviandoConvite}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {enviandoConvite ? (
-              <>
-                <Icone name="loader-2" className="w-4 h-4 animate-spin" />
-                Criando...
-              </>
-            ) : (
-              <>
-                <Icone name="plus-circle" className="w-4 h-4" />
-                Criar Convite
-              </>
-            )}
-          </button>
+      {/* Cabeçalho com botão integrado */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Gerenciar Usuários</h1>
         </div>
+        <button
+          onClick={handleCriarConvite}
+          disabled={enviandoConvite}
+          className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 self-start md:self-auto"
+        >
+          {enviandoConvite ? (
+            <>
+              <Icone name="loader-2" className="w-4 h-4 animate-spin" />
+              Criando...
+            </>
+          ) : (
+            <>
+              <Icone name="plus-circle" className="w-4 h-4" />
+              Criar Convite
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Convites Ativos */}
+      {/* Convites Ativos - Layout Compacto */}
       {convites.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Icone name="link-2" className="w-5 h-5" />
-            Convites Ativos ({convites.length})
-          </h2>
-          <div className="space-y-3">
-            {convites.map((convite) => (
-              <div key={convite.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-sm font-semibold flex items-center gap-2 text-gray-700">
+              <Icone name="link-2" className="w-4 h-4" />
+              Convites Ativos ({convites.length}):
+            </h2>
+            <div className="flex gap-2 flex-wrap">
+              {convites.map((convite) => {
+                const isNovo = novoConviteId === convite.id
+                const dataFormatada = new Date(convite.expires_at).toLocaleDateString('pt-BR', { 
+                  day: '2-digit', 
+                  month: '2-digit' 
+                })
+                
+                return (
+                  <div 
+                    key={convite.id} 
+                    className={`flex items-center gap-2 px-3 py-1.5 border rounded-full text-sm transition-all ${
+                      isNovo 
+                        ? 'bg-green-50 border-green-200 animate-pulse' 
+                        : 'bg-gray-50 border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                    }`}
+                  >
+                    <code className="font-mono font-medium text-gray-800">
                       {convite.codigo}
                     </code>
-                    <span className="text-sm text-muted-foreground">
-                      Expira em {new Date(convite.expires_at).toLocaleDateString('pt-BR')}
+                    <span className="text-xs text-gray-500">
+                      {dataFormatada}
                     </span>
+                    <button
+                      onClick={() => copiarLinkConvite(convite.codigo)}
+                      className="text-blue-500 hover:text-blue-700 p-1 rounded transition-colors"
+                      title="Copiar link"
+                    >
+                      <Icone name="copy" className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDesativarConvite(convite.codigo)}
+                      className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                      title="Excluir convite"
+                    >
+                      <Icone name="user-x" className="w-3 h-3" />
+                    </button>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => copiarLinkConvite(convite.codigo)}
-                    className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50"
-                    title="Copiar link"
-                  >
-                    <Icone name="copy" className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDesativarConvite(convite.codigo)}
-                    className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50"
-                    title="Excluir convite"
-                  >
-                    <Icone name="trash-2" className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -516,19 +543,34 @@ export default function UsuariosPage() {
                         </span>
                       </div>
                     </div>
-                    {/* Botão de remoção */}
-                    {usuario.ativo && podeRemover && (
-                      <button
-                        onClick={() => handleRemoverUsuario(usuario)}
-                        className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                        title={isCurrentUser ? 'Sair do workspace' : 'Remover usuário'}
-                      >
-                        <Icone 
-                          name={isCurrentUser ? "log-out" : "user-x"} 
-                          className="w-4 h-4" 
-                        />
-                      </button>
-                    )}
+                    
+                    {/* Botões de ação */}
+                    <div className="flex items-center gap-1">
+                      {/* Botão Permissões - apenas para MEMBERs */}
+                      {usuario.role === 'member' && (
+                        <button
+                          onClick={() => handleAbrirPermissoes(usuario)}
+                          className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                          title="Configurar permissões"
+                        >
+                          <Icone name="settings" className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {/* Botão de remoção */}
+                      {usuario.ativo && podeRemover && (
+                        <button
+                          onClick={() => handleRemoverUsuario(usuario)}
+                          className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                          title={isCurrentUser ? 'Sair do workspace' : 'Remover usuário'}
+                        >
+                          <Icone 
+                            name={isCurrentUser ? "log-out" : "user-x"} 
+                            className="w-4 h-4" 
+                          />
+                        </button>
+                      )}
+                    </div>
                     {/* Indicador de que não pode ser removido */}
                     {usuario.ativo && !podeRemover && (
                       <div 
@@ -547,6 +589,14 @@ export default function UsuariosPage() {
       </div>
 
       <ConfirmDialog />
+      
+      {/* Modal de Permissões */}
+      <ModalPermissoes
+        isOpen={modalPermissoesAberto}
+        usuario={usuarioPermissoesSelecionado}
+        onClose={handleFecharPermissoes}
+        onSave={handleSalvarPermissoes}
+      />
     </div>
   )
 }

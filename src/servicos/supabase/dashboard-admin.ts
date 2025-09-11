@@ -164,6 +164,7 @@ export async function buscarUsuariosCompletos(): Promise<UsuarioCompleto[]> {
       workspaceId: usuario.workspace_id,
       ativo: usuario.ativo,
       superAdmin: usuario.super_admin || false,
+      role: usuario.role || 'member',
       createdAt: usuario.created_at,
       lastActivity: usuario.last_activity,
       totalTransacoes: usuario.total_transacoes || 0,
@@ -233,6 +234,63 @@ export async function alterarStatusUsuario(usuarioId: string, novoStatus: boolea
     return {
       sucesso: false,
       mensagem: `Erro ao alterar status: ${error.message}`
+    };
+  }
+}
+
+/**
+ * 🆕 Deletar usuário permanentemente (hard delete)
+ * Detecta automaticamente o cenário e age adequadamente
+ * CENÁRIOS:
+ * - owner_unico: Deleta workspace inteiro (DESTRUTIVO)
+ * - owner_multiplo: Deleta apenas usuário (MODERADO)  
+ * - member: Remove acesso (MÍNIMO)
+ */
+export async function deletarUsuarioPermanente(usuarioId: string): Promise<AcaoAdministrativa> {
+  try {
+    console.log(`🗑️ Iniciando deleção permanente do usuário ${usuarioId}...`);
+    
+    const { data, error } = await supabase.rpc('admin_hard_delete_user_smart', {
+      usuario_id: usuarioId
+    });
+
+    if (error) throw error;
+
+    const resultado = data?.[0];
+    
+    if (!resultado) {
+      throw new Error('Nenhuma resposta recebida da função de deleção');
+    }
+    
+    // Invalidar cache após deleção bem-sucedida
+    if (resultado.sucesso) {
+      invalidarCacheDashboard();
+      console.log(`✅ Usuário deletado com sucesso - Cenário: ${resultado.cenario}`);
+    } else {
+      console.error(`❌ Falha na deleção: ${resultado.mensagem}`);
+    }
+    
+    return {
+      sucesso: resultado.sucesso || false,
+      mensagem: resultado.mensagem || 'Erro desconhecido',
+      usuarioEmail: resultado.usuario_email,
+      cenario: resultado.cenario as 'member' | 'owner_unico' | 'owner_multiplo' | 'erro',
+      dadosPerdidos: resultado.dados_perdidos ? {
+        transacoes: parseIntSeguro(resultado.dados_perdidos.transacoes),
+        categorias: parseIntSeguro(resultado.dados_perdidos.categorias),
+        contas: parseIntSeguro(resultado.dados_perdidos.contas),
+        metas: parseIntSeguro(resultado.dados_perdidos.metas),
+        convites: parseIntSeguro(resultado.dados_perdidos.convites),
+        workspaceName: resultado.dados_perdidos.workspaceName || 'Workspace sem nome',
+        usuarioNome: resultado.dados_perdidos.usuarioNome || 'Usuário sem nome'
+      } : undefined
+    };
+  } catch (error: any) {
+    console.error('❌ Erro ao deletar usuário permanentemente:', error);
+    return {
+      sucesso: false,
+      mensagem: `Erro ao deletar usuário: ${error.message}`,
+      cenario: 'erro'
     };
   }
 }

@@ -128,13 +128,13 @@ export function CardCartoesCredito() {
               </div>
 
               {/* Tooltip com últimas transações (hover) */}
-              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl p-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-[9999] max-w-[calc(100vw-2rem)]">
                 <div className="text-xs font-medium text-gray-900 mb-2">
                   Últimas transações:
                 </div>
                 {cartao.ultimasTransacoes && cartao.ultimasTransacoes.length > 0 ? (
-                  <div className="space-y-1">
-                    {cartao.ultimasTransacoes.slice(0, 5).map((trans, transIndex) => (
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {cartao.ultimasTransacoes.slice(0, 20).map((trans, transIndex) => (
                       <div key={transIndex} className="flex justify-between items-center text-xs">
                         <div className="flex-1 truncate mr-2">
                           <span className="text-gray-700">{trans.descricao}</span>

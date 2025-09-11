@@ -3,6 +3,14 @@
 
 import { CentroCusto } from './database'
 
+// Tipo para transação do projeto
+export interface TransacaoProjeto {
+  descricao: string
+  data: string
+  valor: number
+  tipo: 'receita' | 'despesa'
+}
+
 // Tipo base: CentroCusto + campos calculados
 export interface ProjetoPessoal extends CentroCusto {
   // Métricas financeiras calculadas
@@ -27,6 +35,9 @@ export interface ProjetoPessoal extends CentroCusto {
   total_despesas_formatado: string
   resultado_formatado: string
   valor_orcamento_formatado: string | null
+  
+  // Transações para hover tooltip
+  ultimasTransacoes: TransacaoProjeto[]
 }
 
 // Interface para dados do card dashboard
@@ -55,6 +66,7 @@ export interface FiltroProjetosPessoais {
   periodo_fim?: string
   incluir_arquivados?: boolean
   apenas_ativos?: boolean
+  incluir_pendentes?: boolean // Se true, inclui transações pendentes além das realizadas
 }
 
 // Status de um projeto (calculado dinamicamente)

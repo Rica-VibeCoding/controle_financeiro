@@ -8,6 +8,8 @@ export interface Workspace {
   updated_at: string
 }
 
+import type { PermissoesUsuario } from './permissoes'
+
 export interface Usuario {
   id: string
   workspace_id: string
@@ -16,6 +18,7 @@ export interface Usuario {
   avatar_url?: string
   role: 'owner' | 'member'
   ativo: boolean
+  permissoes?: PermissoesUsuario
   created_at: string
   updated_at: string
 }

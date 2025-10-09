@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
+export const dynamic = 'force-dynamic'
+
 export default function NovaFormaPagamentoPage() {
   const router = useRouter()
   const { formaPagamento: modalFormaPagamentoActions } = useModais()

@@ -111,9 +111,8 @@ export function PreviewImportacao({
                     transacao={transacao as TransacaoClassificada}
                     onClick={() => {
                       const transacaoClass = transacao as TransacaoClassificada
-                      if (transacaoClass.status_classificacao === 'pendente') {
-                        setTransacaoParaClassificar(transacaoClass)
-                      }
+                      // Permitir abrir classificação mesmo com match para conferência
+                      setTransacaoParaClassificar(transacaoClass)
                     }}
                     onToggleSelecao={onToggleSelecaoTransacao}
                   />

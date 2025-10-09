@@ -1,10 +1,5 @@
 import { supabase } from '@/servicos/supabase/cliente'
-
-export interface DadosClassificacao {
-  categoria_id: string
-  subcategoria_id: string
-  forma_pagamento_id: string
-}
+import { DadosClassificacao } from '@/tipos/importacao'
 
 /**
  * Busca classificação no histórico por descrição exata + conta
@@ -17,19 +12,18 @@ export async function buscarClassificacaoHistorica(
   try {
     const { data, error } = await supabase
       .from('fp_transacoes')
-      .select('categoria_id, subcategoria_id, forma_pagamento_id')
+      .select('categoria_id, subcategoria_id, forma_pagamento_id, centro_custo_id')
       .eq('descricao', descricao)
       .eq('conta_id', conta_id)
       .not('categoria_id', 'is', null)
       .not('forma_pagamento_id', 'is', null)
-      // subcategoria_id pode ser null - não filtrar
+      // subcategoria_id e centro_custo_id podem ser null - não filtrar
       .order('created_at', { ascending: false })
       .limit(1)
       // Remover .single() para evitar erro 406 quando não há dados
-      
+
     // Verificar se há dados retornados
     if (error || !data || data.length === 0) {
-      console.log('🔍 Classificação histórica não encontrada para:', descricao.substring(0, 30))
       return null
     }
 
@@ -38,41 +32,76 @@ export async function buscarClassificacaoHistorica(
     return {
       categoria_id: primeiroRegistro.categoria_id,
       subcategoria_id: primeiroRegistro.subcategoria_id,
-      forma_pagamento_id: primeiroRegistro.forma_pagamento_id
+      forma_pagamento_id: primeiroRegistro.forma_pagamento_id,
+      centro_custo_id: primeiroRegistro.centro_custo_id ?? null
     }
   } catch (error) {
-    console.error('❌ Erro ao buscar classificação histórica:', {
-      error,
-      descricao: descricao.substring(0, 30),
-      conta_id
-    })
-    return null // Fallback silencioso - não bloqueia importação
+    // Fallback silencioso - não bloqueia importação
+    return null
   }
 }
 
 /**
- * Versão batch para múltiplas transações (performance)
- * Evita loop sequencial que pode travar interface
+ * Versão batch para múltiplas transações (performance otimizada)
+ * Usa query única com IN() para processar todas de uma vez
  */
 export async function buscarClassificacoesEmLote(
   transacoes: Array<{ descricao: string; conta_id: string }>
 ): Promise<Map<string, DadosClassificacao>> {
-  // TODO: Implementar query otimizada com IN() para processar múltiplas de uma vez
-  // Por enquanto, mantém individual mas com Promise.all para paralelismo
+  if (transacoes.length === 0) {
+    return new Map()
+  }
 
   const resultados = new Map<string, DadosClassificacao>()
 
-  const promessas = transacoes.map(async (transacao) => {
-    const chave = `${transacao.descricao}|${transacao.conta_id}`
-    const classificacao = await buscarClassificacaoHistorica(
-      transacao.descricao,
-      transacao.conta_id
-    )
-    if (classificacao) {
-      resultados.set(chave, classificacao)
-    }
-  })
+  // Extrair descrições únicas
+  const descricoesUnicas = [...new Set(transacoes.map(t => t.descricao))]
 
-  await Promise.all(promessas)
-  return resultados
+  try {
+    // Query otimizada: busca TODAS as descrições de uma vez
+    const { data, error } = await supabase
+      .from('fp_transacoes')
+      .select('descricao, conta_id, categoria_id, subcategoria_id, forma_pagamento_id, centro_custo_id')
+      .in('descricao', descricoesUnicas)
+      .not('categoria_id', 'is', null)
+      .not('forma_pagamento_id', 'is', null)
+      .order('created_at', { ascending: false })
+
+    if (error || !data || data.length === 0) {
+      return resultados
+    }
+
+    // Agrupar por descrição + conta_id (pegar apenas a mais recente de cada grupo)
+    const agrupado = new Map<string, DadosClassificacao>()
+
+    data.forEach(registro => {
+      const chave = `${registro.descricao}|${registro.conta_id}`
+
+      // Só adiciona se ainda não existe (primeira = mais recente por causa do ORDER BY)
+      if (!agrupado.has(chave)) {
+        agrupado.set(chave, {
+          categoria_id: registro.categoria_id,
+          subcategoria_id: registro.subcategoria_id,
+          forma_pagamento_id: registro.forma_pagamento_id,
+          centro_custo_id: registro.centro_custo_id ?? null
+        })
+      }
+    })
+
+    // Mapear apenas as transações que existem no histórico
+    transacoes.forEach(transacao => {
+      const chave = `${transacao.descricao}|${transacao.conta_id}`
+      const classificacao = agrupado.get(chave)
+
+      if (classificacao) {
+        resultados.set(chave, classificacao)
+      }
+    })
+
+    return resultados
+  } catch (error) {
+    // Fallback silencioso - não bloqueia importação
+    console.warn('Erro ao buscar classificações em lote:', error)
+    return resultados
+  }
 }

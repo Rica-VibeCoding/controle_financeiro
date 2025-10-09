@@ -41,16 +41,8 @@ export async function importarTransacoes(
 
       // FASE 2: Status vem da FASE 1 (baseado no tipo da conta)
       // Usar status da transação ou fallback para 'realizado'
-      const statusAutomatico: 'previsto' | 'realizado' = 
+      const statusAutomatico: 'previsto' | 'realizado' =
         transacao.status || 'realizado'
-      
-      // Debug log para acompanhar lógica de status
-      console.log('💳 STATUS BASEADO EM CONTA:', {
-        formato: formatoOrigem?.nome || 'CSV Genérico',
-        statusDefinido: statusAutomatico,
-        origem: 'tipo_da_conta',
-        descricao: transacao.descricao.substring(0, 30)
-      })
 
       const dadosParaSalvar: NovaTransacao = {
         data: transacao.data,
@@ -62,28 +54,16 @@ export async function importarTransacoes(
         workspace_id: workspaceId,
         status: statusAutomatico,
         // Incluir dados de classificação se disponível
-        categoria_id: transacaoClassificada.categoria_id || 
+        categoria_id: transacaoClassificada.categoria_id ||
                      transacaoClassificada.classificacao_automatica?.categoria_id || null,
-        subcategoria_id: transacaoClassificada.subcategoria_id || 
+        subcategoria_id: transacaoClassificada.subcategoria_id ||
                         transacaoClassificada.classificacao_automatica?.subcategoria_id || null,
-        forma_pagamento_id: transacaoClassificada.forma_pagamento_id || 
-                           transacaoClassificada.classificacao_automatica?.forma_pagamento_id || null
+        forma_pagamento_id: transacaoClassificada.forma_pagamento_id ||
+                           transacaoClassificada.classificacao_automatica?.forma_pagamento_id || null,
+        centro_custo_id: transacaoClassificada.centro_custo_id ||
+                        transacaoClassificada.classificacao_automatica?.centro_custo_id || null
       }
-      
-      // Debug logs para acompanhar classificação
-      if (temClassificacao) {
-        console.log('✅ TRANSAÇÃO COM CLASSIFICAÇÃO:', {
-          descricao: transacao.descricao.substring(0, 30),
-          categoria_id: dadosParaSalvar.categoria_id,
-          subcategoria_id: dadosParaSalvar.subcategoria_id,
-          forma_pagamento_id: dadosParaSalvar.forma_pagamento_id
-        })
-      } else {
-        console.log('⚠️ TRANSAÇÃO SEM CLASSIFICAÇÃO:', transacao.descricao.substring(0, 30))
-      }
-      
-      console.log('🔍 DEBUG - Dados enviados para criarTransacao:', dadosParaSalvar)
-      
+
       await criarTransacao(dadosParaSalvar, workspaceId)
       resultado.importadas++
     } catch (error) {

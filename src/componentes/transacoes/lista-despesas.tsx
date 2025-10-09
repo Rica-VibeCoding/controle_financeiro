@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { FiltrosTransacoes } from '@/componentes/comum/filtros-transacoes'
 import { PaginacaoTransacoes } from './paginacao-transacoes'
 import { useModais } from '@/contextos/modais-contexto'
@@ -12,6 +12,7 @@ import { usarTransacoes } from '@/hooks/usar-transacoes'
 import { useConfirmDialog } from '@/componentes/ui/confirm-dialog'
 import { Icone } from '@/componentes/ui/icone'
 import type { FiltrosTransacao, ParametrosPaginacao } from '@/tipos/filtros'
+import { DebugLogger } from '@/utilitarios/debug-logger'
 
 interface TransacaoComRelacoes extends Transacao {
   categoria?: { nome: string; cor: string; icone: string }
@@ -32,13 +33,13 @@ export function ListaDespesas() {
   const { workspace } = useAuth()
   const { excluir } = usarTransacoes()
   const { confirm, ConfirmDialog } = useConfirmDialog()
-  
+
   // Estados locais para evitar loading duplo
   const [despesas, setDespesas] = useState<TransacaoComRelacoes[]>([])
   const [loading, setLoading] = useState(true) // Inicia como TRUE para evitar flash
   const [error, setError] = useState<string | null>(null)
   const [totalTransacoes, setTotalTransacoes] = useState(0)
-  
+
   // Estados para filtros e paginação - específicos para despesas
   const [filtrosUsuario, setFiltrosUsuario] = useState<FiltrosTransacao>({})
   const [parametrosPaginacao, setParametrosPaginacao] = useState<ParametrosPaginacao>({
@@ -48,29 +49,75 @@ export function ListaDespesas() {
     direcao: 'desc'
   })
 
+  // Ref para tracking de renders
+  const renderCount = useRef(0)
+
+  // Lifecycle: Component Mount
+  useEffect(() => {
+    renderCount.current++
+    DebugLogger.lifecycle('ListaDespesas', 'Componente montado/atualizado', {
+      renderCount: renderCount.current,
+      workspace: workspace?.id,
+      loading,
+      totalDespesas: despesas.length
+    })
+
+    return () => {
+      DebugLogger.lifecycle('ListaDespesas', 'Componente desmontado', {
+        renderCount: renderCount.current
+      })
+    }
+  }, [])
+
   // Carregar despesas
   const carregarDespesas = useCallback(async () => {
-    if (!workspace) return
-    
+    if (!workspace) {
+      DebugLogger.warn('ListaDespesas', 'carregarDespesas abortado - workspace ausente', {
+        workspace: null
+      })
+      return
+    }
+
+    DebugLogger.time('ListaDespesas.carregarDespesas')
+    DebugLogger.info('ListaDespesas', 'Iniciando carregamento de despesas', {
+      workspaceId: workspace.id,
+      filtros: filtrosUsuario,
+      paginacao: parametrosPaginacao
+    })
+
     try {
       setLoading(true)
       setError(null)
-      
+
       // Aplicar filtros do usuário + filtros fixos para despesas
       const resposta = await obterTransacoes(
-        filtrosUsuario, 
-        parametrosPaginacao, 
+        filtrosUsuario,
+        parametrosPaginacao,
         workspace.id,
         { tipo: 'despesa', status: 'realizado' }
       )
+
       setDespesas(resposta.dados as TransacaoComRelacoes[])
       setTotalTransacoes(resposta.total)
+
+      DebugLogger.success('ListaDespesas', 'Despesas carregadas com sucesso', {
+        total: resposta.total,
+        carregadas: resposta.dados.length,
+        pagina: parametrosPaginacao.pagina
+      })
     } catch (err) {
       const mensagem = err instanceof Error ? err.message : 'Erro ao carregar despesas'
       setError(mensagem)
+
+      DebugLogger.error('ListaDespesas', 'Erro ao carregar despesas', {
+        erro: mensagem,
+        workspaceId: workspace.id
+      })
+
       console.error('Erro ao carregar despesas:', err)
     } finally {
       setLoading(false)
+      DebugLogger.timeEnd('ListaDespesas.carregarDespesas')
     }
   }, [workspace, filtrosUsuario, parametrosPaginacao])
   
@@ -82,15 +129,21 @@ export function ListaDespesas() {
   // Escutar evento customizado para atualizar após mudanças
   useEffect(() => {
     const handleAtualizarTransacoes = () => {
+      DebugLogger.info('ListaDespesas', 'Evento atualizarTransacoes recebido - recarregando', {
+        workspace: workspace?.id
+      })
       carregarDespesas()
     }
-    
+
     window.addEventListener('atualizarTransacoes', handleAtualizarTransacoes)
-    
+
+    DebugLogger.lifecycle('ListaDespesas', 'Listener registrado para atualizarTransacoes', {})
+
     return () => {
       window.removeEventListener('atualizarTransacoes', handleAtualizarTransacoes)
+      DebugLogger.lifecycle('ListaDespesas', 'Listener removido', {})
     }
-  }, [carregarDespesas])
+  }, [carregarDespesas, workspace])
 
   // Handler para editar transação
   const handleEditar = (transacao: Transacao) => {

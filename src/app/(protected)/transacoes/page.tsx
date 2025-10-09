@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { mutate } from 'swr'
 import { Button } from '@/componentes/ui/button'
@@ -20,6 +22,7 @@ import { ModalTransferencia } from '@/componentes/modais/modal-transferencia'
 import { ModalLancamento } from '@/componentes/modais/modal-lancamento'
 import { ModalParcelamento } from '@/componentes/modais/modal-parcelamento'
 import { ModalImportacaoCSV } from '@/componentes/importacao/modal-importacao-csv'
+import { DebugPanel } from '@/componentes/transacoes/debug-panel'
 
 // Definição das abas com suas permissões - Despesas primeiro (padrão)
 const ABAS_TRANSACOES = [
@@ -359,6 +362,14 @@ function TransacoesPageContent() {
           onClose={fecharModal}
           onSuccess={atualizarListasTransacoes}
         />
+
+        {/* Debug Panel - apenas em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && (
+          <DebugPanel
+            abaAtiva={abaAtiva}
+            componenteCarregado={componenteCarregado}
+          />
+        )}
       </div>
   )
 }

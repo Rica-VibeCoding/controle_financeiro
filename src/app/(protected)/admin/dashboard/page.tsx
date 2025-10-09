@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { LayoutContainer } from '@/componentes/dashboard-admin/layout-container';
 import { DashboardPrincipal } from '@/componentes/dashboard-admin/dashboard-principal';
 import { usarDashboardAdmin } from '@/hooks/usar-dashboard-admin';

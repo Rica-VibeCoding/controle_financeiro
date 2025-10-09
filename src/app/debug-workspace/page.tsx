@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useAuth } from '@/contextos/auth-contexto'
 import { useEffect, useState } from 'react'
 import { obterCategorias } from '@/servicos/supabase/categorias'

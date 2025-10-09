@@ -45,6 +45,7 @@ export interface DadosClassificacao {
   categoria_id: string
   subcategoria_id: string | null // Subcategoria é opcional
   forma_pagamento_id: string
+  centro_custo_id?: string | null // Centro de custo é opcional
 }
 
 export type TipoLancamento = 'gasto_real' | 'ajuste_contabil' | 'pagamento_credito' | 'taxa_juro'
@@ -62,6 +63,7 @@ export interface TransacaoClassificada extends TransacaoImportada {
   categoria_id?: string
   subcategoria_id?: string | null // Pode ser null (opcional)
   forma_pagamento_id?: string
+  centro_custo_id?: string | null // Centro de custo opcional
   formato_origem?: string // Para identificar se veio de cartão, nubank, etc.
   sinalizacao?: SinalizacaoLancamento
   selecionada?: boolean // Para controle de seleção individual
@@ -77,4 +79,62 @@ export interface ResumoClassificacao {
 export interface ClassificacaoManual {
   transacao: TransacaoClassificada
   dados: DadosClassificacao
+}
+
+// ============================================
+// TEMPLATES DE BANCO - PRÉ-SELEÇÃO CSV
+// ============================================
+
+export interface ConfiguracaoCSV {
+  separador: ',' | ';'
+  encoding: 'UTF-8' | 'ISO-8859-1'
+  decimal: '.' | ','
+  minColunas: number
+  linhasIgnorar?: number      // Número de linhas de cabeçalho para ignorar (ex: Conta Simples tem 7)
+}
+
+export interface ColunasTemplate {
+  data: string[]              // Aceita variações: ['date', 'Data']
+  valor?: string[]            // ['amount', 'Valor'] - Opcional se usar creditoDebito
+  descricao: string[]         // ['title', 'Descrição']
+  identificador?: string[]    // Opcional: ['id', 'Identificador']
+  // Para bancos que separam crédito/débito (ex: Conta Simples)
+  creditoDebito?: {
+    credito: string[]         // ['Crédito R$']
+    debito: string[]          // ['Débito R$']
+  }
+  // Campos extras opcionais
+  observacoes?: string[]      // ['Descrição', 'Observações']
+  categoria?: string[]        // ['Categoria'] - Importar se existir
+  centroCusto?: string[]      // ['Centro de Custo']
+  saldo?: string[]            // ['Saldo R$']
+}
+
+export interface InstrucoesTemplate {
+  linkTutorial: string        // URL do help do banco
+  tituloResumido: string      // Texto curto de como exportar
+}
+
+export interface ExemploCSV {
+  headers: string             // "date,amount,title"
+  linha1: string              // Exemplo de linha 1
+  linha2: string              // Exemplo de linha 2
+}
+
+export interface TemplateBanco {
+  id: string                  // Formato: banco_tipo (ex: nubank_cartao)
+  nome: string                // Nome para exibição
+  icone?: string              // Emoji do banco (opcional se usar iconeComponent)
+  iconeComponent?: React.ComponentType<{ className?: string }>  // Componente SVG customizado
+  categoria: 'cartao' | 'conta'
+  colunas: ColunasTemplate
+  validacao: ConfiguracaoCSV
+  instrucoes: InstrucoesTemplate
+  exemplo: ExemploCSV
+}
+
+export interface ResultadoValidacaoTemplate {
+  valido: boolean
+  erro?: string
+  sugestao?: string           // Sugestão de template alternativo
 }

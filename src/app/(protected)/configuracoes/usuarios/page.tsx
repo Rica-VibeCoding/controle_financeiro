@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contextos/auth-contexto'
 import { supabaseClient } from '@/servicos/supabase/auth-client'

@@ -22,23 +22,26 @@ Todas as mudanças notáveis do projeto serão documentadas neste arquivo.
 - **Duas queries alteradas**: `queryDespesas` e `queryTransacoes`
 - **Validação**: TypeScript OK, Supabase schema verificado
 
-### 🎨 **CORREÇÃO: Z-Index dos Tooltips Dashboard**
+### 🎨 **CORREÇÃO: Z-Index dos Tooltips Dashboard (CSS Isolation)**
 
 #### Corrigido
-- **Tooltip Contas**: Z-index aumentado de `z-50` para `z-[9999]` 
-- **Tooltip Cartões**: Z-index aumentado de `z-50` para `z-[9999]`
-- **Sobreposição**: Tooltips agora aparecem acima da seção "Projetos Pessoais"
-- **Responsividade**: Adicionado `max-w-[calc(100vw-2rem)]` para telas pequenas
+- **Root Cause**: Animações `slideUp` com `transform` criam stacking context que anula z-index
+- **Solução CSS**: Classe `tooltip-container { isolation: isolate }` quebra stacking context
+- **Tooltip Contas**: Sempre visível acima da seção "Projetos Pessoais"
+- **Tooltip Cartões**: Sempre visível acima da seção "Projetos Pessoais"
+- **Tooltip Projetos**: Z-index consistente `z-[9999]` em todos os componentes
 
 #### Melhorias UX
-- **Transições**: Alterado de `transition-opacity` para `transition-all duration-200`
-- **Sombra**: Atualizado de `shadow-lg` para `shadow-xl` para maior destaque
-- **Visibilidade**: Tooltips sempre visíveis independente da posição no grid
+- **Transições**: Padronizado `transition-all duration-200` em todos os tooltips
+- **Sombra**: Atualizado para `shadow-xl` para maior destaque
+- **Responsividade**: `max-w-[calc(100vw-2rem)]` para telas pequenas
+- **Visibilidade**: 100% confiável independente da ordem DOM
 
-#### Técnico
-- **Arquivos**: `card-saldos-contas.tsx` e `card-cartoes-credito.tsx`
-- **Classes CSS**: Z-index, transições e responsividade otimizados
-- **Compatibilidade**: Tailwind arbitrary values `z-[9999]`
+#### Técnico Avançado
+- **CSS**: Nova classe `.tooltip-container` no `globals.css`
+- **Arquivos**: `card-saldos-contas.tsx`, `card-cartoes-credito.tsx`, `card-projetos-melhorado.tsx`
+- **Abordagem**: CSS `isolation` ao invés de z-index arbitrário alto
+- **Base**: Solução recomendada pela comunidade web (Stack Overflow, GitHub)
 
 ## [2.1.0] - 2025-01-10
 

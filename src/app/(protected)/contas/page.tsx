@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import NextDynamic from 'next/dynamic'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
@@ -13,7 +15,7 @@ import { useModais } from '@/contextos/modais-contexto'
 import type { Conta } from '@/tipos/database'
 
 // Lazy load do modal - só carrega quando necessário
-const ModalConta = dynamic(() => import('@/componentes/modais/modal-conta').then(mod => ({ default: mod.ModalConta })), {
+const ModalConta = NextDynamic(() => import('@/componentes/modais/modal-conta').then(mod => ({ default: mod.ModalConta })), {
   ssr: false
 })
 

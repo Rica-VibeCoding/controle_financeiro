@@ -5,9 +5,10 @@ import { ModalBase } from '@/componentes/modais/modal-base'
 import { Button } from '@/componentes/ui/button'
 import { UploadCSV } from './upload-csv'
 import { SeletorConta } from './seletor-conta'
+import { SeletorBanco } from './seletor-banco'
 import { usarToast } from '@/hooks/usar-toast'
-import { processarCSV } from '@/servicos/importacao/processador-csv'
-import { detectarFormato } from '@/servicos/importacao/detector-formato'
+import { processarCSV, processarCSVComTemplate } from '@/servicos/importacao/processador-csv'
+import { detectarFormato, validarContraTemplate } from '@/servicos/importacao/detector-formato'
 import { verificarDuplicatas } from '@/servicos/importacao/validador-duplicatas'
 import { importarTransacoes } from '@/servicos/importacao/importador-transacoes'
 import { PreviewImportacao } from './preview-importacao'
@@ -16,15 +17,18 @@ import {
   TransacaoClassificada,
   ResumoClassificacao,
   DadosClassificacao,
-  StatusTransacao
+  StatusTransacao,
+  TemplateBanco
 } from '@/tipos/importacao'
 import { detectarTipoLancamento } from '@/servicos/importacao/detector-tipos-lancamento'
 import {
   buscarClassificacaoHistorica,
   buscarClassificacoesEmLote
 } from '@/servicos/importacao/classificador-historico'
+import { classificarTransacaoContaSimples } from '@/servicos/importacao/classificador-conta-simples'
 import { logger } from '@/utilitarios/logger'
 import { useAuth } from '@/contextos/auth-contexto'
+import { invalidarCacheCompleto } from '@/utilitarios/invalidacao-cache-global'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
 interface ModalImportacaoCSVProps {
@@ -40,17 +44,20 @@ export function ModalImportacaoCSV({
 }: ModalImportacaoCSVProps) {
   const { workspace } = useAuth()
   const { dados } = useDadosAuxiliares()
+
+  // NOVOS ESTADOS - Sistema de Templates
+  const [etapaAtual, setEtapaAtual] = useState<'selecao' | 'upload' | 'preview'>('selecao')
+  const [templateSelecionado, setTemplateSelecionado] = useState<TemplateBanco | null>(null)
+
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [contaSelecionada, setContaSelecionada] = useState('')
   const [carregando, setCarregando] = useState(false)
-  // FASE 1: Estado para status padrão baseado no tipo da conta
-  const [statusPadrao, setStatusPadrao] = useState<StatusTransacao>('realizado')
   const [dadosProcessados, setDadosProcessados] = useState<any[]>([])
   const [transacoesMapeadas, setTransacoesMapeadas] = useState<TransacaoImportada[]>([])
   const [duplicadas, setDuplicadas] = useState<TransacaoImportada[]>([])
   const [mostrarPreview, setMostrarPreview] = useState(false)
   const [formatoDetectado, setFormatoDetectado] = useState<any>(null)
-  
+
   // Estados para classificação inteligente
   const [transacoesClassificadas, setTransacoesClassificadas] = useState<TransacaoClassificada[]>([])
   const [resumoClassificacao, setResumoClassificacao] = useState<ResumoClassificacao>({
@@ -58,24 +65,51 @@ export function ModalImportacaoCSV({
     pendentes: 0,
     duplicadas: 0
   })
-  
+
   const { erro, sucesso } = usarToast()
+
+  // Handler para seleção de banco
+  const handleBancoSelecionado = (template: TemplateBanco) => {
+    setTemplateSelecionado(template)
+    setEtapaAtual('upload')
+  }
+
+  // Handler para voltar à seleção de banco
+  const handleVoltarSelecaoBanco = () => {
+    setArquivo(null)
+    setDadosProcessados([])
+    setFormatoDetectado(null)
+    setEtapaAtual('selecao')
+  }
 
   const handleArquivoSelecionado = async (file: File | null) => {
     setArquivo(file)
     setDadosProcessados([])
     setFormatoDetectado(null)
-    
-    if (file) {
+
+    if (file && templateSelecionado) {
       setCarregando(true)
       try {
-        const linhasCSV = await processarCSV(file)
-        
-        // Tentar detectar formato
-        const formato = detectarFormato(linhasCSV)
+        // Usar processador com template
+        const linhasCSV = await processarCSVComTemplate(file, templateSelecionado)
+
+        // Validar contra template
+        const validacao = validarContraTemplate(linhasCSV, templateSelecionado)
+
+        if (!validacao.valido) {
+          erro(validacao.erro || 'CSV não corresponde ao formato esperado')
+          if (validacao.sugestao) {
+            sucesso(`💡 Sugestão: Parece ser ${validacao.sugestao}. Volte e selecione o banco correto.`)
+          }
+          return
+        }
+
+        // Usar detectarFormato para compatibilidade com código existente
+        // Passa o template para validação específica
+        const formato = detectarFormato(linhasCSV, templateSelecionado)
         setFormatoDetectado(formato)
-        
-        sucesso(`${formato.icone} ${formato.nome} detectado: ${linhasCSV.length} transações`)
+
+        sucesso(`${templateSelecionado.icone} ${templateSelecionado.nome}: ${linhasCSV.length} transações validadas`)
         setDadosProcessados(linhasCSV)
       } catch (error) {
         if (error instanceof Error && error.message.includes('formato não reconhecido')) {
@@ -99,41 +133,77 @@ export function ModalImportacaoCSV({
     setCarregando(true)
     try {
       // 1. Detectar formato e mapear dados (código atual)
-      const formato = detectarFormato(dadosProcessados)
+      // Passa o template se disponível
+      const formato = detectarFormato(dadosProcessados, templateSelecionado || undefined)
       setFormatoDetectado(formato)
-      
-      // FASE 2: Buscar tipo da conta selecionada para corrigir lógica de receita/despesa
+
       const contaInfo = dados.contas?.find(c => c.id === contaSelecionada)
       const tipoContaSelecionada = contaInfo?.tipo as any
-      
+
       const transacoesMap = formato.mapeador(dadosProcessados, contaSelecionada, tipoContaSelecionada)
-      
-      // FASE 1: Aplicar status padrão baseado no tipo da conta
+
+      // Aplicar status padrão 'realizado' para todas as transações
       const transacoesComStatus = transacoesMap.map(transacao => ({
         ...transacao,
-        status: statusPadrao
+        status: 'realizado' as const
       }))
       
       // 2. NOVO: Classificação inteligente
       const transacoesClassificadas: TransacaoClassificada[] = []
-      
+
       // Versão otimizada: buscar classificações em lote
       const dadosParaBusca = transacoesComStatus.map(t => ({
         descricao: t.descricao,
         conta_id: t.conta_id
       }))
-      
+
       const classificacoesEncontradas = await buscarClassificacoesEmLote(dadosParaBusca)
-      
+
       // Processar cada transação
-      for (const transacao of transacoesComStatus) {
+      for (let i = 0; i < transacoesComStatus.length; i++) {
+        const transacao = transacoesComStatus[i]
         const chave = `${transacao.descricao}|${transacao.conta_id}`
-        const classificacao = classificacoesEncontradas.get(chave)
-        
+        let classificacao = classificacoesEncontradas.get(chave)
+
+        // NOVO: Classificador específico do Conta Simples
+        if (templateSelecionado?.id === 'conta_simples' && workspace) {
+          const linhaOriginal = dadosProcessados[i] as any
+
+          // Buscar centro de custo direto do CSV (já vem preenchido!)
+          const centroCustoBanco = linhaOriginal['Centro de Custo'] ||
+                                   linhaOriginal['Centro de custo'] ||
+                                   linhaOriginal['centro de custo'] || ''
+
+          const classificacaoContaSimples = await classificarTransacaoContaSimples(
+            {
+              descricao: transacao.descricao,
+              categoriaBanco: linhaOriginal['Categoria'] || linhaOriginal['categoria'],
+              historico: centroCustoBanco // Usar centro de custo do CSV como "histórico" para busca
+            },
+            workspace.id
+          )
+
+          // Mesclar classificações (Conta Simples tem prioridade)
+          if (classificacaoContaSimples.categoria_id || classificacaoContaSimples.centro_custo_id) {
+            const categoriaFinal = classificacaoContaSimples.categoria_id || classificacao?.categoria_id || ''
+            const formaPagamentoFinal = classificacao?.forma_pagamento_id || ''
+
+            // Só criar classificação se tiver ao menos categoria OU forma de pagamento
+            if (categoriaFinal || formaPagamentoFinal) {
+              classificacao = {
+                categoria_id: categoriaFinal,
+                subcategoria_id: classificacao?.subcategoria_id ?? null,
+                forma_pagamento_id: formaPagamentoFinal,
+                centro_custo_id: classificacaoContaSimples.centro_custo_id ?? null
+              }
+            }
+          }
+        }
+
         // Detectar tipo de lançamento para sinalização
         const sinalizacao = detectarTipoLancamento(transacao)
-        
-        if (classificacao) {
+
+        if (classificacao && (classificacao.categoria_id || classificacao.centro_custo_id)) {
           // Transação reconhecida
           transacoesClassificadas.push({
             ...transacao,
@@ -142,6 +212,7 @@ export function ModalImportacaoCSV({
             categoria_id: classificacao.categoria_id,
             subcategoria_id: classificacao.subcategoria_id,
             forma_pagamento_id: classificacao.forma_pagamento_id,
+            centro_custo_id: classificacao.centro_custo_id,
             formato_origem: formato.nome,
             sinalizacao,
             selecionada: sinalizacao.tipo === 'gasto_real' || sinalizacao.tipo === 'taxa_juro' // Padrão inteligente
@@ -224,7 +295,10 @@ export function ModalImportacaoCSV({
     setCarregando(true)
     try {
       const resultado = await importarTransacoes(transacoesParaImportar, workspace.id, formatoDetectado)
-      
+
+      // Invalidar TODO o cache após importação em massa
+      await invalidarCacheCompleto(workspace.id)
+
       if (resultado.erros.length === 0) {
         sucesso(`✅ ${resultado.importadas} transações importadas com sucesso!`)
       } else if (resultado.importadas > 0) {
@@ -235,7 +309,7 @@ export function ModalImportacaoCSV({
         logger.error('Erros de importação:', resultado.erros)
         return // Não fecha o modal se nada foi importado
       }
-      
+
       if (onSuccess) onSuccess()
       onClose()
     } catch (error) {
@@ -254,7 +328,8 @@ export function ModalImportacaoCSV({
       status_classificacao: 'reconhecida',
       categoria_id: dados.categoria_id,
       subcategoria_id: dados.subcategoria_id,
-      forma_pagamento_id: dados.forma_pagamento_id
+      forma_pagamento_id: dados.forma_pagamento_id,
+      centro_custo_id: dados.centro_custo_id
     }
     
     // Atualizar array de transações
@@ -300,9 +375,11 @@ export function ModalImportacaoCSV({
   }
 
   const handleFechar = () => {
+    // Reset de todos os estados
+    setEtapaAtual('selecao')
+    setTemplateSelecionado(null)
     setArquivo(null)
     setContaSelecionada('')
-    setStatusPadrao('realizado') // FASE 1: Reset status padrão
     setDadosProcessados([])
     setTransacoesMapeadas([])
     setDuplicadas([])
@@ -313,36 +390,76 @@ export function ModalImportacaoCSV({
     onClose()
   }
 
+  // Determinar título baseado na etapa
+  const obterTitulo = () => {
+    if (mostrarPreview) return "📋 Preview da Importação"
+    if (etapaAtual === 'selecao') return "📂 Importar CSV"
+    return "📂 Importar"
+  }
+
   return (
-    <ModalBase
-      isOpen={isOpen}
-      onClose={handleFechar}
-      title={mostrarPreview ? "📋 Preview da Importação" : "📂 Importar CSV"}
-      maxWidth={mostrarPreview ? "xl" : "md"}
-    >
-      <div className="space-y-4">
-        {mostrarPreview ? (
-          <PreviewImportacao
-            transacoes={transacoesMapeadas}
-            duplicadas={duplicadas}
-            onConfirmar={handleConfirmarImportacao}
-            onCancelar={handleVoltarUpload}
-            carregando={carregando}
-            // Novas props para classificação
-            transacoesClassificadas={transacoesClassificadas}
-            resumoClassificacao={resumoClassificacao}
-            onClassificarTransacao={handleClassificarTransacao}
-            onToggleSelecaoTransacao={handleToggleSelecaoTransacao}
-            formatoOrigem={formatoDetectado}
-          />
-        ) : (
-          <>
+    <>
+      {/* Modal de seleção de banco */}
+      <SeletorBanco
+        isOpen={isOpen && etapaAtual === 'selecao'}
+        onClose={handleFechar}
+        onBancoSelecionado={handleBancoSelecionado}
+      />
+
+      {/* Modal principal de importação */}
+      <ModalBase
+        isOpen={isOpen && etapaAtual !== 'selecao'}
+        onClose={handleFechar}
+        title={obterTitulo()}
+        maxWidth={mostrarPreview ? "xl" : "md"}
+      >
+        <div className="space-y-4">
+          {mostrarPreview ? (
+            <PreviewImportacao
+              transacoes={transacoesMapeadas}
+              duplicadas={duplicadas}
+              onConfirmar={handleConfirmarImportacao}
+              onCancelar={handleVoltarUpload}
+              carregando={carregando}
+              // Novas props para classificação
+              transacoesClassificadas={transacoesClassificadas}
+              resumoClassificacao={resumoClassificacao}
+              onClassificarTransacao={handleClassificarTransacao}
+              onToggleSelecaoTransacao={handleToggleSelecaoTransacao}
+              formatoOrigem={formatoDetectado}
+            />
+          ) : (
+            <>
+        {/* Card de Informações do Banco Selecionado - SIMPLIFICADO */}
+        {templateSelecionado && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {templateSelecionado.iconeComponent ? (
+                  <templateSelecionado.iconeComponent className="w-10 h-10" />
+                ) : (
+                  <span className="text-3xl">{templateSelecionado.icone}</span>
+                )}
+                <div>
+                  <h4 className="font-semibold text-blue-900 text-lg">{templateSelecionado.nome}</h4>
+                  <p className="text-xs text-blue-600 mt-0.5">💡 Salvar a planilha no formato CSV</p>
+                </div>
+              </div>
+              <button
+                onClick={handleVoltarSelecaoBanco}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded hover:bg-blue-100 transition-colors"
+              >
+                Trocar banco
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Seleção de Conta */}
         <SeletorConta
           contaSelecionada={contaSelecionada}
           onContaChange={setContaSelecionada}
           desabilitado={carregando}
-          onStatusPadraoChange={setStatusPadrao}
         />
 
         {/* Upload de Arquivo */}
@@ -382,29 +499,6 @@ export function ModalImportacaoCSV({
           </div>
         )}
 
-        {/* Informações */}
-        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-          <h4 className="font-medium text-blue-900 mb-2">🏦 Formatos Suportados</h4>
-          <div className="text-sm text-blue-700 space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-purple-600">🏦</span>
-              <strong>Nubank:</strong> Data, Valor, Identificador, Descrição
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-blue-600">💳</span>
-              <strong>Cartão de crédito:</strong> date, title, amount
-            </div>
-            <div className="flex items-center gap-2 text-xs text-blue-600 mt-2">
-              <span>⚡</span>
-              Detecção automática - apenas arraste o arquivo!
-            </div>
-            <div className="flex items-center gap-2 text-xs text-blue-600">
-              <span>🔒</span>
-              Evita automaticamente transações duplicadas
-            </div>
-          </div>
-        </div>
-
         {/* Botões */}
         <div className="flex gap-3 justify-end">
           <Button 
@@ -425,5 +519,6 @@ export function ModalImportacaoCSV({
         )}
       </div>
     </ModalBase>
+    </>
   )
 }

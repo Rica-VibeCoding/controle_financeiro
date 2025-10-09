@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import NextDynamic from 'next/dynamic'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
@@ -13,7 +15,7 @@ import { useModais } from '@/contextos/modais-contexto'
 import type { CentroCusto } from '@/tipos/database'
 
 // Lazy load do modal - só carrega quando necessário
-const ModalCentroCusto = dynamic(() => import('@/componentes/modais/modal-centro-custo').then(mod => ({ default: mod.ModalCentroCusto })), {
+const ModalCentroCusto = NextDynamic(() => import('@/componentes/modais/modal-centro-custo').then(mod => ({ default: mod.ModalCentroCusto })), {
   ssr: false
 })
 

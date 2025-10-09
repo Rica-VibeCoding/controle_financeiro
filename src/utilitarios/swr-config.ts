@@ -1,60 +1,64 @@
-// Configuração SWR otimizada para o sistema financeiro
-// Estratégia híbrida: sem refresh automático + backup 15min
+// Configuração SWR otimizada para uso pessoal
+// Estratégia MANUAL-FIRST: Atualiza apenas quando usuário adiciona/edita dados
 
 import type { SWRConfiguration } from 'swr'
 
 /**
- * Configuração SWR otimizada baseada na estratégia híbrida:
- * - Não atualiza automaticamente ao trocar de aba (melhor UX)
- * - Backup de 15 minutos se ficar muito tempo na mesma tela
- * - Performance otimizada para dados financeiros
+ * Configuração SWR para uso pessoal - Invalidação manual apenas
+ *
+ * FILOSOFIA: "Só atualiza quando EU quero"
+ * - ❌ Sem atualizações automáticas em background
+ * - ❌ Sem reload ao trocar de aba
+ * - ❌ Sem polling periódico
+ * - ✅ Cache agressivo para performance
+ * - ✅ Atualização manual via invalidação explícita após mutations
  */
 export const SWR_CONFIG_OTIMIZADA: SWRConfiguration = {
-  // ESTRATÉGIA HÍBRIDA APROVADA
-  revalidateOnFocus: false,       // ✅ Não atualiza ao trocar aba (evita refresh chato)
-  refreshInterval: 900000,        // ✅ Backup: 15 minutos
-  revalidateOnMount: true,        // ✅ Atualiza ao abrir página
-  
-  // OTIMIZAÇÕES DE PERFORMANCE
-  dedupingInterval: 5000,         // 5s - evita requests duplicados
-  errorRetryCount: 2,             // Menos tentativas = mais rápido
-  revalidateIfStale: true,        // Revalida dados antigos
-  
-  // CONFIGURAÇÕES DE UX
+  // === POLÍTICA DE REVALIDAÇÃO: MANUAL ONLY ===
+  revalidateOnFocus: false,       // ❌ Não atualiza ao trocar aba
+  revalidateOnReconnect: false,   // ❌ Não atualiza ao reconectar
+  revalidateOnMount: true,        // ✅ Carrega ao abrir página pela primeira vez
+  refreshInterval: 0,             // ❌ NUNCA atualizar automaticamente (era 900000)
+
+  // === PERFORMANCE E CACHE ===
+  dedupingInterval: 2000,         // 2s - evita requests duplicados
+  errorRetryCount: 2,             // Apenas 2 tentativas se falhar
+  revalidateIfStale: false,       // ❌ Não revalidar dados "velhos" automaticamente
+
+  // === UX OTIMIZADA ===
   suspense: false,                // Sem suspense (melhor controle loading)
-  revalidateOnReconnect: true,    // Atualiza quando volta conexão
-  
-  // CONFIGURAÇÕES DE ERRO
+  keepPreviousData: true,         // ✅ Mantém dados visíveis durante update manual
+
+  // === TRATAMENTO DE ERROS ===
   shouldRetryOnError: (error: any) => {
     // Não retry em erros de autorização
     if (error?.message?.includes('401')) return false
     if (error?.message?.includes('403')) return false
-    return true
+    return false // Não ficar tentando - mostrar erro e parar
   },
-  
-  // CONFIGURAÇÕES DE CACHE
-  fallbackData: undefined,        // Sem fallback padrão
-  keepPreviousData: true         // Mantém dados anteriores durante loading
+
+  // === CONFIGURAÇÕES DE CACHE ===
+  fallbackData: undefined         // Sem fallback padrão
 }
 
 /**
  * Configuração específica para dados críticos (transações principais)
- * Mesma estratégia, mas com cache um pouco mais agressivo
+ * Mesma estratégia manual-first
  */
 export const SWR_CONFIG_DADOS_CRITICOS: SWRConfiguration = {
   ...SWR_CONFIG_OTIMIZADA,
-  dedupingInterval: 3000,         // 3s para dados críticos
-  refreshInterval: 600000,        // 10 minutos para dados mais importantes
+  dedupingInterval: 1500,         // 1.5s - dados críticos atualizam mais rápido
+  refreshInterval: 0              // ❌ Sem refresh automático
 }
 
 /**
  * Configuração para dados auxiliares (categorias, formas pagamento)
- * Estes dados mudam raramente, então cache mais longo
+ * Dados que mudam raramente - cache muito longo
  */
 export const SWR_CONFIG_DADOS_AUXILIARES: SWRConfiguration = {
   ...SWR_CONFIG_OTIMIZADA,
-  refreshInterval: 1800000,       // 30 minutos para dados auxiliares
-  dedupingInterval: 30000,        // 30s - dados auxiliares podem ter cache maior
+  dedupingInterval: 5000,         // 5s - dados auxiliares
+  refreshInterval: 0              // ❌ Sem refresh automático
 }
 
 // Tipagem para facilitar uso

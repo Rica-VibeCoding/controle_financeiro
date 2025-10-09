@@ -25,51 +25,61 @@ export function ModalClassificacaoRapida({
   const [categoria, setCategoria] = useState('')
   const [subcategoria, setSubcategoria] = useState('')
   const [formaPagamento, setFormaPagamento] = useState('')
+  const [centroCusto, setCentroCusto] = useState('')
   const [subcategorias, setSubcategorias] = useState<any[]>([])
-  
+
   // Usar contexto de dados auxiliares
   const { dados, obterSubcategorias } = useDadosAuxiliares()
 
   // Resetar campos ao abrir modal
   useEffect(() => {
     if (isOpen && transacao) {
-      setCategoria('')
-      setSubcategoria('')
+      // PRÉ-PREENCHER com dados já existentes na transação (prioridade)
+      // ou fallback para classificacao_automatica
+      const classificacaoAuto = (transacao as any).classificacao_automatica
+
+      const categoriaId = transacao.categoria_id || classificacaoAuto?.categoria_id || ''
+      const subcategoriaId = transacao.subcategoria_id || classificacaoAuto?.subcategoria_id || ''
+      const centroCustoId = transacao.centro_custo_id || classificacaoAuto?.centro_custo_id || ''
+
+      setCategoria(categoriaId)
+      setSubcategoria(subcategoriaId)
+      setCentroCusto(centroCustoId)
       setSubcategorias([])
-      
+
       // FASE 2: PRE-SELECIONAR FORMA DE PAGAMENTO PADRÃO
-      // Simplificado - sempre tenta pré-selecionar a primeira forma ativa
-      let formaSelecionada = ''
-      
-      const formaAtiva = dados.formasPagamento.find(f => f.ativo)
-      if (formaAtiva) {
-        formaSelecionada = formaAtiva.id
-        console.log('💳 Pré-selecionado forma padrão:', formaAtiva.nome, 'ID:', formaAtiva.id)
+      // Priorizar dados já na transação, depois classificação automática
+      let formaSelecionada = transacao.forma_pagamento_id || classificacaoAuto?.forma_pagamento_id || ''
+
+      if (!formaSelecionada) {
+        // Tentar pré-selecionar PIX (mais usual)
+        const pixForm = dados.formasPagamento.find(f =>
+          f.nome.toLowerCase().includes('pix') && f.ativo
+        )
+        if (pixForm) {
+          formaSelecionada = pixForm.id
+        } else {
+          // Fallback: primeira forma ativa
+          const formaAtiva = dados.formasPagamento.find(f => f.ativo)
+          if (formaAtiva) {
+            formaSelecionada = formaAtiva.id
+          }
+        }
       }
-      
+
       // Fallback: tentar lógica antiga baseada em formato_origem (compatibilidade)
       if (!formaSelecionada && transacao.formato_origem) {
         if (transacao.formato_origem.toLowerCase().includes('cartão')) {
-          const cartaoForm = dados.formasPagamento.find(f => 
+          const cartaoForm = dados.formasPagamento.find(f =>
             f.tipo === 'credito' && f.ativo
           )
           if (cartaoForm) {
             formaSelecionada = cartaoForm.id
-            console.log('🔄 FALLBACK → Cartão detectado via formato_origem:', cartaoForm.nome)
           }
         }
       }
-      
+
       setFormaPagamento(formaSelecionada)
-      
-      // Debug completo para acompanhar lógica
-      console.log('🎯 PRÉ-SELEÇÃO DEBUG:', {
-        formatoOrigem: formatoOrigem?.nome,
-        tipoOrigem: formatoOrigem?.tipoOrigem,
-        formato_origem_transacao: transacao.formato_origem,
-        formaSelecionada: formaSelecionada,
-        formasDisponiveis: dados.formasPagamento.map(f => ({ nome: f.nome, tipo: f.tipo, id: f.id }))
-      })
     }
   }, [isOpen, transacao, formatoOrigem, dados.formasPagamento])
 
@@ -90,30 +100,22 @@ export function ModalClassificacaoRapida({
 
   const handleSalvar = () => {
     if (!categoria || !formaPagamento) {
-      return // Validação básica - subcategoria é opcional
+      return // Validação básica - subcategoria e centro de custo são opcionais
     }
 
     onClassificar({
       categoria_id: categoria,
-      subcategoria_id: subcategoria || null, // Pode ser vazio
-      forma_pagamento_id: formaPagamento
+      subcategoria_id: subcategoria || null,
+      forma_pagamento_id: formaPagamento,
+      centro_custo_id: centroCusto || null
     })
 
     onClose()
   }
 
-  const categoriasFiltradas = dados.categorias.filter(cat => 
+  const categoriasFiltradas = dados.categorias.filter(cat =>
     cat.ativo && (cat.tipo === transacao?.tipo || cat.tipo === 'ambos')
   )
-
-  // Debug para verificar o que está acontecendo
-  console.log('🐛 Debug Categorias:', {
-    totalCategorias: dados.categorias.length,
-    categoriasAtivas: dados.categorias.filter(c => c.ativo).length,
-    tipoTransacao: transacao?.tipo,
-    categoriasFiltradas: categoriasFiltradas.length,
-    nomesFiltradas: categoriasFiltradas.map(c => c.nome)
-  })
 
   return (
     <ModalBase 
@@ -178,6 +180,27 @@ export function ModalClassificacaoRapida({
                 {sub.nome}
               </option>
             ))}
+          </select>
+        </div>
+
+        {/* Centro de Custo */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Centro de Custo
+          </label>
+          <select
+            value={centroCusto}
+            onChange={(e) => setCentroCusto(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Centro de custo (opcional)</option>
+            {dados.centrosCusto
+              ?.filter(cc => cc.ativo && !cc.arquivado)
+              .map(cc => (
+                <option key={cc.id} value={cc.id}>
+                  {cc.nome}
+                </option>
+              ))}
           </select>
         </div>
 

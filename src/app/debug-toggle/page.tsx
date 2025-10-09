@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useProjetosDashboard } from '@/hooks/usar-projetos-dados'
 import { usarProjetosModo } from '@/hooks/usar-projetos-modo'
 import { useState, useEffect } from 'react'

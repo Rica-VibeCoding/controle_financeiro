@@ -13,6 +13,7 @@ import { Icone } from '@/componentes/ui/icone'
 import { criarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { useAuth } from '@/contextos/auth-contexto'
+import { invalidarCacheTransacoes } from '@/utilitarios/invalidacao-cache-global'
 
 /**
  * Props para o componente ModalTransferencia
@@ -240,14 +241,17 @@ export function ModalTransferencia({ isOpen, onClose, onSuccess }: ModalTransfer
 
     try {
       setSalvando(true)
-      
+
       await criarTransacao(dados as NovaTransacao, workspace.id)
 
-      setMensagem({ 
-        tipo: 'sucesso', 
-        texto: 'Transferencia realizada com sucesso!' 
+      // Invalidar cache para atualizar todas as telas
+      await invalidarCacheTransacoes(workspace.id)
+
+      setMensagem({
+        tipo: 'sucesso',
+        texto: 'Transferencia realizada com sucesso!'
       })
-      
+
       setTimeout(() => {
         setMensagem(null)
         onSuccess?.()

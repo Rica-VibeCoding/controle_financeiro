@@ -75,7 +75,7 @@ export function CardCartoesCredito() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-slide-up">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-slide-up tooltip-container">
       {/* Header com total usado */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-gray-900">

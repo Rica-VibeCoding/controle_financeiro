@@ -4,6 +4,7 @@
  */
 
 import type { NovaTransacao, NovaCategoria } from '@/tipos/database'
+import { normalizarData as normalizarDataHelper, validarDataISO as validarDataISOHelper } from '@/utilitarios/data-helpers'
 
 type NovaConta = {
   nome: string
@@ -23,14 +24,11 @@ export function validarValor(valor: number): boolean {
 }
 
 /**
- * Validar formato de data ISO (YYYY-MM-DD)
+ * Validar formato de data ISO (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss)
+ * IMPORTANTE: Aceita formato com hora para compatibilidade com importação CSV
  */
 export function validarDataISO(data: string): boolean {
-  const regex = /^\d{4}-\d{2}-\d{2}$/
-  if (!regex.test(data)) return false
-  
-  const date = new Date(data)
-  return date instanceof Date && !isNaN(date.getTime())
+  return validarDataISOHelper(data)
 }
 
 /**
@@ -89,34 +87,12 @@ export function limparCamposUUID<T extends Record<string, any>>(objeto: T): T {
  * Validar transação completa - conforme documentação
  */
 /**
- * Normalizar data para formato ISO (YYYY-MM-DD)
+ * Normalizar data para formato ISO com timestamp completo (YYYY-MM-DDTHH:mm:ss)
  * Converte formato brasileiro (DD/MM/YYYY) se necessário
+ * IMPORTANTE: PRESERVA hora/minuto/segundo (banco agora é TIMESTAMP WITH TIME ZONE)
  */
 export function normalizarData(data: string | null | undefined): string | null | undefined {
-  if (!data || data.trim() === '') return null
-  
-  // Se já está no formato ISO (YYYY-MM-DD), retorna como está
-  if (/^\d{4}-\d{2}-\d{2}$/.test(data)) {
-    return data
-  }
-  
-  // Se está no formato brasileiro (DD/MM/YYYY), converte
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
-    const [dia, mes, ano] = data.split('/')
-    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
-  }
-  
-  // Para outros formatos, tenta converter usando Date
-  try {
-    const dataObj = new Date(data)
-    if (!isNaN(dataObj.getTime())) {
-      return dataObj.toISOString().split('T')[0]
-    }
-  } catch (error) {
-    console.warn('Data inválida encontrada:', data)
-  }
-  
-  return data
+  return normalizarDataHelper(data)
 }
 
 export function validarTransacao(transacao: any): string[] {

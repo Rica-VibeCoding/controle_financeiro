@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
+export const dynamic = 'force-dynamic'
+
 export default function NovoCentroCustoPage() {
   const router = useRouter()
   const { centroCusto: modalCentroCustoActions } = useModais()

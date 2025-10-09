@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 
   // Resolver problema de cache de contextos React em desenvolvimento
   reactStrictMode: true,
-  
+
   // Otimizar bundle
   experimental: {
     optimizePackageImports: [

@@ -15,6 +15,7 @@ import { Icone } from '@/componentes/ui/icone'
 import { obterTransacaoPorId, criarTransacao, atualizarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { useAuth } from '@/contextos/auth-contexto'
+import { invalidarCacheTransacoes } from '@/utilitarios/invalidacao-cache-global'
 
 /**
  * Props para o componente ModalLancamento
@@ -371,6 +372,9 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       } else {
         await criarTransacao(dados as NovaTransacao, workspace.id)
       }
+
+      // Invalidar cache para atualizar todas as telas
+      await invalidarCacheTransacoes(workspace.id)
 
       onSuccess?.()
       setSalvando(false) // Reset estado antes de fechar

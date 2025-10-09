@@ -1,6 +1,8 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+export const dynamic = 'force-dynamic'
+
+import NextDynamic from 'next/dynamic'
 import { CardMetrica } from '@/componentes/dashboard/card-metrica'
 import { SeletorPeriodo } from '@/componentes/dashboard/seletor-periodo'
 import { useCardsData } from '@/hooks/usar-cards-dados'
@@ -8,27 +10,27 @@ import { usePeriodoContexto } from '@/contextos/periodo-contexto'
 import { PageGuard } from '@/componentes/ui/page-guard'
 
 // Lazy load componentes pesados
-const GraficoTendencia = dynamic(() => import('@/componentes/dashboard/grafico-tendencia').then(mod => ({ default: mod.GraficoTendencia })), {
+const GraficoTendencia = NextDynamic(() => import('@/componentes/dashboard/grafico-tendencia').then(mod => ({ default: mod.GraficoTendencia })), {
   ssr: false
 })
 
-const GraficoCategorias = dynamic(() => import('@/componentes/dashboard/grafico-categorias').then(mod => ({ default: mod.GraficoCategorias })), {
+const GraficoCategorias = NextDynamic(() => import('@/componentes/dashboard/grafico-categorias').then(mod => ({ default: mod.GraficoCategorias })), {
   ssr: false
 })
 
-const CardProximaConta = dynamic(() => import('@/componentes/dashboard/card-proxima-conta').then(mod => ({ default: mod.CardProximaConta })), {
+const CardProximaConta = NextDynamic(() => import('@/componentes/dashboard/card-proxima-conta').then(mod => ({ default: mod.CardProximaConta })), {
   ssr: false
 })
 
-const CardSaldosContas = dynamic(() => import('@/componentes/dashboard/card-saldos-contas').then(mod => ({ default: mod.CardSaldosContas })), {
+const CardSaldosContas = NextDynamic(() => import('@/componentes/dashboard/card-saldos-contas').then(mod => ({ default: mod.CardSaldosContas })), {
   ssr: false
 })
 
-const CardCartoesCredito = dynamic(() => import('@/componentes/dashboard/card-cartoes-credito').then(mod => ({ default: mod.CardCartoesCredito })), {
+const CardCartoesCredito = NextDynamic(() => import('@/componentes/dashboard/card-cartoes-credito').then(mod => ({ default: mod.CardCartoesCredito })), {
   ssr: false
 })
 
-const CardProjetosPessoais = dynamic(() => import('@/componentes/dashboard/card-projetos-melhorado').then(mod => ({ default: mod.CardProjetosPessoais })), {
+const CardProjetosPessoais = NextDynamic(() => import('@/componentes/dashboard/card-projetos-melhorado').then(mod => ({ default: mod.CardProjetosPessoais })), {
   ssr: false
 })
 

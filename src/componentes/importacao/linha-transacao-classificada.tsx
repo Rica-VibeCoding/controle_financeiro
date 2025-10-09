@@ -1,4 +1,5 @@
 import { TransacaoClassificada } from '@/tipos/importacao'
+import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 
 interface LinhaTransacaoProps {
   transacao: TransacaoClassificada
@@ -6,21 +7,22 @@ interface LinhaTransacaoProps {
   onToggleSelecao?: (transacao: TransacaoClassificada, selecionada: boolean) => void
 }
 
-export function LinhaTransacaoClassificada({ 
-  transacao, 
+export function LinhaTransacaoClassificada({
+  transacao,
   onClick,
   onToggleSelecao
 }: LinhaTransacaoProps) {
+  const { dados } = useDadosAuxiliares()
   
   const getStatusConfig = () => {
     switch (transacao.status_classificacao) {
       case 'reconhecida':
         return {
           icon: '✅',
-          bgColor: 'bg-green-50 hover:bg-green-100',
+          bgColor: 'bg-green-50 hover:bg-green-100 cursor-pointer',
           textColor: 'text-green-700',
           borderColor: 'border-green-200',
-          clickable: false
+          clickable: true // Permitir conferência mesmo com match
         }
       case 'pendente':
         return {
@@ -36,7 +38,7 @@ export function LinhaTransacaoClassificada({
           bgColor: 'bg-red-50',
           textColor: 'text-red-700',
           borderColor: 'border-red-200',
-          clickable: false
+          clickable: false // Duplicadas não podem ser editadas
         }
     }
   }
@@ -95,11 +97,19 @@ export function LinhaTransacaoClassificada({
           <div className="text-xs text-gray-500">
             {new Date(transacao.data).toLocaleDateString('pt-BR')}
           </div>
-          {/* Mostrar classificação se reconhecida */}
-          {transacao.status_classificacao === 'reconhecida' && 
-           transacao.classificacao_automatica && (
-            <div className="text-xs text-green-600 mt-1">
-              Auto-classificada
+          {/* Mostrar categoria e centro de custo se preenchidos */}
+          {(transacao.categoria_id || transacao.centro_custo_id) && (
+            <div className="flex gap-2 mt-1 text-xs">
+              {transacao.categoria_id && (
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
+                  {dados.categorias.find(c => c.id === transacao.categoria_id)?.nome || 'Categoria'}
+                </span>
+              )}
+              {transacao.centro_custo_id && (
+                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
+                  {dados.centrosCusto?.find(cc => cc.id === transacao.centro_custo_id)?.nome || 'Centro de Custo'}
+                </span>
+              )}
             </div>
           )}
         </div>

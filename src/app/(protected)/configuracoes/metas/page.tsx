@@ -1,4 +1,6 @@
 'use client'
+
+export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { Input } from '@/componentes/ui/input'

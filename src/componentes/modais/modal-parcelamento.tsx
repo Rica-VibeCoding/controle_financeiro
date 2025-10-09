@@ -13,6 +13,7 @@ import { Icone } from '@/componentes/ui/icone'
 import { criarTransacaoParcelada } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
 import { useAuth } from '@/contextos/auth-contexto'
+import { invalidarCacheTransacoes } from '@/utilitarios/invalidacao-cache-global'
 
 /**
  * Props para o componente ModalParcelamento
@@ -380,17 +381,20 @@ export function ModalParcelamento({ isOpen, onClose, onSuccess }: ModalParcelame
       setSalvando(true)
       
       await criarTransacaoParcelada(
-        dados as NovaTransacao, 
-        numeroParcelas, 
+        dados as NovaTransacao,
+        numeroParcelas,
         workspace.id,
         datasParcelasEditaveis.length > 0 ? datasParcelasEditaveis : undefined
       )
 
-      setMensagem({ 
-        tipo: 'sucesso', 
-        texto: `Parcelamento criado com sucesso! ${numeroParcelas} parcelas geradas.` 
+      // Invalidar cache para atualizar todas as telas
+      await invalidarCacheTransacoes(workspace.id)
+
+      setMensagem({
+        tipo: 'sucesso',
+        texto: `Parcelamento criado com sucesso! ${numeroParcelas} parcelas geradas.`
       })
-      
+
       // Fechar modal imediatamente após sucesso (sem delay)
       onSuccess?.()
       onClose()

@@ -315,6 +315,11 @@ body {
   -webkit-backdrop-filter: blur(10px);
 }
 
+/* Tooltip container - quebra stacking context para z-index funcionar corretamente */
+.tooltip-container {
+  isolation: isolate;
+}
+
 /* Gradient backgrounds */
 .gradient-green {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);

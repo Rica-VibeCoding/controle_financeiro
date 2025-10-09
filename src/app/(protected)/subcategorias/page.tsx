@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import NextDynamic from 'next/dynamic'
 import { Button } from '@/componentes/ui/button'
 import { Icone } from '@/componentes/ui/icone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
@@ -14,7 +16,7 @@ import { useModais } from '@/contextos/modais-contexto'
 import type { Subcategoria, Categoria } from '@/tipos/database'
 
 // Lazy load do modal - só carrega quando necessário
-const ModalSubcategoria = dynamic(() => import('@/componentes/modais/modal-subcategoria').then(mod => ({ default: mod.ModalSubcategoria })), {
+const ModalSubcategoria = NextDynamic(() => import('@/componentes/modais/modal-subcategoria').then(mod => ({ default: mod.ModalSubcategoria })), {
   ssr: false
 })
 

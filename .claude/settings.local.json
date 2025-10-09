@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Read(//mnt/c/Users/ricar/OneDrive/Documentos/ShareX/Screenshots/2025-10/**)"
     ],
     "ask": [],
     "deny": []

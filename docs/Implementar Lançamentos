@@ -1,0 +1,274 @@
+● 📚 PROMPT COMPLETO PARA CLASSIFICAÇÃO E INSERÇÃO DE TRANSAÇÕES
+
+  🎯 CONTEXTO DO SISTEMA
+
+  Estou trabalhando em um sistema financeiro Next.js + Supabase (PostgreSQL) onde preciso:
+  1. Atualizar transações existentes com categorias/centros de custo
+  2. Inserir novas transações a partir de dados em formato planilha
+
+  Workspace ativo: woodpromais@gmail.com (ID: b4f7239a-8641-4802-b70c-e412cf033381)
+
+  ---
+  📊 ESTRUTURA DE DADOS
+
+  Tabelas principais:
+
+  - fp_transacoes - Transações financeiras
+  - fp_categorias - Categorias (Receita/Despesa)
+  - fp_subcategorias - Subcategorias vinculadas às categorias
+  - fp_centros_custo - Centros de custo (projetos/clientes)
+  - fp_contas - Contas bancárias
+  - fp_formas_pagamento - Formas de pagamento
+
+  Campos da transação:
+
+  fp_transacoes:
+    - data (date)
+    - descricao (text)
+    - valor (numeric)
+    - tipo (text: 'receita' | 'despesa' | 'transferencia')
+    - status (text: 'realizado' | 'previsto')
+    - categoria_id (uuid FK)
+    - subcategoria_id (uuid FK, nullable)
+    - centro_custo_id (uuid FK, nullable)
+    - conta_id (uuid FK)
+    - forma_pagamento_id (uuid FK, nullable)
+    - workspace_id (uuid FK)
+
+  ---
+  🗂️ CADASTROS EXISTENTES NO SISTEMA
+
+  CENTROS DE CUSTO:
+
+  - WoodPro+
+  - Suelen e Osmar
+  - Dayana S Tokinari
+  - Cooperativa | Sala Hélio e Dr. Ivan e Corredor
+  - Renata Santos Leite Neris
+  - Maurício Manoel Ribeiro dos Santos
+  - Jailson Danilo da Silva
+  - Andréia Pelegrini Mendes
+  - Darlon Marques - Andréia
+  - Hélio Tristão
+  - Mauá Plaza Shopping
+  - Cooperativa | Complementos
+
+  CATEGORIAS E SUBCATEGORIAS:
+
+  RECEITAS:
+  - Aplicação → Rentabilidade CDI
+  - Recebimento Venda → (sem subcategorias)
+
+  DESPESAS:
+  - Alimentação → (sem subcategorias)
+  - Aplicativos → Conta Simples
+  - Componentes → VT Ferragens
+  - Fabricação → Corte Sob Medida
+  - Ferramentas → (sem subcategorias)
+  - Impostos e tributos → (sem subcategorias)
+  - Indicadores → (sem subcategorias)
+  - Lalamove → (sem subcategorias)
+  - MDF / FITA / Tapa Furo → Lano
+  - Medição → (sem subcategorias)
+  - Montagem → Evaldo Carlos
+  - Não Lembro → (sem subcategorias)
+  - Papelaria → (sem subcategorias)
+  - Projeto Executivo → (sem subcategorias)
+  - Promob → Licença Promob (tipo: ambos)
+  - Receita Federal → (sem subcategorias)
+  - Refeição → (sem subcategorias)
+  - Reserva Tecnica → (sem subcategorias)
+  - Retirada → Alexandre, Ricardo
+  - Serralheria → (sem subcategorias)
+  - Transporte → Uber, Lalamov
+  - Vidraçaria → (sem subcategorias)
+
+  CONTAS DISPONÍVEIS:
+
+  - Wood Pro + (tipo: conta_corrente)
+  - Wood Pro + (tipo: dinheiro) ← Padrão para inserções
+
+  ---
+  🎯 REGRAS DE CLASSIFICAÇÃO APRENDIDAS
+
+  PADRÃO 1: Atualizar transações existentes por DESCRIÇÃO
+
+  Formato da solicitação:
+  "Todos que contenham na descrição: [TEXTO]
+   Categoria: [NOME]
+   Centro de Custo: [NOME]
+   Subcategoria: [NOME] (opcional)"
+
+  Processo:
+  1. Buscar IDs via ILIKE '%TEXTO%' (busca aproximada)
+  2. Executar UPDATE na tabela fp_transacoes
+  3. Validar quantidade de registros atualizados
+
+  Exemplo:
+  UPDATE fp_transacoes
+  SET
+    categoria_id = 'UUID',
+    subcategoria_id = 'UUID',
+    centro_custo_id = 'UUID',
+    updated_at = NOW()
+  WHERE workspace_id = 'b4f7239a-8641-4802-b70c-e412cf033381'
+    AND descricao ILIKE '%UBER DO BRASIL%';
+
+  ---
+  PADRÃO 2: Inserir novas transações via PLANILHA
+
+  Formato de entrada (9 colunas):
+  Col1: Data (DD/MM/YYYY)
+  Col2: Centro de Custo
+  Col3: Tipo (SAIDA=despesa | ENTRADA=receita)
+  Col4: Descrição
+  Col5: Valor (formato: 5.655,00)
+  Col6: Subcategoria (pode ser fornecedor/pessoa)
+  Col7: Categoria
+  Col8: Status (Realizado | Previsto)
+  Col9: Conta (geralmente "Dinheiro")
+
+  Exemplo de linha:
+  12/12/2024 | SUELEN E OSMAR | SAIDA | OBRA | 5.655,00 | VT FERRAGENS | COMPONETES | Realizado | Dinheiro
+
+  Processo de mapeamento:
+
+  1. Centro de Custo: Busca aproximada via ILIKE
+  -- "SUELEN E OSMAR" encontra "Suelen e Osmar"
+  WHERE nome ILIKE '%SUELEN%OSMAR%'
+  2. Categoria: Busca aproximada
+  -- "COMPONETES" encontra "Componentes"
+  WHERE nome ILIKE '%COMPONENT%'
+  3. Subcategoria: Busca aproximada + vinculação com categoria
+  -- Se não existir subcategoria específica, usar subcategoria genérica da categoria
+  -- Exemplo: "CSM" não existe → usar "Corte Sob Medida" da categoria "Fabricação"
+  4. Fornecedor na descrição: Se subcategoria não existir, adicionar à descrição
+  -- Entrada: Col4="OBRA", Col6="CSM"
+  -- Resultado: descricao = "OBRA - CSM"
+  5. Tipo: Conversão
+    - SAIDA → 'despesa'
+    - ENTRADA → 'receita'
+  6. Status: Conversão
+    - Realizado → 'realizado'
+    - Previsto → 'previsto'
+  7. Valor: Converter 5.655,00 → 5655.00 (numeric)
+  8. Conta: Usar conta padrão "Wood Pro + (dinheiro)"
+    - ID: 5a811902-37bd-433d-a563-856a2b09ef1b
+
+  ---
+  🔍 ESTRATÉGIA DE BUSCA APROXIMADA
+
+  Regras de matching:
+  1. Sempre usar ILIKE (case-insensitive)
+  2. Remover acentos mentalmente: "ANDREIA" = "Andréia"
+  3. Buscar palavras-chave: "WOOD PRO MAIS" → %WOOD%PRO%
+  4. Para nomes compostos: buscar ambas as partes
+  5. NUNCA criar novos cadastros - sempre usar o mais próximo existente
+
+  Exemplos de mapeamento:
+  "COOPERATIVA | DR. HELIO - DR. IVAM"
+  → "Cooperativa | Sala Hélio e Dr. Ivan e Corredor"
+
+  "COMPONETES" (erro de digitação)
+  → "Componentes"
+
+  "RETIRADA (Alexandre)"
+  → Categoria: "Retirada" + Subcategoria: "Alexandre"
+
+  ---
+  📝 TEMPLATE SQL PARA INSERÇÃO
+
+  INSERT INTO fp_transacoes (
+    workspace_id, data, descricao, valor, tipo, status,
+    categoria_id, subcategoria_id, centro_custo_id, conta_id,
+    created_at, updated_at
+  ) VALUES
+  ('b4f7239a-8641-4802-b70c-e412cf033381',
+   '2024-12-12',
+   'OBRA - VT FERRAGENS',
+   5655.00,
+   'despesa',
+   'realizado',
+   '71228b18-fac7-4b1b-92e7-b94642a35121', -- Componentes
+   '9ecb9df7-8257-493e-b4df-6322ec5db5b7', -- VT Ferragens
+   '70d8435a-2f83-4f89-b8ea-5c81d5a0a302', -- Suelen e Osmar
+   '5a811902-37bd-433d-a563-856a2b09ef1b', -- Wood Pro + (dinheiro)
+   NOW(),
+   NOW()
+  );
+
+  ---
+  ✅ WORKFLOW COMPLETO
+
+  Para ATUALIZAÇÃO:
+
+  1. Receber: "Descrição contém X → Categoria Y, Centro Z"
+  2. Buscar IDs via MCP Supabase
+  3. Executar UPDATE
+  4. Validar com SELECT COUNT
+
+  Para INSERÇÃO:
+
+  1. Receber linhas de planilha (9 colunas)
+  2. Buscar todos IDs necessários (centros, categorias, subcategorias)
+  3. Criar preview mostrando mapeamento
+  4. Aguardar confirmação
+  5. Executar INSERT em lote
+  6. Validar com SELECT
+
+  ---
+  🚀 EXEMPLO DE VALIDAÇÃO PÓS-INSERÇÃO
+
+  SELECT
+    t.data,
+    t.descricao,
+    t.valor,
+    t.tipo,
+    t.status,
+    c.nome as categoria,
+    s.nome as subcategoria,
+    cc.nome as centro_custo,
+    co.nome as conta
+  FROM fp_transacoes t
+  LEFT JOIN fp_categorias c ON t.categoria_id = c.id
+  LEFT JOIN fp_subcategorias s ON t.subcategoria_id = s.id
+  LEFT JOIN fp_centros_custo cc ON t.centro_custo_id = cc.id
+  LEFT JOIN fp_contas co ON t.conta_id = co.id
+  WHERE t.workspace_id = 'b4f7239a-8641-4802-b70c-e412cf033381'
+    AND t.created_at >= NOW() - INTERVAL '1 hour'
+  ORDER BY t.created_at DESC;
+
+  ---
+  🎯 PROMPT PARA INICIAR NOVO CHAT
+
+  Olá! Preciso de ajuda com classificação e inserção de transações financeiras via MCP Supabase.
+
+  CONTEXTO:
+  - Sistema: Next.js + Supabase (PostgreSQL)
+  - Workspace: woodpromais@gmail.com (ID: b4f7239a-8641-4802-b70c-e412cf033381)
+  - Tenho acesso ao MCP Supabase para queries SQL
+
+  TAREFA:
+  Vou te passar transações em formato de planilha (9 colunas) para inserir no banco de dados.
+
+  REGRAS IMPORTANTES:
+  1. NUNCA criar novos cadastros - sempre usar registros existentes mais próximos
+  2. Usar busca aproximada (ILIKE) para encontrar categorias/centros de custo
+  3. Se subcategoria não existir, usar subcategoria genérica da categoria
+  4. Adicionar fornecedor/pessoa na descrição se não houver subcategoria específica
+  5. Conta padrão: "Wood Pro + (dinheiro)" - ID: 5a811902-37bd-433d-a563-856a2b09ef1b
+  6. Sempre criar PREVIEW antes de inserir
+
+  FORMATO DAS LINHAS:
+  Data | Centro Custo | Tipo | Descrição | Valor | Subcategoria | Categoria | Status | Conta
+
+  Você consegue me ajudar? Por favor, primeiro busque todos os cadastros existentes (centros de custo, categorias e subcategorias) do
+  workspace para conhecer as opções disponíveis.
+
+  ---
+  Esse prompt garante que o novo chat:
+  ✅ Entenda o contexto completo do sistema
+  ✅ Conheça todas as regras de mapeamento aprendidas
+  ✅ Saiba buscar cadastros existentes primeiro
+  ✅ Crie previews antes de executar
+  ✅ Use a estratégia de busca aproximada correta

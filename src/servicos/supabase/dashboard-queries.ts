@@ -316,35 +316,37 @@ export async function obterProximasContas(workspaceId: string): Promise<ProximaC
   }
 }
 
-// Função para obter dados de tendência (últimos 6 meses)
+// Função para obter dados de tendência (ano vigente completo - 12 meses)
 export async function obterTendencia(workspaceId: string): Promise<TendenciaData[]> {
   try {
-    // Buscar transações dos últimos 6 meses
-    const dataInicio = new Date()
-    dataInicio.setMonth(dataInicio.getMonth() - 6)
-    
+    // Buscar transações do ano atual (1º de janeiro até hoje)
+    const anoAtual = new Date().getFullYear()
+    const dataInicio = new Date(anoAtual, 0, 1) // 1º de janeiro
+    const dataFim = new Date() // Hoje
+
     const queryTendencia = supabase
       .from('fp_transacoes')
       .select('data, tipo, valor')
       .eq('status', 'realizado')
       .gte('data', dataInicio.toISOString().split('T')[0])
+      .lte('data', dataFim.toISOString().split('T')[0])
       .order('data', { ascending: true })
-    
+
     queryTendencia.eq('workspace_id', workspaceId)
-    
+
     const { data, error } = await queryTendencia
 
     if (error) throw error
 
     // Agrupar por mês separando receitas e despesas
     const meses: { [key: string]: { receitas: number; despesas: number } } = {}
-    
+
     data?.forEach(transacao => {
       const data = new Date(transacao.data)
       const chave = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`
-      
+
       if (!meses[chave]) meses[chave] = { receitas: 0, despesas: 0 }
-      
+
       if (transacao.tipo === 'receita') {
         meses[chave].receitas += transacao.valor || 0
       } else if (transacao.tipo === 'despesa') {
@@ -352,21 +354,23 @@ export async function obterTendencia(workspaceId: string): Promise<TendenciaData
       }
     })
 
-    // Converter para array ordenado
+    // Criar array completo de 12 meses (preenche meses sem dados com 0)
     const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-    
-    return Object.entries(meses)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([chave, dados]) => {
-        const [ano, mes] = chave.split('-')
-        const mesIndex = parseInt(mes) - 1
-        return {
-          mes: mesesNomes[mesIndex],
-          receitas: dados.receitas,
-          despesas: dados.despesas,
-          saldo: dados.receitas - dados.despesas
-        }
+    const resultado: TendenciaData[] = []
+
+    for (let mes = 1; mes <= 12; mes++) {
+      const chave = `${anoAtual}-${String(mes).padStart(2, '0')}`
+      const dadosMes = meses[chave] || { receitas: 0, despesas: 0 }
+
+      resultado.push({
+        mes: mesesNomes[mes - 1],
+        receitas: dadosMes.receitas,
+        despesas: dadosMes.despesas,
+        saldo: dadosMes.receitas - dadosMes.despesas
       })
+    }
+
+    return resultado
 
   } catch (error) {
     console.error('Erro ao obter tendência:', error)

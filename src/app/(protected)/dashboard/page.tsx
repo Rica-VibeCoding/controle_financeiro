@@ -105,29 +105,37 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        {/* Gráfico Tendência - Full Width (2 colunas) */}
+        <div className="mb-4">
           <div style={{ animationDelay: '0.5s' }}>
             <GraficoTendencia />
           </div>
-          
+        </div>
+
+        {/* Categorias + Coluna Direita (Contas + Próximas) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div style={{ animationDelay: '0.6s' }}>
             <GraficoCategorias />
           </div>
+
+          {/* Coluna direita: Contas + Próximas empilhados */}
+          <div className="space-y-4">
+            <div style={{ animationDelay: '0.7s' }}>
+              <CardSaldosContas />
+            </div>
+
+            <div style={{ animationDelay: '0.8s' }}>
+              <CardProximaConta limite={3} />
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div style={{ animationDelay: '0.7s' }}>
-            <CardProximaConta limite={3} />
-          </div>
-          
-          <div style={{ animationDelay: '0.8s' }}>
-            <CardSaldosContas />
-          </div>
-          
+        {/* Cards inferiores */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div style={{ animationDelay: '0.9s' }}>
             <CardCartoesCredito />
           </div>
-          
+
           <div style={{ animationDelay: '1.0s' }}>
             <CardProjetosPessoais limite={4} />
           </div>

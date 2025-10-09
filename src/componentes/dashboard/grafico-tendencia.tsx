@@ -1,6 +1,6 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { useTendenciaData } from '@/hooks/usar-tendencia-dados'
 
 interface TooltipProps {
@@ -31,10 +31,10 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 
 function SkeletonGrafico() {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-80">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-96">
       <div className="animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-48 mb-6"></div>
-        <div className="h-64 bg-gray-100 rounded"></div>
+        <div className="h-80 bg-gray-100 rounded"></div>
       </div>
     </div>
   )
@@ -43,6 +43,11 @@ function SkeletonGrafico() {
 export function GraficoTendencia() {
   // TODOS OS HOOKS NO TOPO - SEMPRE EXECUTADOS
   const { data: tendencia, error, isLoading } = useTendenciaData()
+
+  // Calcular mês atual e ano
+  const anoAtual = new Date().getFullYear()
+  const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+  const mesAtual = mesesNomes[new Date().getMonth()]
 
   // RENDERIZAÇÃO CONDICIONAL APÓS HOOKS
   if (isLoading) {
@@ -53,7 +58,7 @@ export function GraficoTendencia() {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-80">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Tendência - Últimos 6 meses
+          Tendência - Ano {anoAtual}
         </h3>
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700 text-sm">Erro ao carregar dados de tendência</p>
@@ -66,7 +71,7 @@ export function GraficoTendencia() {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-80">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Tendência - Últimos 6 meses
+          Tendência - Ano {anoAtual}
         </h3>
         <div className="flex items-center justify-center h-64 text-gray-500">
           <p>Nenhum dado disponível</p>
@@ -76,12 +81,12 @@ export function GraficoTendencia() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-80 animate-slide-up">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-96 animate-slide-up">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Tendência - Últimos 6 meses
+        Tendência - Ano {anoAtual}
       </h3>
-      
-      <div className="h-64">
+
+      <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={tendencia} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <defs>
@@ -116,7 +121,22 @@ export function GraficoTendencia() {
               }
             />
             <Tooltip content={<CustomTooltip />} />
-            
+
+            {/* Linha de referência no mês atual */}
+            <ReferenceLine
+              x={mesAtual}
+              stroke="#f59e0b"
+              strokeDasharray="3 3"
+              strokeWidth={2}
+              label={{
+                value: 'Hoje',
+                position: 'top',
+                fill: '#f59e0b',
+                fontSize: 12,
+                fontWeight: 600
+              }}
+            />
+
             <Line
               type="monotone"
               dataKey="receitas"

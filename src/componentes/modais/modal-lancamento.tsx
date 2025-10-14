@@ -31,7 +31,7 @@ interface ModalLancamentoProps {
   transacaoId?: string
 }
 
-type AbaAtiva = 'essencial' | 'categorizacao' | 'anexos'
+type AbaAtiva = 'essencial' | 'categorizacao' | 'relacionamento'
 
 /**
  * Componente botão de aba reutilizável
@@ -67,7 +67,8 @@ const ESTADO_INICIAL = {
   status: 'previsto' as const,
   parcela_atual: 1,
   total_parcelas: 1,
-  recorrente: false
+  recorrente: false,
+  contato_id: undefined as string | undefined
 }
 
 /**
@@ -302,8 +303,8 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
   /**
    * Renderiza skeleton form unificado
    */
-  const renderSkeletonForm = (tipo: 'essencial' | 'categorizacao' | 'anexos') => {
-    if (tipo === 'anexos') {
+  const renderSkeletonForm = (tipo: 'essencial' | 'categorizacao' | 'relacionamento') => {
+    if (tipo === 'relacionamento') {
       return (
         <div className="space-y-4">
           <div className="flex flex-col items-center space-y-4 py-8">
@@ -691,15 +692,54 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
           </div>
         )
 
-      case 'anexos':
+      case 'relacionamento':
         return (
           <div className="space-y-4">
-            <UploadAnexo
-              onUploadSuccess={handleUploadSuccess}
-              onUploadError={handleUploadError}
-              anexoAtual={dados.anexo_url || undefined}
-              disabled={salvando}
-            />
+            {/* Campo Cliente */}
+            <div className="space-y-2">
+              <Label htmlFor="cliente_id">Cliente</Label>
+              <Select
+                id="cliente_id"
+                value={dados.contato_id || ''}
+                onChange={(e) => atualizarCampo('contato_id', e.target.value || undefined)}
+              >
+                <option value="">Selecione um cliente</option>
+                {dadosAuxiliares?.clientes?.map(cliente => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.nome}
+                    {cliente.cpf_cnpj ? ` - ${cliente.cpf_cnpj}` : ''}
+                  </option>
+                )) || []}
+              </Select>
+            </div>
+
+            {/* Campo Fornecedor */}
+            <div className="space-y-2">
+              <Label htmlFor="fornecedor_id">Fornecedor</Label>
+              <Select
+                id="fornecedor_id"
+                value={dados.contato_id || ''}
+                onChange={(e) => atualizarCampo('contato_id', e.target.value || undefined)}
+              >
+                <option value="">Selecione um fornecedor</option>
+                {dadosAuxiliares?.fornecedores?.map(fornecedor => (
+                  <option key={fornecedor.id} value={fornecedor.id}>
+                    {fornecedor.nome}
+                    {fornecedor.cpf_cnpj ? ` - ${fornecedor.cpf_cnpj}` : ''}
+                  </option>
+                )) || []}
+              </Select>
+            </div>
+
+            {/* Componente de Upload de Anexo (movido para o final) */}
+            <div className="space-y-2 pt-4 border-t border-gray-200">
+              <UploadAnexo
+                onUploadSuccess={handleUploadSuccess}
+                onUploadError={handleUploadError}
+                anexoAtual={dados.anexo_url || undefined}
+                disabled={salvando}
+              />
+            </div>
           </div>
         )
 
@@ -731,11 +771,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
             >
               Categorização
             </AbaButton>
-            <AbaButton 
-              ativa={abaAtiva === 'anexos'} 
-              onClick={() => setAbaAtiva('anexos')}
+            <AbaButton
+              ativa={abaAtiva === 'relacionamento'}
+              onClick={() => setAbaAtiva('relacionamento')}
             >
-              Anexos
+              Relacionamento
             </AbaButton>
           </nav>
         </div>

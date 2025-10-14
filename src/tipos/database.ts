@@ -320,3 +320,20 @@ export type NovaSubcategoria = Database['public']['Tables']['fp_subcategorias'][
 export type NovaConta = Database['public']['Tables']['fp_contas']['Insert']
 export type NovaFormaPagamento = Database['public']['Tables']['fp_formas_pagamento']['Insert']
 export type NovoCentroCusto = Database['public']['Tables']['fp_centros_custo']['Insert']
+
+/**
+ * Contato do sistema (cliente, fornecedor, etc)
+ * Tabela: r_contatos
+ */
+export interface Contato {
+  id: string
+  nome: string
+  cpf_cnpj: string | null
+  tipo_pessoa: 'cliente' | 'fornecedor' | 'parceiro' | 'freelancer' | 'lojista'
+  telefone: string | null
+  email: string | null
+  ativo: boolean
+  workspace_id: string
+  created_at: string
+  updated_at: string
+}

@@ -56,6 +56,7 @@ import {
   MoreHorizontal,
   Home,
   UserMinus,
+  ExternalLink,
 } from 'lucide-react'
 
 export type IconName =
@@ -112,6 +113,7 @@ export type IconName =
   | 'more-horizontal'
   | 'home'
   | 'user-minus'
+  | 'external-link'
 
 const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'layout-dashboard': LayoutDashboard,
@@ -167,6 +169,7 @@ const iconMap: Record<IconName, React.ComponentType<LucideProps>> = {
   'more-horizontal': MoreHorizontal,
   'home': Home,
   'user-minus': UserMinus,
+  'external-link': ExternalLink,
 }
 
 export interface IconeProps extends Omit<LucideProps, 'ref'> {

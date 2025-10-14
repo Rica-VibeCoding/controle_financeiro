@@ -105,40 +105,40 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Gráfico Tendência - Full Width (2 colunas) */}
+        {/* Gráfico Tendência - Full Width */}
         <div className="mb-4">
           <div style={{ animationDelay: '0.5s' }}>
             <GraficoTendencia />
           </div>
         </div>
 
-        {/* Categorias + Coluna Direita (Contas + Próximas) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div style={{ animationDelay: '0.6s' }}>
-            <GraficoCategorias />
-          </div>
+        {/* Layout: Coluna Esquerda (Cards empilhados) + Coluna Direita (Categorias) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-          {/* Coluna direita: Contas + Próximas empilhados */}
+          {/* Coluna Esquerda: Contas + Cartões + Próximas + Projetos empilhados */}
           <div className="space-y-4">
-            <div style={{ animationDelay: '0.7s' }}>
+            <div style={{ animationDelay: '0.6s' }}>
               <CardSaldosContas />
+            </div>
+
+            <div style={{ animationDelay: '0.7s' }}>
+              <CardCartoesCredito />
             </div>
 
             <div style={{ animationDelay: '0.8s' }}>
               <CardProximaConta limite={3} />
             </div>
-          </div>
-        </div>
 
-        {/* Cards inferiores */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div style={{ animationDelay: '0.9s' }}>
-            <CardCartoesCredito />
+            <div style={{ animationDelay: '0.9s' }}>
+              <CardProjetosPessoais limite={4} />
+            </div>
           </div>
 
+          {/* Coluna Direita: Categorias vs Metas */}
           <div style={{ animationDelay: '1.0s' }}>
-            <CardProjetosPessoais limite={4} />
+            <GraficoCategorias />
           </div>
+
         </div>
       </div>
     </PageGuard>

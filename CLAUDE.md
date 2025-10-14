@@ -1,5 +1,27 @@
-## 📋 Para Contexto Completo do Projeto
-**SEMPRE leia primeiro:** `docs/Resumo.md`
+## 📋 Hierarquia de Leitura - Documentação Modular
+
+**SEMPRE siga esta ordem:**
+
+1. **`docs/Resumo.md`** ⭐ **PRIORIDADE MÁXIMA**
+   - Contexto atual do projeto
+   - Preferências de comunicação com Ricardo
+   - Status de implementações recentes
+
+2. **`docs/README.txt`** - Índice de Navegação
+   - Use como mapa para encontrar documentação específica
+   - NÃO leia completo, apenas use os links
+
+3. **Documentação Específica** (quando necessário):
+   - `docs/guias/` - Quick start, instalação, comandos, troubleshooting
+   - `docs/funcionalidades/` - CSV, backup, PWA, multiusuário, dashboard
+   - `docs/desenvolvimento/` - Personalização, performance, testes
+   - `docs/specs/` - Stack técnica, estrutura do projeto
+
+**Regra de Ouro:**
+- ✅ Leia Resumo.md SEMPRE antes de começar
+- ✅ Use README.txt como índice (não leia completo)
+- ✅ Leia apenas documentos específicos que você precisa
+- ❌ NUNCA leia todos os documentos de uma vez
 
 ## Regras de Implementação
 - SEMPRE valide TypeScript antes de continuar

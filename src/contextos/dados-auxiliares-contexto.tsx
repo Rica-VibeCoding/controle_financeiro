@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import useSWR from 'swr'
-import { Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
+import { Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto, Contato } from '@/tipos/database'
 import { obterCategorias } from '@/servicos/supabase/categorias'
 import { obterContas } from '@/servicos/supabase/contas'
 import { obterSubcategoriasPorCategoria } from '@/servicos/supabase/subcategorias'
 import { obterFormasPagamento } from '@/servicos/supabase/formas-pagamento'
 import { obterCentrosCusto } from '@/servicos/supabase/centros-custo'
+import { obterClientes, obterFornecedores } from '@/servicos/supabase/contatos-queries'
 import { logger } from '@/utilitarios/logger'
 import { useAuth } from '@/contextos/auth-contexto'
 
@@ -19,6 +20,8 @@ interface DadosAuxiliares {
   categorias: Categoria[]
   formasPagamento: FormaPagamento[]
   centrosCusto: CentroCusto[]
+  clientes: Contato[]
+  fornecedores: Contato[]
 }
 
 /**
@@ -46,7 +49,9 @@ const DADOS_VAZIOS: DadosAuxiliares = {
   contas: [],
   categorias: [],
   formasPagamento: [],
-  centrosCusto: []
+  centrosCusto: [],
+  clientes: [],
+  fornecedores: []
 }
 
 const DadosAuxiliaresContexto = createContext<DadosAuxiliaresContextType | undefined>(undefined)
@@ -69,18 +74,22 @@ export function DadosAuxiliaresProvider({ children }: DadosAuxiliaresProviderPro
   const carregarDadosAuxiliares = async () => {
     if (!workspace) return DADOS_VAZIOS
 
-    const [contasData, categoriasData, formasData, centrosData] = await Promise.all([
+    const [contasData, categoriasData, formasData, centrosData, clientesData, fornecedoresData] = await Promise.all([
       obterContas(false, workspace.id),
       obterCategorias(false, workspace.id),
       obterFormasPagamento(false, workspace.id),
-      obterCentrosCusto(false, workspace.id)
+      obterCentrosCusto(false, workspace.id),
+      obterClientes(workspace.id),
+      obterFornecedores(workspace.id)
     ])
 
     return {
       contas: contasData,
       categorias: categoriasData,
       formasPagamento: formasData,
-      centrosCusto: centrosData
+      centrosCusto: centrosData,
+      clientes: clientesData,
+      fornecedores: fornecedoresData
     }
   }
 

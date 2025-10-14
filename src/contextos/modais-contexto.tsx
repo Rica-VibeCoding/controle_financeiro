@@ -36,6 +36,8 @@ interface ModaisContextoType {
   modalFormaPagamento: EstadoModal
   modalCentroCusto: EstadoModal
   modalGestaoUsuarios: EstadoModal
+  modalCliente: boolean
+  modalFornecedor: boolean
   
   // Sistema novo - Ações específicas por modal
   categoria: {
@@ -66,6 +68,18 @@ interface ModaisContextoType {
   gestaoUsuarios: {
     abrir: (id?: string) => void
     fechar: () => void
+  }
+
+  cliente: {
+    abrir: (id?: string) => void
+    fechar: () => void
+    clienteId?: string
+  }
+
+  fornecedor: {
+    abrir: (id?: string) => void
+    fechar: () => void
+    fornecedorId?: string
   }
 
   // Sistema novo - Métodos unificados
@@ -102,6 +116,12 @@ export function ModaisProvider({ children }: ModaisProviderProps) {
   const [modalFormaPagamento, setModalFormaPagamento] = useState<EstadoModal>(ESTADO_INICIAL_MODAL)
   const [modalCentroCusto, setModalCentroCusto] = useState<EstadoModal>(ESTADO_INICIAL_MODAL)
   const [modalGestaoUsuarios, setModalGestaoUsuarios] = useState<EstadoModal>(ESTADO_INICIAL_MODAL)
+
+  const [modalCliente, setModalCliente] = useState(false)
+  const [clienteId, setClienteId] = useState<string | undefined>()
+
+  const [modalFornecedor, setModalFornecedor] = useState(false)
+  const [fornecedorId, setFornecedorId] = useState<string | undefined>()
 
   // Sistema antigo (manter compatibilidade)
   const abrirModal = (tipo: TipoModal, dados?: any) => {
@@ -196,6 +216,30 @@ export function ModaisProvider({ children }: ModaisProviderProps) {
     fechar: () => fecharModalNovo('gestao-usuarios')
   }
 
+  const cliente = {
+    abrir: (id?: string) => {
+      setClienteId(id)
+      setModalCliente(true)
+    },
+    fechar: () => {
+      setModalCliente(false)
+      setClienteId(undefined)
+    },
+    clienteId
+  }
+
+  const fornecedor = {
+    abrir: (id?: string) => {
+      setFornecedorId(id)
+      setModalFornecedor(true)
+    },
+    fechar: () => {
+      setModalFornecedor(false)
+      setFornecedorId(undefined)
+    },
+    fornecedorId
+  }
+
   // Sistema novo - Utilidades
   const modaisNovosAbertos = Object.values(estadosMap).filter(estado => estado.isOpen)
   const algumModalAberto = Boolean(modalAberto) || modaisNovosAbertos.length > 0
@@ -216,7 +260,9 @@ export function ModaisProvider({ children }: ModaisProviderProps) {
       modalFormaPagamento,
       modalCentroCusto,
       modalGestaoUsuarios,
-      
+      modalCliente,
+      modalFornecedor,
+
       // Sistema novo - Ações específicas
       categoria,
       conta,
@@ -224,6 +270,8 @@ export function ModaisProvider({ children }: ModaisProviderProps) {
       formaPagamento,
       centroCusto,
       gestaoUsuarios,
+      cliente,
+      fornecedor,
       
       // Sistema novo - Métodos unificados
       abrirModalNovo,

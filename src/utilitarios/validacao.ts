@@ -440,3 +440,44 @@ export function validarCentroCusto(centroCusto: any): string[] {
 
   return erros
 }
+
+/**
+ * Valida dados de contato (nome obrigatório, tel e email opcionais)
+ */
+export function validarContato(dados: {
+  nome: string
+  telefone?: string
+  email?: string
+}): string[] {
+  const erros: string[] = []
+
+  // Validar nome (obrigatório)
+  if (!dados.nome || dados.nome.trim().length === 0) {
+    erros.push('Nome é obrigatório')
+  } else if (dados.nome.trim().length < 3) {
+    erros.push('Nome deve ter pelo menos 3 caracteres')
+  } else if (dados.nome.trim().length > 255) {
+    erros.push('Nome deve ter no máximo 255 caracteres')
+  }
+
+  // Validar telefone (opcional, mas se preenchido deve ter formato válido)
+  if (dados.telefone && dados.telefone.trim().length > 0) {
+    const telefone = dados.telefone.trim()
+    if (telefone.length < 10 || telefone.length > 15) {
+      erros.push('Telefone deve ter entre 10 e 15 caracteres')
+    }
+  }
+
+  // Validar email (opcional, mas se preenchido deve ter formato válido)
+  if (dados.email && dados.email.trim().length > 0) {
+    const email = dados.email.trim()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      erros.push('Email deve ter um formato válido')
+    } else if (email.length > 255) {
+      erros.push('Email deve ter no máximo 255 caracteres')
+    }
+  }
+
+  return erros
+}

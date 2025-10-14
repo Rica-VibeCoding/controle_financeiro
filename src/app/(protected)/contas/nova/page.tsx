@@ -1,20 +1,28 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
-// Desabilitar SSG para esta página (requer runtime do cliente)
 export const dynamic = 'force-dynamic'
+
+// Desabilitar SSG para esta página (requer runtime do cliente)
 
 export default function NovaContaPage() {
   const router = useRouter()
   const { conta: modalContaActions } = useModais()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   useEffect(() => {
-    // Abre modal e redireciona para página de listagem
+    if (mounted) {
+      // Abre modal e redireciona para página de listagem
     modalContaActions.abrir()
     router.push('/contas')
+    }
   }, [modalContaActions, router])
   
   return (

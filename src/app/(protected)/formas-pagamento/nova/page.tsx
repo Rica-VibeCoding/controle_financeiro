@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
@@ -9,11 +9,18 @@ export const dynamic = 'force-dynamic'
 export default function NovaFormaPagamentoPage() {
   const router = useRouter()
   const { formaPagamento: modalFormaPagamentoActions } = useModais()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   useEffect(() => {
-    // Abre modal e redireciona para página de listagem
+    if (mounted) {
+      // Abre modal e redireciona para página de listagem
     modalFormaPagamentoActions.abrir()
     router.push('/formas-pagamento')
+    }
   }, [modalFormaPagamentoActions, router])
   
   return (

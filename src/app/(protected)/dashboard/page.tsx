@@ -1,6 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
 
 import NextDynamic from 'next/dynamic'
 import { CardMetrica } from '@/componentes/dashboard/card-metrica'

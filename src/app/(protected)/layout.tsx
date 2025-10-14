@@ -1,8 +1,5 @@
 'use client'
 
-// Forçar renderização dinâmica para todas as páginas protegidas
-export const dynamic = 'force-dynamic'
-
 import { useAuth } from '@/contextos/auth-contexto'
 import { LayoutPrincipal } from '@/componentes/layout/layout-principal'
 import { useRouter } from 'next/navigation'

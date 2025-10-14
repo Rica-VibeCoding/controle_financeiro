@@ -1,6 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
 
 import { PageGuard } from '@/componentes/ui/page-guard'
 import { CardRelatorio } from '@/componentes/relatorios/card-relatorio'

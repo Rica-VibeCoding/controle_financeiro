@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
@@ -9,13 +9,21 @@ export const dynamic = 'force-dynamic'
 export default function NovaCategoriaPage() {
   const router = useRouter()
   const { categoria: modalCategoriaActions } = useModais()
-  
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
-    // Abre modal e redireciona para página de listagem
-    modalCategoriaActions.abrir()
-    router.push('/categorias')
-  }, [modalCategoriaActions, router])
-  
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      modalCategoriaActions.abrir()
+      router.push('/categorias')
+    }
+  }, [mounted, modalCategoriaActions, router])
+
+  if (!mounted) return null
+
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="text-center">

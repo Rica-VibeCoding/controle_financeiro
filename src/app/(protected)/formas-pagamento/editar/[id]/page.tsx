@@ -1,20 +1,28 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
+
+export const dynamic = 'force-dynamic'
 
 export default function EditarFormaPagamentoPage() {
   const router = useRouter()
   const params = useParams()
   const { formaPagamento: modalFormaPagamentoActions } = useModais()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   useEffect(() => {
-    // Abre modal para edição e redireciona para página de listagem
+    if (mounted) {
+      // Abre modal para edição e redireciona para página de listagem
     modalFormaPagamentoActions.abrir(params.id as string)
     router.push('/formas-pagamento')
+    }
   }, [modalFormaPagamentoActions, router, params.id])
   
   return (

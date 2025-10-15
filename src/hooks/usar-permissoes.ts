@@ -1,41 +1,60 @@
 /**
  * Hook para gerenciar permissões granulares de usuários
  * Integra com o sistema de auth existente e service de permissões
+ *
+ * ✅ CACHE EM MEMÓRIA: Permissões são armazenadas e reusadas ao trocar abas
  */
 
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '@/contextos/auth-contexto'
-import { 
-  buscarPermissoesUsuario, 
+import {
+  buscarPermissoesUsuario,
   verificarPermissaoUsuario,
   atualizarPermissoesUsuario,
   verificarMultiplasPermissoes
 } from '@/servicos/supabase/permissoes-service'
-import type { 
-  PermissoesUsuario, 
-  TipoPermissao, 
-  ResultadoPermissoes, 
-  ContextoPermissoes 
+import type {
+  PermissoesUsuario,
+  TipoPermissao,
+  ResultadoPermissoes,
+  ContextoPermissoes
 } from '@/tipos/permissoes'
 import { PERMISSOES_PADRAO_OWNER, PERMISSOES_PADRAO_MEMBER } from '@/tipos/permissoes'
+
+/**
+ * Cache global de permissões em memória
+ * Evita re-buscar permissões ao trocar de aba
+ * Estrutura: { "userId_workspaceId": { permissoes, timestamp } }
+ */
+interface CachePermissoes {
+  permissoes: PermissoesUsuario
+  timestamp: number
+  isOwner: boolean
+}
+
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+const cacheGlobalPermissoes = new Map<string, CachePermissoes>()
 
 interface UsarPermissoesReturn extends ContextoPermissoes {
   /** Estado de carregamento das permissões */
   loading: boolean
-  
+
   /** Erro na operação de permissões */
   error: string | null
-  
-  /** Recarregar permissões do usuário */
+
+  /** Recarregar permissões do usuário (força busca, ignora cache) */
   recarregarPermissoes: () => Promise<void>
-  
+
   /** Verificar múltiplas permissões de uma vez */
   verificarMultiplasPermissoes: (permissoes: TipoPermissao[]) => Promise<Record<TipoPermissao, boolean>>
-  
+
   /** Cache de verificações recentes para otimização */
   cachePermissoes: Record<TipoPermissao, boolean>
+
+  /** Limpar todo o cache de permissões (útil em logout) */
+  limparCacheGlobal: () => void
 }
 
 /**
@@ -56,13 +75,27 @@ export function usePermissoes(): UsarPermissoesReturn {
   }, [user, workspace])
 
   /**
-   * Carregar permissões do usuário atual
+   * Carregar permissões do usuário atual com cache em memória
    */
-  const carregarPermissoesUsuario = useCallback(async () => {
+  const carregarPermissoesUsuario = useCallback(async (forcarRecarga = false) => {
     if (!user || !workspace) {
       setPermissoesUsuario(null)
       setLoading(false)
       return
+    }
+
+    const cacheKey = `${user.id}_${workspace.id}`
+    const now = Date.now()
+
+    // ✅ VERIFICAR CACHE PRIMEIRO (exceto se forçar recarga)
+    if (!forcarRecarga) {
+      const cached = cacheGlobalPermissoes.get(cacheKey)
+      if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+        // Cache válido - usar sem buscar
+        setPermissoesUsuario(cached.permissoes)
+        setLoading(false)
+        return
+      }
     }
 
     try {
@@ -70,23 +103,40 @@ export function usePermissoes(): UsarPermissoesReturn {
       setError(null)
 
       const permissoes = await buscarPermissoesUsuario(user.id, workspace.id)
-      
+
+      let permissoesFinais: PermissoesUsuario
+
       if (!permissoes) {
         // Se não conseguiu carregar, usar padrão baseado no role
-        const permissoesPadrao = isOwner ? PERMISSOES_PADRAO_OWNER : PERMISSOES_PADRAO_MEMBER
-        setPermissoesUsuario(permissoesPadrao)
+        permissoesFinais = isOwner ? PERMISSOES_PADRAO_OWNER : PERMISSOES_PADRAO_MEMBER
       } else {
-        setPermissoesUsuario(permissoes)
+        permissoesFinais = permissoes
       }
+
+      setPermissoesUsuario(permissoesFinais)
+
+      // ✅ SALVAR NO CACHE GLOBAL
+      cacheGlobalPermissoes.set(cacheKey, {
+        permissoes: permissoesFinais,
+        timestamp: now,
+        isOwner
+      })
 
     } catch (err: any) {
       console.error('Erro ao carregar permissões:', err)
       setError(err.message || 'Erro ao carregar permissões')
-      
+
       // Em caso de erro, usar padrão baseado no role
       const permissoesPadrao = isOwner ? PERMISSOES_PADRAO_OWNER : PERMISSOES_PADRAO_MEMBER
       setPermissoesUsuario(permissoesPadrao)
-      
+
+      // Cache também o fallback (com timestamp menor para expirar mais rápido)
+      cacheGlobalPermissoes.set(cacheKey, {
+        permissoes: permissoesPadrao,
+        timestamp: now - (CACHE_DURATION * 0.8), // Expira em 1 minuto ao invés de 5
+        isOwner
+      })
+
     } finally {
       setLoading(false)
     }
@@ -192,12 +242,19 @@ export function usePermissoes(): UsarPermissoesReturn {
   }, [user, workspace, isOwner])
 
   /**
-   * Recarregar permissões do usuário
+   * Recarregar permissões do usuário (força busca, ignora cache)
    */
   const recarregarPermissoes = useCallback(async () => {
-    await carregarPermissoesUsuario()
-    setCachePermissoes({} as any) // Limpar cache
-  }, [carregarPermissoesUsuario])
+    if (!user || !workspace) return
+
+    // Limpar cache global para este usuário/workspace
+    const cacheKey = `${user.id}_${workspace.id}`
+    cacheGlobalPermissoes.delete(cacheKey)
+
+    // Forçar recarga com parâmetro true
+    await carregarPermissoesUsuario(true)
+    setCachePermissoes({} as any) // Limpar cache local
+  }, [carregarPermissoesUsuario, user, workspace])
 
   // Efeito para carregar permissões quando auth estiver pronto
   useEffect(() => {
@@ -206,6 +263,13 @@ export function usePermissoes(): UsarPermissoesReturn {
     }
   }, [authLoading, user, workspace, carregarPermissoesUsuario])
 
+  /**
+   * Limpar todo o cache global de permissões
+   */
+  const limparCacheGlobal = useCallback(() => {
+    cacheGlobalPermissoes.clear()
+  }, [])
+
   // Limpar estado quando usuário faz logout
   useEffect(() => {
     if (!user) {
@@ -213,8 +277,10 @@ export function usePermissoes(): UsarPermissoesReturn {
       setCachePermissoes({} as any)
       setError(null)
       setLoading(false)
+      // Limpar cache global ao fazer logout
+      limparCacheGlobal()
     }
-  }, [user])
+  }, [user, limparCacheGlobal])
 
   return {
     // ContextoPermissoes interface
@@ -222,13 +288,14 @@ export function usePermissoes(): UsarPermissoesReturn {
     isOwner,
     permissoesUsuario,
     atualizarPermissoes,
-    
+
     // Extras específicos do hook
     loading,
     error,
     recarregarPermissoes,
     verificarMultiplasPermissoes: verificarMultiplasPermissoesCallback,
-    cachePermissoes
+    cachePermissoes,
+    limparCacheGlobal
   }
 }
 

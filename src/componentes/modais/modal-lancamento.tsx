@@ -127,6 +127,7 @@ const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransa
     subcategoria_id: transacao.subcategoria_id || undefined,
     forma_pagamento_id: transacao.forma_pagamento_id || undefined,
     centro_custo_id: transacao.centro_custo_id || undefined,
+    contato_id: transacao.contato_id || undefined,
     status: transacao.status,
     data_vencimento: transacao.data_vencimento || undefined,
     observacoes: transacao.observacoes || undefined,

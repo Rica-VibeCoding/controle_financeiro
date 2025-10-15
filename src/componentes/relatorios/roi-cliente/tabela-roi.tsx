@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import type { ClienteROI } from '@/tipos/roi-cliente'
+import { LinhaClienteExpandida } from './linha-cliente-expandida'
+import type { ClienteROI, FiltrosROI } from '@/tipos/roi-cliente'
 
 interface TabelaROIProps {
   clientes: ClienteROI[]
   isLoading: boolean
+  filtros: FiltrosROI
 }
 
-export function TabelaROI({ clientes, isLoading }: TabelaROIProps) {
+export function TabelaROI({ clientes, isLoading, filtros }: TabelaROIProps) {
   const [expandido, setExpandido] = useState<string | null>(null)
 
   const formatarValor = (valor: number): string => {
@@ -34,21 +36,21 @@ export function TabelaROI({ clientes, isLoading }: TabelaROIProps) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Receita
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Despesa
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Lucro
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Margem
                 </th>
               </tr>
@@ -95,59 +97,71 @@ export function TabelaROI({ clientes, isLoading }: TabelaROIProps) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                 Cliente
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                 Receita
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                 Despesa
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                 Lucro
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                 Margem
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white">
             {clientes.map((cliente) => {
               const { cor, icone } = obterCorMargem(cliente.margem)
               const isExpandido = expandido === cliente.id
 
               return (
-                <tr
-                  key={cliente.id}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => toggleExpandir(cliente.id)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {isExpandido ? (
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                      )}
-                      <span className="font-medium text-gray-900">{cliente.nome}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-700">
-                    R$ {formatarValor(cliente.receita)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-700">
-                    R$ {formatarValor(cliente.despesa)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                    R$ {formatarValor(cliente.lucro)}
-                  </td>
-                  <td className={`px-4 py-3 text-right font-bold ${cor}`}>
-                    {cliente.margem.toFixed(1)}% {icone}
-                  </td>
-                </tr>
+                <Fragment key={cliente.id}>
+                  <tr
+                    className="hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-200"
+                    onClick={() => toggleExpandir(cliente.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {isExpandido ? (
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-400" />
+                        )}
+                        <span className="font-medium text-gray-900">{cliente.nome}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right bg-green-50">
+                      <span className="text-gray-900">R$ {formatarValor(cliente.receita)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right bg-red-50">
+                      <span className="text-gray-900">R$ {formatarValor(cliente.despesa)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                      R$ {formatarValor(cliente.lucro)}
+                    </td>
+                    <td className={`px-4 py-3 text-right font-bold ${cor}`}>
+                      {cliente.margem.toFixed(1)}% {icone}
+                    </td>
+                  </tr>
+                  {isExpandido && (
+                    <tr>
+                      <td colSpan={5} className="p-0">
+                        <LinhaClienteExpandida
+                          clienteId={cliente.id}
+                          clienteNome={cliente.nome}
+                          filtros={filtros}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               )
             })}
           </tbody>

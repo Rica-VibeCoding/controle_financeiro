@@ -16,9 +16,9 @@ export function useCartoesDados(periodo: Periodo) {
     workspace ? ['cartoes-credito', workspace.id, periodo.inicio, periodo.fim] : null,
     () => obterCartoesCredito(periodo, workspace!.id),
     {
-      refreshInterval: 300000, // 5 minutos (dados financeiros)
+      refreshInterval: 0, // ❌ Manual 100% - sem refresh automático
       revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minuto
+      revalidateIfStale: false, // ❌ NUNCA considerar dados velhos
       errorRetryCount: 3,
       errorRetryInterval: 5000
     }

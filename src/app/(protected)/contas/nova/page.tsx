@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
-export const dynamic = 'force-dynamic'
-
 // Desabilitar SSG para esta página (requer runtime do cliente)
 
 export default function NovaContaPage() {

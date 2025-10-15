@@ -6,11 +6,12 @@ import { useState } from 'react'
 import { PageGuard } from '@/componentes/ui/page-guard'
 import { CardsKPI } from '@/componentes/relatorios/roi-cliente/cards-kpi'
 import { TabelaROI } from '@/componentes/relatorios/roi-cliente/tabela-roi'
+import { FiltrosROI as FiltrosROIComponent } from '@/componentes/relatorios/roi-cliente/filtros-roi'
 import { useROIClientes } from '@/hooks/usar-roi-clientes'
 import type { FiltrosROI } from '@/tipos/roi-cliente'
 
 export default function ROIClientePage() {
-  const [filtros] = useState<FiltrosROI>({
+  const [filtros, setFiltros] = useState<FiltrosROI>({
     periodo: 'todo',
     ordenacao: 'margem_desc'
   })
@@ -33,6 +34,9 @@ export default function ROIClientePage() {
         {/* KPIs */}
         <CardsKPI kpis={kpis} isLoading={isLoading} />
 
+        {/* Filtros */}
+        <FiltrosROIComponent filtros={filtros} onFiltrosChange={setFiltros} />
+
         {/* Erro */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -43,7 +47,7 @@ export default function ROIClientePage() {
         )}
 
         {/* Tabela */}
-        <TabelaROI clientes={clientes} isLoading={isLoading} />
+        <TabelaROI clientes={clientes} isLoading={isLoading} filtros={filtros} />
       </div>
     </PageGuard>
   )

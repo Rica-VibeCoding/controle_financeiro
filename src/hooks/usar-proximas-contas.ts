@@ -10,9 +10,9 @@ export function useProximasContas() {
     workspace ? ['proximas-contas', workspace.id] : null,
     () => obterProximasContas(workspace!.id),
     {
-      refreshInterval: 60000, // 1 minuto
-      revalidateOnFocus: true, // importante para contas vencendo
-      dedupingInterval: 10000,
+      refreshInterval: 0, // ❌ Manual 100% - sem refresh automático
+      revalidateOnFocus: false, // ❌ Não atualiza ao trocar aba
+      revalidateIfStale: false, // ❌ NUNCA considerar dados velhos
       errorRetryCount: 3,
       errorRetryInterval: 5000
     }

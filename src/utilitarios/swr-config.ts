@@ -18,12 +18,11 @@ export const SWR_CONFIG_OTIMIZADA: SWRConfiguration = {
   revalidateOnFocus: false,       // ❌ Não atualiza ao trocar aba
   revalidateOnReconnect: false,   // ❌ Não atualiza ao reconectar
   revalidateOnMount: true,        // ✅ Carrega ao abrir página pela primeira vez
-  refreshInterval: 0,             // ❌ NUNCA atualizar automaticamente (era 900000)
+  refreshInterval: 0,             // ❌ NUNCA atualizar automaticamente
+  revalidateIfStale: false,       // ❌ NUNCA considerar dados velhos (cache infinito)
 
   // === PERFORMANCE E CACHE ===
-  dedupingInterval: 2000,         // 2s - evita requests duplicados
   errorRetryCount: 2,             // Apenas 2 tentativas se falhar
-  revalidateIfStale: false,       // ❌ Não revalidar dados "velhos" automaticamente
 
   // === UX OTIMIZADA ===
   suspense: false,                // Sem suspense (melhor controle loading)
@@ -43,22 +42,18 @@ export const SWR_CONFIG_OTIMIZADA: SWRConfiguration = {
 
 /**
  * Configuração específica para dados críticos (transações principais)
- * Mesma estratégia manual-first
+ * Mesma estratégia manual-first - cache infinito
  */
 export const SWR_CONFIG_DADOS_CRITICOS: SWRConfiguration = {
-  ...SWR_CONFIG_OTIMIZADA,
-  dedupingInterval: 1500,         // 1.5s - dados críticos atualizam mais rápido
-  refreshInterval: 0              // ❌ Sem refresh automático
+  ...SWR_CONFIG_OTIMIZADA
 }
 
 /**
  * Configuração para dados auxiliares (categorias, formas pagamento)
- * Dados que mudam raramente - cache muito longo
+ * Mesma estratégia manual-first - cache infinito
  */
 export const SWR_CONFIG_DADOS_AUXILIARES: SWRConfiguration = {
-  ...SWR_CONFIG_OTIMIZADA,
-  dedupingInterval: 5000,         // 5s - dados auxiliares
-  refreshInterval: 0              // ❌ Sem refresh automático
+  ...SWR_CONFIG_OTIMIZADA
 }
 
 // Tipagem para facilitar uso

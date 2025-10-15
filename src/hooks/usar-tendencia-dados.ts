@@ -10,9 +10,9 @@ export function useTendenciaData() {
     workspace ? ['dashboard-tendencia', workspace.id] : null,
     () => obterTendencia(workspace!.id),
     {
-      refreshInterval: 300000, // 5 minutos (dados históricos)
+      refreshInterval: 0, // ❌ Manual 100% - sem refresh automático
       revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minuto
+      revalidateIfStale: false, // ❌ NUNCA considerar dados velhos
       errorRetryCount: 3,
       errorRetryInterval: 5000
     }

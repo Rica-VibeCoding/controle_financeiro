@@ -1,8 +1,9 @@
 # 💰 PLANO DE IMPLEMENTAÇÃO - ROI POR CLIENTE
 
-> **Status:** ✅ FASE 1 CONCLUÍDA (14/10/2025)
+> **Status:** ✅ FASE 3 CONCLUÍDA (14/10/2025)
 > **Implementado por:** Claude (Sonnet 4.5)
-> **Próxima fase:** FASE 2 - Expansão e Detalhes
+> **Concluído:** Gráfico de Evolução + Filtros de Período + Ordenação
+> **Próxima fase:** Opcional - Exportação Excel/PDF
 
 ## 📋 ÍNDICE
 1. [Visão Geral do Projeto](#visão-geral-do-projeto)
@@ -95,11 +96,293 @@ Gestor/empresário que precisa tomar decisões estratégicas sobre:
    - ✅ Exemplos: "WoodPro+", "Hélio Tristão", "Suelen e Osmar"
    - ✅ Cálculos de receita, despesa, lucro e margem funcionando
 
-3. **Pendências para FASE 2:**
-   - [ ] Expansão de linha (ver detalhes de receitas/despesas por categoria)
-   - [ ] Gráfico de evolução temporal
-   - [ ] Filtros de período e ordenação
+3. **Pendências Originais FASE 2:** ✅ CONCLUÍDAS
+   - [x] Expansão de linha (ver detalhes de receitas/despesas por categoria) ✅
+   - [ ] Gráfico de evolução temporal (movido para FASE 3)
+   - [ ] Filtros de período e ordenação (movido para FASE 3)
+   - [ ] Exportação Excel/PDF (movido para FASE 3)
+
+---
+
+### ✅ FASE 2 - EXPANSÃO E DETALHES (CONCLUÍDA)
+
+**Data:** 14/10/2025
+**Duração:** ~1 hora
+**Status:** ✅ Funcionando e validado
+
+#### Arquivos Criados/Modificados:
+
+**Backend (Supabase):**
+- ✅ Migration: `buscar_detalhes_roi_centro_custo` - Function para detalhamento por categoria
+
+**TypeScript:**
+- ✅ `src/tipos/roi-cliente.ts` - Adicionadas interfaces `ItemDetalhado` e `DetalhesCliente`
+- ✅ `src/servicos/supabase/roi-cliente-queries.ts` - Função `buscarDetalhesCliente()`
+
+**Componentes:**
+- ✅ `src/componentes/relatorios/roi-cliente/linha-cliente-expandida.tsx` - Novo componente de expansão
+- ✅ `src/componentes/relatorios/roi-cliente/tabela-roi.tsx` - Modificado para integrar expansão
+
+**Páginas:**
+- ✅ `src/app/(protected)/relatorios/roi-cliente/page.tsx` - Atualizado para passar filtros
+
+#### Funcionalidades Implementadas:
+
+1. **Expansão de Linha na Tabela:**
+   - Clique no ícone [>] expande a linha
+   - Ícone muda para [v] quando expandido
+   - Animação suave de transição
+
+2. **Detalhamento de Receitas:**
+   - Tabela interna com categoria, subcategoria, quantidade, valor e %
+   - Agrupamento por categoria/subcategoria
+   - Cores verde para valores de receita
+   - Total de receitas no cabeçalho
+
+3. **Detalhamento de Despesas:**
+   - Tabela interna com categoria, subcategoria, quantidade, valor e %
+   - Agrupamento por categoria/subcategoria
+   - Cores vermelhas para valores de despesa
+   - Total de despesas no cabeçalho
+
+4. **Estados de Carregamento:**
+   - Loading spinner enquanto busca detalhes
+   - Tratamento de erros
+   - Mensagem quando não há detalhes
+
+#### Validações:
+- ✅ TypeScript: `npx tsc --noEmit` - SEM ERROS
+- ✅ Integração com Supabase: Funcionando
+- ✅ Performance: Busca sob demanda (só ao expandir)
+- ✅ UX: Transições suaves e feedback visual claro
+
+#### Observações Técnicas:
+
+1. **Busca Sob Demanda:**
+   - Detalhes são buscados apenas quando usuário expande a linha
+   - Evita sobrecarga de dados na listagem inicial
+   - Cache via useEffect no componente
+
+2. **Agrupamento por Categoria:**
+   - SQL agrupa automaticamente por categoria + subcategoria
+   - Calcula percentual de cada item no total
+   - Inclui contagem de transações por grupo
+
+3. **Correção de Bug Importante:**
+   - ✅ Corrigido: Uso incorreto de `createClient` do `server.ts` (usa `next/headers`)
+   - ✅ Solução: Trocado para `createClient` do `auth-client.ts` (usa `createBrowserClient`)
+   - ✅ Motivo: Componentes client-side não podem usar `next/headers`
+   - ✅ Arquivos corrigidos: `src/servicos/supabase/roi-cliente-queries.ts` (3 funções)
+
+4. **Pendências para FASE 3:**
+   - [x] Gráfico de evolução temporal ✅
+   - [ ] Filtros de período (mês atual, 3 meses, 6 meses, ano)
+   - [ ] Seletor de ordenação
    - [ ] Exportação Excel/PDF
+
+---
+
+### ✅ FASE 3 - GRÁFICO DE EVOLUÇÃO (PARCIALMENTE CONCLUÍDA)
+
+**Data:** 14/10/2025
+**Duração:** ~1.5 horas
+**Status:** ✅ Gráfico funcionando | ⏳ Filtros pendentes
+
+#### Arquivos Criados/Modificados:
+
+**Backend (Supabase):**
+- ✅ Migration: `buscar_evolucao_roi_centro_custo` - Function para evolução mensal
+
+**TypeScript:**
+- ✅ `src/tipos/roi-cliente.ts` - Adicionada interface `EvolucaoMensal`
+- ✅ `src/servicos/supabase/roi-cliente-queries.ts` - Função `buscarEvolucaoCliente()`
+
+**Componentes:**
+- ✅ `src/componentes/relatorios/roi-cliente/grafico-evolucao.tsx` - Novo componente com Recharts
+- ✅ `src/componentes/relatorios/roi-cliente/linha-cliente-expandida.tsx` - Integrado botão "Ver Evolução"
+- ✅ `src/componentes/relatorios/roi-cliente/tabela-roi.tsx` - Atualizado para passar nome do cliente
+
+#### Funcionalidades Implementadas:
+
+1. **Gráfico de Evolução Temporal:**
+   - Gráfico de linha (LineChart) com Recharts
+   - 2 linhas: Receita (verde) e Despesa (vermelho)
+   - Eixo X: Meses no formato "Mon/YYYY"
+   - Eixo Y: Valores formatados em R$
+   - Tooltip customizado com valores em moeda
+   - Legend para identificar linhas
+   - Gradientes sutis para melhor visualização
+
+2. **Integração na Linha Expandida:**
+   - Botão "Ver Evolução no Tempo" com ícone de tendência
+   - Loading state durante busca de dados
+   - Toggle para mostrar/ocultar gráfico
+   - Busca sob demanda (só carrega ao clicar)
+   - Cache de dados (não recarrega se já foi buscado)
+
+3. **Function SQL:**
+   - Agrupa transações por mês
+   - Calcula receita, despesa, lucro e margem mensal
+   - Retorna série temporal ordenada
+   - Respeita filtros de período
+
+#### Validações:
+- ✅ TypeScript: `npx tsc --noEmit` - SEM ERROS
+- ✅ Padrão Recharts do dashboard seguido
+- ✅ Function SQL testada com dados reais
+- ✅ UX consistente com o resto do sistema
+
+#### Observações Técnicas:
+
+1. **Padrão Recharts:**
+   - Seguiu exatamente o estilo de `grafico-tendencia.tsx`
+   - Mesmas cores: #10b981 (receita) e #ef4444 (despesa)
+   - Mesmo tooltip customizado
+   - Mesma responsividade
+
+2. **Performance:**
+   - Dados carregados apenas ao expandir gráfico
+   - Cache local no componente (não refaz request)
+   - Function SQL otimizada com CTEs
+
+3. **Dados Testados:**
+   - ✅ WoodPro+: 12 meses de evolução (Set/2024 a Ago/2025)
+   - ✅ Valores corretos de receita/despesa por mês
+   - ✅ Formato de data adequado para exibição
+
+4. **Pendências para Continuação FASE 3:**
+   - [x] Componente de filtros (período + ordenação) ✅
+   - [x] Integrar filtros na página principal ✅
+   - [x] Aplicar filtros na busca de dados ✅
+   - [ ] (Opcional) Exportação Excel/PDF
+
+---
+
+### ✅ FASE 3 - FILTROS E ORDENAÇÃO (CONCLUÍDA)
+
+**Data:** 14/10/2025
+**Duração:** ~30 minutos
+**Status:** ✅ Totalmente funcional
+
+#### Arquivos Criados/Modificados:
+
+**Componentes:**
+- ✅ `src/componentes/relatorios/roi-cliente/filtros-roi.tsx` - Novo componente de filtros
+
+**Páginas:**
+- ✅ `src/app/(protected)/relatorios/roi-cliente/page.tsx` - Integrado filtros com estado
+
+#### Funcionalidades Implementadas:
+
+1. **Componente de Filtros:**
+   - 2 dropdowns lado a lado (responsivo)
+   - Filtro de período: Todo período, Mês atual, 3/6/12 meses
+   - Filtro de ordenação: Margem %, Lucro R$, Receita, Nome A-Z
+   - Ícones descritivos (Calendar, ArrowUpDown)
+   - Estilo consistente com o sistema
+
+2. **Integração com Estado:**
+   - Estado local com `useState` na página
+   - Callback `onFiltrosChange` para atualizar filtros
+   - Reativa automaticamente quando filtros mudam
+   - SWR refaz queries automaticamente
+
+3. **Períodos Disponíveis:**
+   - Todo período (padrão - desde primeira transação)
+   - Mês atual (primeiro ao último dia do mês)
+   - Últimos 3 meses
+   - Últimos 6 meses
+   - Último ano
+
+4. **Ordenações Disponíveis:**
+   - Maior Margem % (padrão)
+   - Menor Margem %
+   - Maior Lucro R$
+   - Menor Lucro R$
+   - Maior Receita
+   - Nome A-Z
+
+#### Validações:
+- ✅ TypeScript: `npx tsc --noEmit` - SEM ERROS
+- ✅ Filtros aplicam automaticamente via SWR
+- ✅ UI responsiva (mobile/tablet/desktop)
+- ✅ Lógica de datas já implementada nas queries
+
+#### Observações Técnicas:
+
+1. **Reatividade Automática:**
+   - SWR detecta mudança no objeto `filtros`
+   - Refaz request automaticamente
+   - Mantém cache de requisições anteriores
+   - Loading state gerenciado pelo hook
+
+2. **Cálculo de Datas:**
+   - Lógica já existia em `roi-cliente-queries.ts`
+   - Switch case para cada tipo de período
+   - Calcula primeiro e último dia automaticamente
+
+3. **UX:**
+   - Posicionado entre KPIs e tabela
+   - Grid responsivo (1 col mobile, 2 cols desktop)
+   - Labels descritivos com ícones
+   - Foco visual (ring blue ao selecionar)
+
+---
+
+## 🚀 GUIA RÁPIDO PARA NOVO CHAT (FASE 3)
+
+**IMPORTANTE:** Use este resumo para contexto rápido ao iniciar novo chat.
+
+### O que está PRONTO:
+✅ Tela principal `/relatorios` com 3 cards de seleção
+✅ Relatório ROI completo em `/relatorios/roi-cliente`:
+  - 3 Cards KPI (Melhor ROI %, Melhor ROI R$, Margem Mensal)
+  - **Filtros de período e ordenação** ⭐ NOVO
+  - Tabela de clientes com receita, despesa, lucro e margem
+  - Expansão de linha mostrando detalhes por categoria
+  - **Gráfico de evolução temporal (mês a mês)** ⭐
+  - Cores indicativas (verde/amarelo/vermelho)
+  - Loading states e tratamento de erros
+
+### Estrutura de Arquivos Criados:
+```
+Backend (Supabase):
+- Migration: criar_funcao_roi_centros_custo
+- Migration: criar_funcao_kpis_roi
+- Migration: buscar_detalhes_roi_centro_custo
+- Migration: buscar_evolucao_roi_centro_custo
+
+Frontend:
+- src/tipos/roi-cliente.ts (+ EvolucaoMensal)
+- src/servicos/supabase/roi-cliente-queries.ts (usa auth-client.ts!)
+- src/hooks/usar-roi-clientes.ts
+- src/componentes/relatorios/card-relatorio.tsx
+- src/componentes/relatorios/roi-cliente/cards-kpi.tsx
+- src/componentes/relatorios/roi-cliente/filtros-roi.tsx ⭐ NOVO
+- src/componentes/relatorios/roi-cliente/tabela-roi.tsx
+- src/componentes/relatorios/roi-cliente/linha-cliente-expandida.tsx
+- src/componentes/relatorios/roi-cliente/grafico-evolucao.tsx
+- src/app/(protected)/relatorios/page.tsx
+- src/app/(protected)/relatorios/roi-cliente/page.tsx
+```
+
+### Decisões Técnicas Importantes:
+1. **Usa Centros de Custo como "Clientes"** (campo `centro_custo_id` em transações)
+2. **Queries usam `auth-client.ts`** (NÃO `server.ts`) - componentes client-side
+3. **Busca sob demanda** - detalhes só carregam ao expandir linha
+4. **SWR para cache** - configuração 'otimizada'
+
+### O que fazer na FASE 4 (opcional):
+- [x] Implementar gráfico de evolução temporal (mês a mês) ✅ CONCLUÍDO
+- [x] Adicionar filtros de período no topo da tela ✅ CONCLUÍDO
+- [x] Implementar seletor de ordenação ✅ CONCLUÍDO
+- [ ] Exportação Excel/PDF (opcional para futuro)
+
+### Comandos Importantes:
+```bash
+npx tsc --noEmit  # Validar TypeScript
+npm run build     # Testar build completo
+```
 
 ---
 

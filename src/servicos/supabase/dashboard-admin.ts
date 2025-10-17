@@ -3,8 +3,9 @@
  */
 
 import { createClient } from './auth-client';
-import type { 
-  DashboardAdminDados, 
+import { logger } from '@/utilitarios/logger';
+import type {
+  DashboardAdminDados,
   KPIMetricas,
   DadosCrescimento,
   UsuarioCompleto,
@@ -121,7 +122,7 @@ export async function buscarKPIMetricas(): Promise<KPIMetricas> {
       transacoesMes: parseIntSeguro(volumeData.transacoes_mes)
     };
   } catch (error: any) {
-    console.error('Erro ao buscar KPIs:', error);
+    logger.error('Erro ao buscar KPIs:', error);
     throw new Error(`Falha ao carregar métricas do sistema: ${error.message}`);
   }
 }
@@ -142,7 +143,7 @@ export async function buscarDadosCrescimento(): Promise<DadosCrescimento[]> {
       volume: parseFloat(item.volume || '0')
     }));
   } catch (error: any) {
-    console.error('Erro ao buscar crescimento:', error);
+    logger.error('Erro ao buscar crescimento:', error);
     throw new Error(`Falha ao carregar dados de crescimento: ${error.message}`);
   }
 }
@@ -172,7 +173,7 @@ export async function buscarUsuariosCompletos(): Promise<UsuarioCompleto[]> {
       atividadeStatus: usuario.atividade_status
     }));
   } catch (error: any) {
-    console.error('Erro ao buscar usuários completos:', error);
+    logger.error('Erro ao buscar usuários completos:', error);
     throw new Error(`Falha ao carregar usuários completos: ${error.message}`);
   }
 }
@@ -200,7 +201,7 @@ export async function buscarWorkspacesCompletos(): Promise<WorkspaceCompleto[]> 
       statusWorkspace: workspace.status_workspace
     }));
   } catch (error: any) {
-    console.error('Erro ao buscar workspaces completos:', error);
+    logger.error('Erro ao buscar workspaces completos:', error);
     throw new Error(`Falha ao carregar workspaces completos: ${error.message}`);
   }
 }
@@ -230,7 +231,7 @@ export async function alterarStatusUsuario(usuarioId: string, novoStatus: boolea
       usuarioEmail: resultado?.usuario_email
     };
   } catch (error: any) {
-    console.error('Erro ao alterar status do usuário:', error);
+    logger.error('Erro ao alterar status do usuário:', error);
     return {
       sucesso: false,
       mensagem: `Erro ao alterar status: ${error.message}`
@@ -248,7 +249,7 @@ export async function alterarStatusUsuario(usuarioId: string, novoStatus: boolea
  */
 export async function deletarUsuarioPermanente(usuarioId: string): Promise<AcaoAdministrativa> {
   try {
-    console.log(`🗑️ Iniciando deleção permanente do usuário ${usuarioId}...`);
+    logger.log(`🗑️ Iniciando deleção permanente do usuário ${usuarioId}...`);
     
     const { data, error } = await supabase.rpc('admin_hard_delete_user_smart', {
       usuario_id: usuarioId
@@ -265,9 +266,9 @@ export async function deletarUsuarioPermanente(usuarioId: string): Promise<AcaoA
     // Invalidar cache após deleção bem-sucedida
     if (resultado.sucesso) {
       invalidarCacheDashboard();
-      console.log(`✅ Usuário deletado com sucesso - Cenário: ${resultado.cenario}`);
+      logger.log(`✅ Usuário deletado com sucesso - Cenário: ${resultado.cenario}`);
     } else {
-      console.error(`❌ Falha na deleção: ${resultado.mensagem}`);
+      logger.error(`❌ Falha na deleção: ${resultado.mensagem}`);
     }
     
     return {
@@ -286,7 +287,7 @@ export async function deletarUsuarioPermanente(usuarioId: string): Promise<AcaoA
       } : undefined
     };
   } catch (error: any) {
-    console.error('❌ Erro ao deletar usuário permanentemente:', error);
+    logger.error('❌ Erro ao deletar usuário permanentemente:', error);
     return {
       sucesso: false,
       mensagem: `Erro ao deletar usuário: ${error.message}`,
@@ -355,7 +356,7 @@ async function buscarWorkspacesCompletosComCache(): Promise<WorkspaceCompleto[]>
  */
 export function invalidarCacheDashboard(): void {
   dashboardCache.clear();
-  console.log('🧹 Cache do dashboard admin limpo');
+  logger.log('🧹 Cache do dashboard admin limpo');
 }
 
 /**
@@ -367,13 +368,13 @@ export async function buscarDadosDashboardAdmin(): Promise<DashboardAdminDados> 
   // FASE 4: Tentar buscar do cache primeiro
   const cached = dashboardCache.get<DashboardAdminDados>(cacheKey);
   if (cached) {
-    console.log('⚡ Dashboard admin carregado do cache');
+    logger.log('⚡ Dashboard admin carregado do cache');
     return cached;
   }
   
   try {
     const startTime = Date.now();
-    console.log('🔄 Carregando dados do dashboard admin...');
+    logger.log('🔄 Carregando dados do dashboard admin...');
 
     // FASE 4: Executar queries com cache individual em paralelo
     const [kpis, crescimento, usuariosCompletos, workspacesCompletos] = await Promise.all([
@@ -405,11 +406,11 @@ export async function buscarDadosDashboardAdmin(): Promise<DashboardAdminDados> 
     dashboardCache.set(cacheKey, resultado, 1);
     
     const loadTime = Date.now() - startTime;
-    console.log(`✅ Dashboard admin carregado com sucesso em ${loadTime}ms`);
+    logger.log(`✅ Dashboard admin carregado com sucesso em ${loadTime}ms`);
 
     return resultado;
   } catch (error) {
-    console.error('❌ Erro ao carregar dashboard admin:', error);
+    logger.error('❌ Erro ao carregar dashboard admin:', error);
     throw error;
   }
 }
@@ -431,7 +432,7 @@ export async function verificarAcessoSuperAdmin(): Promise<boolean> {
 
     return !dbError && data?.super_admin === true;
   } catch (error) {
-    console.error('Erro ao verificar super admin:', error);
+    logger.error('Erro ao verificar super admin:', error);
     return false;
   }
 }

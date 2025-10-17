@@ -5,6 +5,7 @@ import { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/servicos/supabase/auth-client'
 import { atualizarUltimaAtividade } from '@/servicos/supabase/convites-simples'
 import { clearAuthData } from '@/utilitarios/clear-auth-selective'
+import { logger } from '@/utilitarios/logger'
 
 // Cache em memória para workspace (5 minutos)
 interface WorkspaceCache {
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient()
     // Timeout aumentado para 30 segundos - sistema demora ~10s para carregar chunks
     const timeoutId = setTimeout(() => {
-      console.warn('⚠️ AuthProvider timeout após 30s - forçando loading = false')
+      logger.warn('AuthProvider timeout após 30s - forçando loading = false')
       setLoading(false)
     }, 30000) // Aumentado de 10s para 30s
     
@@ -84,16 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           // Erros de token são agora tratados silenciosamente no auth-client
           // mas vamos adicionar uma verificação adicional
-          if (error.message?.includes('refresh_token') || 
+          if (error.message?.includes('refresh_token') ||
               error.message?.includes('Invalid Refresh Token')) {
-            console.warn('🔄 Sessão inválida detectada - redirecionando para login')
+            logger.warn('Sessão inválida detectada - redirecionando para login')
             setLoading(false)
             window.location.replace('/auth/login')
             return
           }
-          
+
           // Para outros erros, apenas logar e continuar
-          console.warn('Erro não crítico ao carregar sessão:', error.message)
+          logger.warn('Erro não crítico ao carregar sessão:', error.message)
         }
         
         // Processar sessão (pode ser null se não houver)
@@ -106,10 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error: any) {
         clearTimeout(timeoutId)
-        
+
         // Tratamento de fallback para qualquer erro não capturado
-        console.warn('⚠️ Erro ao inicializar auth:', error?.message || 'Erro desconhecido')
-        
+        logger.warn('Erro ao inicializar auth:', error?.message || 'Erro desconhecido')
+
         // Se for erro de autenticação, limpar e redirecionar
         if (error?.message?.includes('auth') || 
             error?.message?.includes('token') ||
@@ -152,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadWorkspace = useCallback(async (userId: string, retries = 3) => {
     // Validar que o userId é um UUID válido
     if (!userId || userId.length !== 36) {
-      console.warn('UserId inválido para carregar workspace:', userId)
+      logger.warn('UserId inválido para carregar workspace:', userId)
       return
     }
     
@@ -198,9 +199,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           // Se erro 406 (Not Acceptable), pode ser usuário inválido
           if (userError.message?.includes('406') || userError.message?.includes('Not Acceptable')) {
-            console.warn('❌ Usuário não encontrado na base de dados:', userId)
-            console.warn('💡 Fazendo logout e redirecionando...')
-            
+            logger.warn('Usuário não encontrado na base de dados:', userId)
+            logger.warn('Fazendo logout e redirecionando...')
+
             // Fazer logout completo via Supabase
             const supabase = createClient()
             await supabase.auth.signOut()
@@ -214,13 +215,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           
           if (!silentErrors.includes(userError.code || '')) {
-            console.error('Erro ao carregar dados do usuário:', userError)
+            logger.error('Erro ao carregar dados do usuário:', userError)
           }
           return
         }
 
         if (!userData?.workspace_id) {
-          console.warn('❌ Workspace ID não encontrado para usuário:', userId)
+          logger.warn('Workspace ID não encontrado para usuário:', userId)
           clearTimeout(timeoutId)
           return
         }
@@ -239,9 +240,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (workspaceError) {
           const silentErrors = ['42P01', 'PGRST116', 'PGRST301']
-          
+
           if (!silentErrors.includes(workspaceError.code || '')) {
-            console.error('Erro ao carregar workspace:', workspaceError)
+            logger.error('Erro ao carregar workspace:', workspaceError)
           }
           return
         }
@@ -249,17 +250,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (workspaceData) {
           const workspace = workspaceData as Workspace
           setWorkspace(workspace)
-          
+
           // Atualizar cache
           workspaceCache.current = {
             data: workspace,
             timestamp: now,
             userId
           }
-          
+
           // Workspace carregado com sucesso
         } else {
-          console.warn('❌ Workspace não encontrado para usuário:', userId)
+          logger.warn('Workspace não encontrado para usuário:', userId)
         }
 
       } catch (queryError: any) {
@@ -267,8 +268,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Tratar timeout específico do AbortController
         if (queryError.name === 'AbortError') {
-          console.warn(`⏱️ Timeout ao carregar workspace (5s) - tentativa ${attempt + 1}/${retries}`)
-          
+          logger.warn(`Timeout ao carregar workspace (5s) - tentativa ${attempt + 1}/${retries}`)
+
           // Se não for última tentativa, tentar novamente
           if (attempt < retries - 1) {
             const delay = Math.min(1000 * Math.pow(2, attempt), 5000) // Backoff exponencial
@@ -276,8 +277,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await new Promise(resolve => setTimeout(resolve, delay))
             continue // Próxima tentativa
           }
-          
-          console.warn('❌ Timeout após todas as tentativas - continuando sem workspace')
+
+          logger.warn('Timeout após todas as tentativas - continuando sem workspace')
           return
         }
         
@@ -293,12 +294,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Silenciar erros de tabela inexistente completamente
         const silentCodes = ['42P01', 'PGRST116', 'PGRST301']
         if (!silentCodes.includes(error?.code)) {
-          console.error(`Erro ao carregar workspace após ${retries} tentativas:`, error)
+          logger.error(`Erro ao carregar workspace após ${retries} tentativas:`, error)
         }
       } else {
         // Não é última tentativa - aguardar e tentar novamente
         const delay = Math.min(1000 * Math.pow(2, attempt), 5000)
-        console.warn(`🔄 Erro na tentativa ${attempt + 1}/${retries}. Tentando novamente em ${delay}ms...`)
+        logger.warn(`Erro na tentativa ${attempt + 1}/${retries}. Tentando novamente em ${delay}ms...`)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
@@ -325,7 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Redirect imediato sem setTimeout
       window.location.replace('/auth/login')
     } catch (error) {
-      console.error('Erro ao fazer logout:', error)
+      logger.error('Erro ao fazer logout:', error)
       // Em caso de erro, ainda assim redirecionar
       window.location.replace('/auth/login')
     }
@@ -338,19 +339,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) {
         // Tratar especificamente erros de refresh token
-        if (error.message?.includes('Invalid Refresh Token') || 
+        if (error.message?.includes('Invalid Refresh Token') ||
             error.message?.includes('Refresh Token Not Found')) {
-          console.warn('🔄 Erro ao atualizar sessão - refresh token inválido')
+          logger.warn('Erro ao atualizar sessão - refresh token inválido')
           await signOut() // Fazer logout automático
           return
         }
         throw error
       }
-      
+
       setSession(session)
       setUser(session?.user ?? null)
     } catch (error) {
-      console.error('Erro ao atualizar sessão:', error)
+      logger.error('Erro ao atualizar sessão:', error)
       // Em caso de erro crítico, fazer logout
       await signOut()
     }

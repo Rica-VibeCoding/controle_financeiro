@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__supabase__execute_sql"
+      "Read(//mnt/c/Users/ricar/Projetos/workspace_fluyt/Portal Representação/**)"
     ],
     "ask": [],
     "deny": []

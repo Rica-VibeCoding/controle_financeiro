@@ -46,6 +46,7 @@ export interface DadosClassificacao {
   subcategoria_id: string | null // Subcategoria é opcional
   forma_pagamento_id: string
   centro_custo_id?: string | null // Centro de custo é opcional
+  contato_id?: string | null // Cliente vinculado (CSV Conta Simples)
 }
 
 export type TipoLancamento = 'gasto_real' | 'ajuste_contabil' | 'pagamento_credito' | 'taxa_juro'
@@ -64,6 +65,7 @@ export interface TransacaoClassificada extends TransacaoImportada {
   subcategoria_id?: string | null // Pode ser null (opcional)
   forma_pagamento_id?: string
   centro_custo_id?: string | null // Centro de custo opcional
+  contato_id?: string | null // Cliente vinculado (CSV Conta Simples)
   formato_origem?: string // Para identificar se veio de cartão, nubank, etc.
   sinalizacao?: SinalizacaoLancamento
   selecionada?: boolean // Para controle de seleção individual

@@ -178,13 +178,14 @@ export function ModalImportacaoCSV({
             {
               descricao: transacao.descricao,
               categoriaBanco: linhaOriginal['Categoria'] || linhaOriginal['categoria'],
-              historico: centroCustoBanco // Usar centro de custo do CSV como "histórico" para busca
+              historico: centroCustoBanco, // Usado para busca de centro de custo
+              centroCustoBanco: centroCustoBanco // NOVO: Usado para buscar cliente
             },
             workspace.id
           )
 
           // Mesclar classificações (Conta Simples tem prioridade)
-          if (classificacaoContaSimples.categoria_id || classificacaoContaSimples.centro_custo_id) {
+          if (classificacaoContaSimples.categoria_id || classificacaoContaSimples.centro_custo_id || classificacaoContaSimples.contato_id) {
             const categoriaFinal = classificacaoContaSimples.categoria_id || classificacao?.categoria_id || ''
             const formaPagamentoFinal = classificacao?.forma_pagamento_id || ''
 
@@ -194,7 +195,8 @@ export function ModalImportacaoCSV({
                 categoria_id: categoriaFinal,
                 subcategoria_id: classificacao?.subcategoria_id ?? null,
                 forma_pagamento_id: formaPagamentoFinal,
-                centro_custo_id: classificacaoContaSimples.centro_custo_id ?? null
+                centro_custo_id: classificacaoContaSimples.centro_custo_id ?? null,
+                contato_id: classificacaoContaSimples.contato_id ?? null // NOVO: Cliente vinculado
               }
             }
           }
@@ -203,7 +205,7 @@ export function ModalImportacaoCSV({
         // Detectar tipo de lançamento para sinalização
         const sinalizacao = detectarTipoLancamento(transacao)
 
-        if (classificacao && (classificacao.categoria_id || classificacao.centro_custo_id)) {
+        if (classificacao && (classificacao.categoria_id || classificacao.centro_custo_id || classificacao.contato_id)) {
           // Transação reconhecida
           transacoesClassificadas.push({
             ...transacao,
@@ -213,6 +215,7 @@ export function ModalImportacaoCSV({
             subcategoria_id: classificacao.subcategoria_id,
             forma_pagamento_id: classificacao.forma_pagamento_id,
             centro_custo_id: classificacao.centro_custo_id,
+            contato_id: classificacao.contato_id, // NOVO: Cliente vinculado
             formato_origem: formato.nome,
             sinalizacao,
             selecionada: sinalizacao.tipo === 'gasto_real' || sinalizacao.tipo === 'taxa_juro' // Padrão inteligente

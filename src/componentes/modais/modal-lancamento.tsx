@@ -111,13 +111,26 @@ const calcularProximaRecorrencia = (
 }
 
 /**
+ * Formata data ISO para formato YYYY-MM-DD
+ * @param data - Data em formato ISO ou YYYY-MM-DD
+ * @returns Data em formato YYYY-MM-DD
+ */
+const formatarDataParaInput = (data: string | undefined): string | undefined => {
+  if (!data) return undefined
+  // Se já estiver no formato correto (YYYY-MM-DD), retornar direto
+  if (/^\d{4}-\d{2}-\d{2}$/.test(data)) return data
+  // Se estiver em formato ISO (com hora), extrair apenas a data
+  return data.split('T')[0]
+}
+
+/**
  * Mapeia dados da transação do banco para o estado do formulário
  * @param transacao - Transação do banco de dados
  * @returns Estado formatado para o formulário
  */
 const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransacao> => {
   return {
-    data: transacao.data,
+    data: formatarDataParaInput(transacao.data) || new Date().toISOString().split('T')[0],
     descricao: transacao.descricao,
     valor: transacao.valor,
     tipo: transacao.tipo,
@@ -129,12 +142,12 @@ const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransa
     centro_custo_id: transacao.centro_custo_id || undefined,
     contato_id: transacao.contato_id || undefined,
     status: transacao.status,
-    data_vencimento: transacao.data_vencimento || undefined,
+    data_vencimento: formatarDataParaInput(transacao.data_vencimento),
     observacoes: transacao.observacoes || undefined,
     anexo_url: transacao.anexo_url || undefined,
     recorrente: transacao.recorrente,
     frequencia_recorrencia: transacao.frequencia_recorrencia || undefined,
-    proxima_recorrencia: transacao.proxima_recorrencia || undefined,
+    proxima_recorrencia: formatarDataParaInput(transacao.proxima_recorrencia),
     parcela_atual: transacao.parcela_atual,
     total_parcelas: transacao.total_parcelas
   }

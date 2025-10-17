@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useModais } from '@/contextos/modais-contexto'
 
-export const dynamic = 'force-dynamic'
-
-
 export default function NovoCentroCustoPage() {
   const router = useRouter()
   const { centroCusto: modalCentroCustoActions } = useModais()
@@ -15,15 +12,15 @@ export default function NovoCentroCustoPage() {
   useEffect(() => {
     setMounted(true)
   }, [])
-  
+
   useEffect(() => {
     if (mounted) {
       // Abre modal e redireciona para página de listagem
-    modalCentroCustoActions.abrir()
-    router.push('/centros-custo')
+      modalCentroCustoActions.abrir()
+      router.push('/centros-custo')
     }
-  }, [modalCentroCustoActions, router])
-  
+  }, [mounted, modalCentroCustoActions, router])
+
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="text-center">

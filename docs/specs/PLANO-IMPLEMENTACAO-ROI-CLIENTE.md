@@ -1461,7 +1461,40 @@ export function useROIClientes(filtros: FiltrosROI) {
 ---
 
 **Documento criado em:** 14/10/2025
-**Versão:** 1.0
-**Status:** Pronto para implementação
+**Versão:** 1.1
+**Status:** Implementado com melhorias UI/UX
 **Criado por:** Claude (Opus) para Ricardo
-**Próximo passo:** Implementar FASE 1 - Estrutura Base
+**Última atualização:** 17/10/2025 - Padronização UI/UX
+
+---
+
+## 📝 HISTÓRICO DE ATUALIZAÇÕES
+
+### Versão 1.1 - Janeiro 2025 (17/10/2025)
+**Melhorias UI/UX - Cards KPI com Cores Dinâmicas**
+
+✅ **Melhorias no Componente `cards-kpi.tsx`**
+
+**Cores Dinâmicas Adicionadas:**
+- **Card 1 (Melhor ROI %)**:
+  - Verde (≥30%) / Amarelo (15-30%) / Vermelho (<15%)
+  - Função: `obterCorMargem()`
+
+- **Card 2 (Melhor ROI R$)**:
+  - Verde (>0) / Vermelho (<0) / Cinza (=0)
+  - Função: `obterCorLucro()`
+
+- **Card 3 (Margem Mensal)**:
+  - Verde (≥20%) / Amarelo (10-20%) / Vermelho (<10%)
+  - Função: `obterCorMargemMensal()`
+
+**Textos Secundários Melhorados:**
+- Card 2: Adicionado "- lucro líquido" após nome do cliente para maior clareza
+
+**Resultado:** Feedback visual instantâneo sobre saúde financeira através de cores condicionais nos valores principais
+
+**Validação:**
+- ✅ TypeScript sem erros
+- ✅ Build bem-sucedido em 25s
+- ✅ Mantida estrutura Card shadcn/ui existente
+- ✅ Cores alinhadas com padrão do Fluxo de Caixa

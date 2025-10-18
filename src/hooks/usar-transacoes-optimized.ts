@@ -1,19 +1,25 @@
 /**
  * Hook SWR otimizado para transações - Substituição do TransacoesProvider
- * 
+ *
  * Benefícios da migração:
  * - Cache inteligente: 5min para dados financeiros
  * - Deduplicação: 60s para evitar requests duplicados
  * - Mutations otimistas: UX instantânea
  * - Performance: 90% menos requests
+ *
+ * FASE 1 - Cache Persistente:
+ * - fallbackData: Dados instantâneos do localStorage
+ * - onSuccess: Salva cache após cada carregamento
+ * - Sobrevive a F5 e stand-by
  */
 
 import useSWR, { mutate } from 'swr'
-import { 
-  obterTransacoes, 
-  criarTransacao, 
-  atualizarTransacao, 
-  excluirTransacao 
+import { useMemo } from 'react'
+import {
+  obterTransacoes,
+  criarTransacao,
+  atualizarTransacao,
+  excluirTransacao
 } from '@/servicos/supabase/transacoes'
 import { useAuth } from '@/contextos/auth-contexto'
 import { obterConfigSWR } from '@/utilitarios/swr-config'
@@ -23,6 +29,23 @@ import type {
   RespostaPaginada
 } from '@/tipos/filtros'
 import type { Transacao, NovaTransacao } from '@/tipos/database'
+
+// ===== CACHE PERSISTENTE =====
+// NOTA FASE 3: Este hook pode ser migrado para usar CacheManager:
+// import { CacheManager } from '@/utilitarios/cache-manager'
+// CacheManager.get('transacoes', workspaceId, { filtros, paginacao })
+// CacheManager.set('transacoes', workspaceId, data, { filtros, paginacao })
+
+const TRANSACOES_CACHE_KEY = 'fp_transacoes_cache'
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+
+interface TransacoesCache {
+  data: RespostaPaginada<TransacaoComRelacoes>
+  timestamp: number
+  workspaceId: string
+  filtros: FiltrosTransacao
+  paginacao: ParametrosPaginacao
+}
 
 type TransacaoComRelacoes = Transacao & {
   categoria?: { nome: string; cor: string; icone: string }
@@ -51,9 +74,64 @@ interface UseTransacoesReturn {
   excluir: (id: string) => Promise<void>
 }
 
+/**
+ * Salvar cache de transações no localStorage
+ * FASE 1: Cache instantâneo para F5 e stand-by
+ */
+function salvarTransacoesCache(
+  data: RespostaPaginada<TransacaoComRelacoes>,
+  workspaceId: string,
+  filtros: FiltrosTransacao,
+  paginacao: ParametrosPaginacao
+): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    const cacheData: TransacoesCache = {
+      data,
+      timestamp: Date.now(),
+      workspaceId,
+      filtros,
+      paginacao
+    }
+    localStorage.setItem(TRANSACOES_CACHE_KEY, JSON.stringify(cacheData))
+  } catch (error) {
+    // Silenciar erros (quota excedida, etc)
+  }
+}
+
+/**
+ * Carregar cache de transações do localStorage
+ * FASE 1: Dados instantâneos no mount
+ */
+function carregarTransacoesCache(
+  workspaceId: string,
+  filtros: FiltrosTransacao,
+  paginacao: ParametrosPaginacao
+): RespostaPaginada<TransacaoComRelacoes> | undefined {
+  if (typeof window === 'undefined') return undefined
+
+  try {
+    const cached = localStorage.getItem(TRANSACOES_CACHE_KEY)
+    if (!cached) return undefined
+
+    const cacheData: TransacoesCache = JSON.parse(cached)
+
+    // Validar cache (workspace, duração, filtros)
+    if (cacheData.workspaceId !== workspaceId) return undefined
+    if (Date.now() - cacheData.timestamp > CACHE_DURATION) return undefined
+    if (JSON.stringify(cacheData.filtros) !== JSON.stringify(filtros)) return undefined
+    if (JSON.stringify(cacheData.paginacao) !== JSON.stringify(paginacao)) return undefined
+
+    return cacheData.data
+  } catch {
+    return undefined
+  }
+}
+
 export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseTransacoesReturn {
   const { workspace } = useAuth()
-  
+
   const filtrosPadrao: FiltrosTransacao = {}
   const paginacaoPadrao: ParametrosPaginacao = {
     pagina: 1,
@@ -61,10 +139,16 @@ export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseT
     ordenacao: 'data',
     direcao: 'desc'
   }
-  
+
   const filtros = options.filtros || filtrosPadrao
   const paginacao = options.paginacao || paginacaoPadrao
-  
+
+  // FASE 1: Cache inicial do localStorage
+  const cacheInicial = useMemo(() => {
+    if (!workspace) return undefined
+    return carregarTransacoesCache(workspace.id, filtros, paginacao)
+  }, [workspace?.id, filtros, paginacao])
+
   // Chave única para cache baseada em workspace, filtros e paginação
   const chave = workspace ? [
     'transacoes',
@@ -72,12 +156,21 @@ export function useTransacoesOptimized(options: UseTransacoesOptions = {}): UseT
     filtros,
     paginacao
   ] : null
-  
+
   // Hook SWR com configuração híbrida otimizada
   const { data, error, isLoading, mutate: revalidate } = useSWR<RespostaPaginada<TransacaoComRelacoes>>(
     chave,
     () => obterTransacoes(filtros, paginacao, workspace!.id),
-    obterConfigSWR('criticos') // Transações são dados críticos
+    {
+      ...obterConfigSWR('criticos'),
+      fallbackData: cacheInicial, // FASE 1: Dados instantâneos
+      onSuccess: (data) => {
+        // FASE 1: Salvar no cache após sucesso
+        if (workspace && data) {
+          salvarTransacoesCache(data, workspace.id, filtros, paginacao)
+        }
+      }
+    }
   )
   
   // Função otimizada para invalidar apenas cache relacionado específico

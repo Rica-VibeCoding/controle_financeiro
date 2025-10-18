@@ -1,11 +1,11 @@
 'use client'
 
-import { Trophy, DollarSign, TrendingUp } from 'lucide-react'
+import { TrendingUp, Target, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
-import type { CardKPI } from '@/tipos/roi-cliente'
+import type { KPIsFluxoCaixa } from '@/tipos/fluxo-caixa'
 
 interface CardsKPIProps {
-  kpis?: CardKPI
+  kpis?: KPIsFluxoCaixa
   isLoading: boolean
 }
 
@@ -17,22 +17,9 @@ export function CardsKPI({ kpis, isLoading }: CardsKPIProps) {
     })
   }
 
-  // Funções de cores dinâmicas
-  const obterCorMargem = (margem: number): string => {
-    if (margem >= 30) return 'text-green-600'
-    if (margem >= 15) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
-  const obterCorLucro = (lucro: number): string => {
-    if (lucro > 0) return 'text-green-600'
-    if (lucro < 0) return 'text-red-600'
-    return 'text-gray-900'
-  }
-
-  const obterCorMargemMensal = (margem: number): string => {
-    if (margem >= 20) return 'text-green-600'
-    if (margem >= 10) return 'text-yellow-600'
+  const obterCorVariacao = (percentual: number) => {
+    if (percentual >= -5 && percentual <= 5) return 'text-green-600'
+    if (percentual >= -10 && percentual <= 10) return 'text-yellow-600'
     return 'text-red-600'
   }
 
@@ -58,63 +45,66 @@ export function CardsKPI({ kpis, isLoading }: CardsKPIProps) {
     return null
   }
 
+  const corVariacao = obterCorVariacao(kpis.variacao_percentual)
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      {/* Card 1: Melhor ROI % */}
-      <Card className="border-l-4 border-l-green-500">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
-            Melhor ROI %
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            <p className={`text-2xl font-bold ${obterCorMargem(kpis.melhorRoiPercentual.valor)}`}>
-              {kpis.melhorRoiPercentual.valor.toFixed(1)}%
-            </p>
-            <p className="text-sm text-gray-600 truncate">
-              {kpis.melhorRoiPercentual.cliente}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Card 2: Melhor ROI R$ */}
+      {/* Card 1: Variação Total */}
       <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Melhor ROI R$
+            <TrendingUp className="h-4 w-4" />
+            Variação Total
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-1">
-            <p className={`text-2xl font-bold ${obterCorLucro(kpis.melhorRoiValor.valor)}`}>
-              R$ {formatarValor(kpis.melhorRoiValor.valor)}
+            <p className={`text-2xl font-bold ${corVariacao}`}>
+              {kpis.variacao_percentual > 0 ? '+' : ''}
+              {kpis.variacao_percentual.toFixed(1)}%
             </p>
-            <p className="text-sm text-gray-600 truncate">
-              {kpis.melhorRoiValor.cliente} - lucro líquido
+            <p className="text-sm text-gray-600">
+              Previsto vs Realizado
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Card 3: Margem Mensal */}
-      <Card className="border-l-4 border-l-purple-500">
+      {/* Card 2: Taxa de Acerto */}
+      <Card className="border-l-4 border-l-green-500">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Margem Mensal
+            <Target className="h-4 w-4" />
+            Taxa de Acerto
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-1">
-            <p className={`text-2xl font-bold ${obterCorMargemMensal(kpis.margemMensal.percentual)}`}>
-              {kpis.margemMensal.percentual.toFixed(1)}%
+            <p className="text-2xl font-bold text-gray-900">
+              {kpis.taxa_acerto.toFixed(1)}%
             </p>
             <p className="text-sm text-gray-600">
-              Lucro: R$ {formatarValor(kpis.margemMensal.lucroTotal)}
+              Meses dentro de ±10%
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 3: Diferença Total */}
+      <Card className="border-l-4 border-l-purple-500">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Diferença Total
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1">
+            <p className={`text-2xl font-bold ${kpis.diferenca_total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              R$ {formatarValor(Math.abs(kpis.diferenca_total))}
+            </p>
+            <p className="text-sm text-gray-600">
+              {kpis.diferenca_total >= 0 ? 'Acima' : 'Abaixo'} do previsto
             </p>
           </div>
         </CardContent>

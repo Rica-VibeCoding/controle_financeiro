@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/componentes/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/componentes/ui/card'
 import { Button } from '@/componentes/ui/button'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
@@ -9,7 +9,6 @@ import type { LucideIcon } from 'lucide-react'
 interface CardRelatorioProps {
   icone: LucideIcon
   titulo: string
-  descricao: string
   rota: string
   cor: 'green' | 'blue' | 'purple'
 }
@@ -38,7 +37,6 @@ const coresMap = {
 export function CardRelatorio({
   icone: Icone,
   titulo,
-  descricao,
   rota,
   cor
 }: CardRelatorioProps) {
@@ -72,14 +70,9 @@ export function CardRelatorio({
         </div>
 
         {/* Título */}
-        <CardTitle className="text-xl font-semibold mb-2">
+        <CardTitle className="text-xl font-semibold">
           {titulo}
         </CardTitle>
-
-        {/* Descrição */}
-        <CardDescription className="text-sm text-gray-600 leading-relaxed">
-          {descricao}
-        </CardDescription>
       </CardHeader>
 
       <CardContent className="pt-0">

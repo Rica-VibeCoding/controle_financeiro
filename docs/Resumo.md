@@ -109,6 +109,32 @@
 
 ## 📋 **ÚLTIMAS ATUALIZAÇÕES (Janeiro 2025)**
 
+### **✅ CORREÇÃO ROI POR CLIENTE (17/10/2025 23:30)**
+- **Status**: ✅ Funções SQL corrigidas - ROI exibindo dados reais
+- **Problema**: Funções buscavam em `r_contatos.contato_id` (campo errado)
+- **Solução**: Corrigidas 4 funções SQL para usar `fp_centros_custo.centro_custo_id`
+- **Resultado**: 3 clientes com dados validados (Helio Martin, Fernando, Conecta)
+- **Migrations**: `fix_calcular_roi_clientes_centro_custo`, `fix_calcular_kpis_roi_clientes`, `fix_buscar_detalhes_roi_cliente`, `fix_buscar_evolucao_roi_cliente`
+- **URL**: http://localhost:3003/relatorios/roi-cliente
+- **Documentação**: `docs/desenvolvimento/STATUS-ATUAL-REFATORACAO.md`
+
+### **🐛 CORREÇÃO CRÍTICA - MODAL EDIÇÃO TRANSAÇÃO (17/10/2025)**
+- **Status**: ✅ Erro de formatação de data em produção **CORRIGIDO**
+- **Problema**: Input type="date" recebia data ISO completa (2025-09-17T00:00:00+00:00)
+- **Solução**: Proteção extra nos inputs usando `formatarDataParaInput()`
+- **Campos**: "Data" e "Próxima Recorrência" no modal de lançamento
+- **Arquivo**: `src/componentes/modais/modal-lancamento.tsx`
+
+### **🔥 CACHE PERSISTENTE - TODAS AS 3 FASES CONCLUÍDAS (17/10/2025)**
+- **Status**: ✅ Sistema 100% atualizado + ferramentas avançadas
+- **Baseado em**: Portal Representação (sistema que funciona perfeitamente)
+- **Fase 1**: Infraestrutura base + Transações ✅
+- **Fase 2**: 7 hooks principais (Dashboard, Contas, ROI, etc) ✅
+- **Fase 3**: Cache Manager + Prefetch + Métricas ✅
+- **Total**: 8 hooks + SWRProvider + 3 ferramentas avançadas
+- **Resultado**: Dados não são mais perdidos + sistema otimizado
+- **Documentação**: `docs/RELATORIO-ANALISE-PORTAL-REPRESENTACAO.md`
+
 ### **🎯 PROJETO SISTEMA TRANSAÇÕES - REFATORAÇÃO CONCLUÍDA**
 - **Status**: ✅ Sistema de transações 100% refatorado para abas únicas
 - **URL**: http://172.19.112.1:3003/transacoes **FUNCIONANDO**

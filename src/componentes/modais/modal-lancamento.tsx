@@ -115,7 +115,7 @@ const calcularProximaRecorrencia = (
  * @param data - Data em formato ISO ou YYYY-MM-DD
  * @returns Data em formato YYYY-MM-DD
  */
-const formatarDataParaInput = (data: string | undefined): string | undefined => {
+const formatarDataParaInput = (data: string | null | undefined): string | undefined => {
   if (!data) return undefined
   // Se já estiver no formato correto (YYYY-MM-DD), retornar direto
   if (/^\d{4}-\d{2}-\d{2}$/.test(data)) return data
@@ -142,12 +142,12 @@ const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransa
     centro_custo_id: transacao.centro_custo_id || undefined,
     contato_id: transacao.contato_id || undefined,
     status: transacao.status,
-    data_vencimento: formatarDataParaInput(transacao.data_vencimento),
+    data_vencimento: formatarDataParaInput(transacao.data_vencimento ?? undefined) || undefined,
     observacoes: transacao.observacoes || undefined,
     anexo_url: transacao.anexo_url || undefined,
     recorrente: transacao.recorrente,
     frequencia_recorrencia: transacao.frequencia_recorrencia || undefined,
-    proxima_recorrencia: formatarDataParaInput(transacao.proxima_recorrencia),
+    proxima_recorrencia: formatarDataParaInput(transacao.proxima_recorrencia ?? undefined) || undefined,
     parcela_atual: transacao.parcela_atual,
     total_parcelas: transacao.total_parcelas
   }
@@ -440,7 +440,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                 <Input
                   id="data"
                   type="date"
-                  value={dados.data}
+                  value={dados.data ? formatarDataParaInput(dados.data) : ''}
                   onChange={(e) => atualizarCampo('data', e.target.value)}
                   required
                 />
@@ -694,7 +694,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                     <Input
                       id="proxima_recorrencia"
                       type="date"
-                      value={dados.proxima_recorrencia || ''}
+                      value={dados.proxima_recorrencia ? formatarDataParaInput(dados.proxima_recorrencia) : ''}
                       onChange={(e) => atualizarCampo('proxima_recorrencia', e.target.value)}
                       className="border-blue-200 focus:border-blue-400"
                       required

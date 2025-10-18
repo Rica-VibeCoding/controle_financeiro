@@ -118,3 +118,26 @@ export function extrairHora(dataCompleta: string): string {
   const partes = dataCompleta.split('T')
   return partes.length > 1 ? partes[1] : '00:00:00'
 }
+
+/**
+ * Calcula dias até vencimento (negativo = atrasado, positivo = a vencer)
+ * Útil para determinar urgência de contas a pagar/receber
+ *
+ * @param dataVencimento - Data de vencimento em formato ISO (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss)
+ * @returns Número de dias (negativo se atrasado, 0 se vence hoje, positivo se futuro)
+ *
+ * @example
+ * calcularDiasVencimento("2025-01-20") → 3 (se hoje é 2025-01-17)
+ * calcularDiasVencimento("2025-01-17") → 0 (vence hoje)
+ * calcularDiasVencimento("2025-01-15") → -2 (atrasado 2 dias)
+ */
+export function calcularDiasVencimento(dataVencimento: string): number {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+
+  const vencimento = new Date(dataVencimento)
+  vencimento.setHours(0, 0, 0, 0)
+
+  const diffTime = vencimento.getTime() - hoje.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}

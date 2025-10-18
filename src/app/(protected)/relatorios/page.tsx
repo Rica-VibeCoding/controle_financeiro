@@ -10,21 +10,18 @@ export default function RelatoriosPage() {
     {
       icone: DollarSign,
       titulo: 'ROI por Cliente',
-      descricao: 'Análise de rentabilidade e margem de lucro por cliente. Identifique quais clientes trazem maior retorno.',
       rota: '/relatorios/roi-cliente',
       cor: 'green' as const
     },
     {
       icone: TrendingUp,
       titulo: 'Fluxo de Caixa Projetado',
-      descricao: 'Compare valores previstos com realizados. Identifique desvios e mantenha controle orçamentário.',
       rota: '/relatorios/fluxo-caixa',
       cor: 'blue' as const
     },
     {
       icone: FileText,
       titulo: 'Contas a Pagar e Receber',
-      descricao: 'Gestão completa de obrigações financeiras. Acompanhe vencimentos e status de pagamentos.',
       rota: '/relatorios/contas',
       cor: 'purple' as const
     }

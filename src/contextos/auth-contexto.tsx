@@ -7,7 +7,7 @@ import { atualizarUltimaAtividade } from '@/servicos/supabase/convites-simples'
 import { clearAuthData } from '@/utilitarios/clear-auth-selective'
 import { logger } from '@/utilitarios/logger'
 
-// Cache em memória para workspace (5 minutos)
+// Cache em memória para workspace (30 minutos)
 interface WorkspaceCache {
   data: Workspace | null
   timestamp: number
@@ -49,10 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Função para atualizar atividade com throttling
   const trackUserActivity = useCallback(async (userId: string) => {
     const now = Date.now()
-    const FIVE_MINUTES = 5 * 60 * 1000 // 5 minutos em ms
-    
-    // Só atualizar se passaram mais de 5 minutos desde a última atualização
-    if (now - lastActivityUpdate.current > FIVE_MINUTES) {
+    const THIRTY_MINUTES = 30 * 60 * 1000 // 30 minutos em ms
+
+    // Só atualizar se passaram mais de 30 minutos desde a última atualização
+    if (now - lastActivityUpdate.current > THIRTY_MINUTES) {
       lastActivityUpdate.current = now
       await atualizarUltimaAtividade(userId)
     }
@@ -161,9 +161,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
 
-      // Verificar cache (5 minutos)
+      // Verificar cache (30 minutos)
       const now = Date.now()
-      const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+      const CACHE_DURATION = 30 * 60 * 1000 // 30 minutos
       
       if (workspaceCache.current?.userId === userId && 
           now - workspaceCache.current.timestamp < CACHE_DURATION) {
@@ -355,7 +355,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Em caso de erro crítico, fazer logout
       await signOut()
     }
-  }, [])
+  }, [signOut])
+
+  // Detectar quando usuário volta à aba e verificar sessão
+  useEffect(() => {
+    if (!isClient) return
+
+    const handleVisibilityChange = async () => {
+      // Só agir quando a aba ficar visível novamente
+      if (document.visibilityState !== 'visible') return
+
+      const supabase = createClient()
+
+      try {
+        // Verificar sessão atual
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error || !session) {
+          logger.warn('Sessão inválida detectada ao retornar - fazendo logout')
+          await signOut()
+          return
+        }
+
+        // Verificar se sessão vai expirar em breve (menos de 5 minutos)
+        const expiresAt = session.expires_at
+        if (expiresAt) {
+          const now = Math.floor(Date.now() / 1000)
+          const timeUntilExpiry = expiresAt - now
+
+          // Se sessão expira em menos de 5 minutos, fazer refresh
+          if (timeUntilExpiry < 5 * 60) {
+            logger.info('Sessão próxima de expirar - fazendo refresh automático')
+            await refreshSession()
+          }
+        }
+
+        // Verificar se workspace está no cache e ainda válido
+        if (session.user && workspaceCache.current) {
+          const now = Date.now()
+          const CACHE_DURATION = 30 * 60 * 1000
+          const cacheAge = now - workspaceCache.current.timestamp
+
+          // Se cache expirou, limpar cache (será recarregado na próxima requisição)
+          if (cacheAge >= CACHE_DURATION) {
+            logger.info('Cache de workspace expirado - limpando para próxima requisição')
+            workspaceCache.current = null
+          }
+        }
+
+      } catch (error: any) {
+        logger.warn('Erro ao verificar sessão ao retornar:', error?.message)
+        // Não fazer nada crítico aqui - deixar usuário continuar usando
+      }
+    }
+
+    // Adicionar listener
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isClient, signOut, refreshSession])
 
   return (
     <AuthContext.Provider value={{

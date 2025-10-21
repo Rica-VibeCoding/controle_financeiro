@@ -2,7 +2,8 @@
  * Hook para gerenciar permissões granulares de usuários
  * Integra com o sistema de auth existente e service de permissões
  *
- * ✅ CACHE EM MEMÓRIA: Permissões são armazenadas e reusadas ao trocar abas
+ * ✅ CACHE EM MEMÓRIA: Permissões armazenadas por 30 minutos
+ * ✅ REVALIDAÇÃO AUTOMÁTICA: Detecta retorno à aba e revalida se necessário
  */
 
 'use client'
@@ -34,7 +35,7 @@ interface CachePermissoes {
   isOwner: boolean
 }
 
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+const CACHE_DURATION = 30 * 60 * 1000 // 30 minutos
 const cacheGlobalPermissoes = new Map<string, CachePermissoes>()
 
 interface UsarPermissoesReturn extends ContextoPermissoes {
@@ -262,6 +263,39 @@ export function usePermissoes(): UsarPermissoesReturn {
       carregarPermissoesUsuario()
     }
   }, [authLoading, user, workspace, carregarPermissoesUsuario])
+
+  // Detectar quando usuário volta à aba e revalidar permissões se necessário
+  useEffect(() => {
+    if (!user || !workspace) return
+
+    const handleVisibilityChange = async () => {
+      // Só agir quando a aba ficar visível novamente
+      if (document.visibilityState !== 'visible') return
+
+      const cacheKey = `${user.id}_${workspace.id}`
+      const cached = cacheGlobalPermissoes.get(cacheKey)
+
+      // Se cache expirou ou está próximo de expirar (25 minutos), revalidar
+      if (cached) {
+        const now = Date.now()
+        const cacheAge = now - cached.timestamp
+        const REVALIDATION_THRESHOLD = 25 * 60 * 1000 // 25 minutos
+
+        if (cacheAge >= REVALIDATION_THRESHOLD) {
+          console.log('🔄 Permissões próximas de expirar - revalidando ao retornar')
+          await carregarPermissoesUsuario(true) // Forçar recarga
+        }
+      }
+    }
+
+    // Adicionar listener
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [user, workspace, carregarPermissoesUsuario])
 
   /**
    * Limpar todo o cache global de permissões

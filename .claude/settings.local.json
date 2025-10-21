@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__supabase__apply_migration"
+      "mcp__supabase__list_tables"
     ],
     "ask": [],
     "deny": []

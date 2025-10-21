@@ -2,13 +2,13 @@
 
 **Data:** 21/10/2025
 **Responsável:** Claude + Ricardo
-**Status:** 🟢 FASE 1 CONCLUÍDA
+**Status:** ✅ FASE 3 CONCLUÍDA - SISTEMA FUNCIONANDO
 
 ## 📊 PROGRESSO
 
 - ✅ **FASE 1 COMPLETA** - 4 funções SQL criadas e testadas
-- ⏳ **FASE 2 PENDENTE** - Aguardando aprovação para atualizar código TypeScript
-- ⏳ **FASE 3 PENDENTE** - Testes na interface
+- ✅ **FASE 2 COMPLETA** - Código TypeScript atualizado
+- ✅ **FASE 3 COMPLETA** - Interface testada e funcionando
 - ⏳ **FASE 4 PENDENTE** - Limpeza (opcional)
 
 ## ✅ FASE 1 - EXECUTADA COM SUCESSO
@@ -36,6 +36,52 @@
 
 ### **Resultado:**
 Todas as funções SQL estão operacionais e retornando dados corretos de `r_contatos`.
+
+---
+
+## ✅ FASE 2 - EXECUTADA COM SUCESSO
+
+### **Arquivo Atualizado:**
+- `src/servicos/supabase/roi-cliente-queries.ts`
+
+### **Mudanças Realizadas:**
+1. ✅ Linha 5: Comentário atualizado (Centro de Custo → Cliente r_contatos)
+2. ✅ Linha 47: `calcular_roi_clientes` → `calcular_roi_clientes_v2`
+3. ✅ Linha 85: `calcular_kpis_roi_clientes` → `calcular_kpis_roi_clientes_v2`
+4. ✅ Linha 150: `buscar_detalhes_roi_cliente` → `buscar_detalhes_roi_cliente_v2`
+5. ✅ Linha 221: `buscar_evolucao_roi_cliente` → `buscar_evolucao_roi_cliente_v2`
+
+### **Validação:**
+- ✅ TypeScript sem erros (`npx tsc --noEmit`)
+- ✅ Tipos e interfaces mantidos (sem breaking changes)
+
+### **Resultado:**
+Código TypeScript atualizado para chamar funções _v2 que usam `r_contatos`.
+
+---
+
+## ✅ FASE 3 - VALIDADA PELO USUÁRIO
+
+### **Testes Realizados:**
+- ✅ Interface `/relatorios/roi-cliente` acessada
+- ✅ Clientes de `r_contatos` aparecendo corretamente
+- ✅ Dados reais sendo exibidos
+- ✅ Filtros funcionando
+- ✅ Expansão de clientes operacional
+- ✅ Gráficos renderizando
+
+### **Resultado:**
+Sistema 100% funcional usando `r_contatos` ao invés de `fp_centros_custo`.
+
+---
+
+## 🎉 REFATORAÇÃO CONCLUÍDA COM SUCESSO
+
+A tela de **ROI por Cliente** agora:
+- ✅ Usa a tabela correta (`r_contatos`)
+- ✅ Mostra clientes reais do sistema
+- ✅ Dados batem com transações reais
+- ✅ Sistema alinhado com modelo de negócio
 
 ---
 

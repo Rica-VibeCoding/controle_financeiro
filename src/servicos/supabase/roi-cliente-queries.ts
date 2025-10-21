@@ -2,7 +2,7 @@ import { createClient } from './auth-client'
 import type { ClienteROI, CardKPI, FiltrosROI, DetalhesCliente, EvolucaoMensal } from '@/tipos/roi-cliente'
 
 /**
- * Busca dados de ROI por Centro de Custo (Clientes/Projetos)
+ * Busca dados de ROI por Cliente (r_contatos)
  */
 export async function buscarDadosROIClientes(
   workspaceId: string,
@@ -44,7 +44,7 @@ export async function buscarDadosROIClientes(
       break
   }
 
-  const { data, error } = await supabase.rpc('calcular_roi_clientes', {
+  const { data, error } = await supabase.rpc('calcular_roi_clientes_v2', {
     p_workspace_id: workspaceId,
     p_data_inicio: dataInicio,
     p_data_fim: dataFim
@@ -82,7 +82,7 @@ export async function buscarKPIs(workspaceId: string): Promise<CardKPI> {
   const hoje = new Date()
   const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`
 
-  const { data, error } = await supabase.rpc('calcular_kpis_roi_clientes', {
+  const { data, error } = await supabase.rpc('calcular_kpis_roi_clientes_v2', {
     p_workspace_id: workspaceId,
     p_mes: mesAtual
   })
@@ -147,7 +147,7 @@ export async function buscarDetalhesCliente(
       break
   }
 
-  const { data, error } = await supabase.rpc('buscar_detalhes_roi_cliente', {
+  const { data, error } = await supabase.rpc('buscar_detalhes_roi_cliente_v2', {
     p_workspace_id: workspaceId,
     p_cliente_id: clienteId,
     p_data_inicio: dataInicio,
@@ -218,7 +218,7 @@ export async function buscarEvolucaoCliente(
       break
   }
 
-  const { data, error } = await supabase.rpc('buscar_evolucao_roi_cliente', {
+  const { data, error } = await supabase.rpc('buscar_evolucao_roi_cliente_v2', {
     p_workspace_id: workspaceId,
     p_cliente_id: clienteId,
     p_data_inicio: dataInicio,

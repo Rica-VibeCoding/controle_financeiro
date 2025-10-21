@@ -54,7 +54,19 @@ export function CardsKPI({ kpis, isLoading }: CardsKPIProps) {
     )
   }
 
-  if (!kpis) {
+  // Verificação defensiva: garantir que kpis e todas as propriedades existem
+  if (!kpis || !kpis.melhorRoiPercentual || !kpis.melhorRoiValor || !kpis.margemMensal) {
+    return null
+  }
+
+  // Verificação adicional de valores não-null
+  const temValoresValidos =
+    typeof kpis.melhorRoiPercentual.valor === 'number' &&
+    typeof kpis.melhorRoiValor.valor === 'number' &&
+    typeof kpis.margemMensal.percentual === 'number' &&
+    typeof kpis.margemMensal.lucroTotal === 'number'
+
+  if (!temValoresValidos) {
     return null
   }
 

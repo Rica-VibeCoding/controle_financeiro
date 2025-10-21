@@ -1,8 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(timeout 60 npx tsc:*)",
-      "Bash(echo:*)"
+      "Bash(npx tsc:*)"
     ],
     "ask": [],
     "deny": []

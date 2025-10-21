@@ -41,7 +41,18 @@ export function CardsKPI({ kpis, isLoading }: CardsKPIProps) {
     )
   }
 
+  // Verificação defensiva: garantir que kpis e todas as propriedades existem
   if (!kpis) {
+    return null
+  }
+
+  // Verificação adicional de valores não-null
+  const temValoresValidos =
+    typeof kpis.variacao_percentual === 'number' &&
+    typeof kpis.taxa_acerto === 'number' &&
+    typeof kpis.diferenca_total === 'number'
+
+  if (!temValoresValidos) {
     return null
   }
 

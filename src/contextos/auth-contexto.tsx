@@ -31,6 +31,7 @@ interface AuthContextType {
   session: Session | null
   workspace: Workspace | null
   loading: boolean
+  slowLoading: boolean  // Indica se carregamento está demorando (cold start)
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
 }
@@ -42,9 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [loading, setLoading] = useState(true)
+  const [slowLoading, setSlowLoading] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const lastActivityUpdate = useRef<number>(0)
   const workspaceCache = useRef<WorkspaceCache | null>(null)
+  const slowLoadingTimer = useRef<NodeJS.Timeout | null>(null)
 
   // Função para atualizar atividade com throttling
   const trackUserActivity = useCallback(async (userId: string) => {
@@ -156,7 +159,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.warn('UserId inválido para carregar workspace:', userId)
       return
     }
-    
+
+    // Iniciar timer para detectar slow loading (cold start)
+    slowLoadingTimer.current = setTimeout(() => {
+      setSlowLoading(true)
+      logger.info('⏳ Carregamento lento detectado - possível cold start do Supabase')
+    }, 5000) // 5 segundos
+
     // Loop de tentativas com retry
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
@@ -164,11 +173,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Verificar cache (30 minutos)
       const now = Date.now()
       const CACHE_DURATION = 30 * 60 * 1000 // 30 minutos
-      
-      if (workspaceCache.current?.userId === userId && 
+
+      if (workspaceCache.current?.userId === userId &&
           now - workspaceCache.current.timestamp < CACHE_DURATION) {
         // Workspace carregado do cache
         setWorkspace(workspaceCache.current.data)
+
+        // Limpar timer de slow loading
+        if (slowLoadingTimer.current) {
+          clearTimeout(slowLoadingTimer.current)
+          slowLoadingTimer.current = null
+        }
+        setSlowLoading(false)
         return
       }
 
@@ -176,9 +192,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Carregando workspace para usuário
       
-      // AbortController para timeout de 5 segundos (aumentado de 3s)
+      // AbortController para timeout de 15 segundos (suporte cold start Supabase)
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
 
       try {
         // Query 1: Buscar workspace_id do usuário
@@ -258,9 +274,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             userId
           }
 
+          // Limpar timer de slow loading
+          if (slowLoadingTimer.current) {
+            clearTimeout(slowLoadingTimer.current)
+            slowLoadingTimer.current = null
+          }
+          setSlowLoading(false)
+
           // Workspace carregado com sucesso
         } else {
           logger.warn('Workspace não encontrado para usuário:', userId)
+
+          // Limpar timer mesmo em caso de erro
+          if (slowLoadingTimer.current) {
+            clearTimeout(slowLoadingTimer.current)
+            slowLoadingTimer.current = null
+          }
+          setSlowLoading(false)
         }
 
       } catch (queryError: any) {
@@ -268,7 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Tratar timeout específico do AbortController
         if (queryError.name === 'AbortError') {
-          logger.warn(`Timeout ao carregar workspace (5s) - tentativa ${attempt + 1}/${retries}`)
+          logger.warn(`Timeout ao carregar workspace (15s) - tentativa ${attempt + 1}/${retries} - Aguardando resposta do servidor...`)
 
           // Se não for última tentativa, tentar novamente
           if (attempt < retries - 1) {
@@ -279,15 +309,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           logger.warn('Timeout após todas as tentativas - continuando sem workspace')
+
+          // Limpar timer de slow loading
+          if (slowLoadingTimer.current) {
+            clearTimeout(slowLoadingTimer.current)
+            slowLoadingTimer.current = null
+          }
+          setSlowLoading(false)
+
           return
         }
-        
+
         throw queryError
       }
-      
+
       // Se chegou aqui, sucesso - sair do loop
       return
-      
+
     } catch (error: any) {
       // Se for última tentativa, logar erro
       if (attempt === retries - 1) {
@@ -296,6 +334,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!silentCodes.includes(error?.code)) {
           logger.error(`Erro ao carregar workspace após ${retries} tentativas:`, error)
         }
+
+        // Limpar timer de slow loading em erro final
+        if (slowLoadingTimer.current) {
+          clearTimeout(slowLoadingTimer.current)
+          slowLoadingTimer.current = null
+        }
+        setSlowLoading(false)
       } else {
         // Não é última tentativa - aguardar e tentar novamente
         const delay = Math.min(1000 * Math.pow(2, attempt), 5000)
@@ -425,6 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       workspace,
       loading,
+      slowLoading,
       signOut,
       refreshSession
     }}>

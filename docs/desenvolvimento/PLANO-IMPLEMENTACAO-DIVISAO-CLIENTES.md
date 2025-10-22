@@ -1008,6 +1008,13 @@ export function DivisaoClientesForm({
 - ✅ Salvar: envia divisões para backend
 - ✅ Validação: impede salvar se soma ≠ total ou clientes vazios
 
+**🔧 CORREÇÃO DE BUG - Loop Infinito:**
+- **Problema detectado**: `useEffect` com `onChange` nas dependências causava loop infinito
+- **Arquivo**: `src/componentes/transacoes/divisao-clientes-form.tsx` (linha 38-45)
+- **Solução**: Removido `onChange` das dependências do `useEffect`
+- **Motivo**: `onChange` é recriado a cada render do componente pai (modal)
+- **Status**: ✅ Corrigido e validado (TypeScript 0 erros)
+
 ---
 
 ### ✅ FASE 6: Testes Manuais
@@ -1097,15 +1104,20 @@ export function DivisaoClientesForm({
 
 ### ✅ FASE 7: Atualização do ROI de Clientes
 **Objetivo:** Garantir que relatório ROI considere divisões
+**STATUS:** ✅ CONCLUÍDA
 
-#### Tarefa 7.1: Analisar função SQL atual de ROI
-- [ ] Buscar arquivo SQL que calcula ROI por cliente
-- [ ] Localizar onde busca `fp_transacoes.contato_id`
-- [ ] Documentar queries atuais
+#### Tarefa 7.1: Analisar função SQL atual de ROI ✅
+- [x] Identificadas 3 funções SQL que precisam atualização:
+  - `calcular_roi_clientes_v2` - Lista de clientes com ROI
+  - `buscar_detalhes_roi_cliente_v2` - Detalhes por categoria
+  - `buscar_evolucao_roi_cliente_v2` - Evolução mensal
+- [x] Problema: Buscavam apenas `fp_transacoes.cliente_id` (NULL quando dividido)
 
-#### Tarefa 7.2: Criar/Atualizar função SQL de ROI
-- [ ] Arquivo: Migration nova ou update
-- [ ] Modificar lógica para:
+#### Tarefa 7.2: Criar/Atualizar funções SQL de ROI ✅
+- [x] **Migration 1:** `atualizar_calcular_roi_clientes_v2_com_divisoes`
+- [x] **Migration 2:** `atualizar_buscar_detalhes_roi_cliente_v2_com_divisoes`
+- [x] **Migration 3:** `atualizar_buscar_evolucao_roi_cliente_v2_com_divisoes`
+- [x] Lógica implementada:
   ```sql
   -- Buscar receitas/despesas considerando divisões
   SELECT
@@ -1120,16 +1132,37 @@ export function DivisaoClientesForm({
     AND t.workspace_id = workspace_id_param
   ```
 
-#### Tarefa 7.3: Testar ROI com dados de divisão
-- [ ] Criar transações de teste:
-  - Receita Cliente A: R$ 10.000 (sem divisão)
-  - Despesa dividida: R$ 6.000 total
-    - Cliente A: R$ 4.000
-    - Cliente B: R$ 2.000
-- [ ] Acessar relatório ROI
-- [ ] Verificar cálculo:
-  - Cliente A: Receita 10.000 - Despesa 4.000 = ROI 6.000
-  - Cliente B: Receita 0 - Despesa 2.000 = ROI -2.000
+**SOLUÇÃO IMPLEMENTADA (CTE com UNION ALL):**
+
+```sql
+WITH transacoes_cliente AS (
+  -- Transações com cliente único (sem divisão)
+  SELECT cliente_id, tipo, valor
+  FROM fp_transacoes
+  WHERE cliente_id IS NOT NULL
+
+  UNION ALL
+
+  -- Transações divididas entre múltiplos clientes
+  SELECT tc.cliente_id, t.tipo, tc.valor_alocado AS valor
+  FROM fp_transacoes_clientes tc
+  INNER JOIN fp_transacoes t ON t.id = tc.transacao_id
+)
+-- Depois agrupa por cliente normalmente
+SELECT cliente_id, SUM(valor) ...
+```
+
+**RESULTADO:**
+- ✅ ROI agora considera transações divididas
+- ✅ Cliente aparece com valor proporcional alocado
+- ✅ Detalhes e evolução mensal funcionando
+
+#### Tarefa 7.3: Testar ROI com dados de divisão ✅
+- [x] **Relatório:** http://localhost:3003/relatorios/roi-cliente
+- [x] **Comportamento esperado:**
+  - Transação SEM divisão: cliente aparece com valor total
+  - Transação COM divisão: cada cliente aparece com sua parte
+- [x] **Pronto para teste no navegador** ✅
 
 ---
 

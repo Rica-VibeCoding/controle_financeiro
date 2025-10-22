@@ -1,9 +1,268 @@
 # PLANO DE REFATORAÇÃO - Sistema de Convites
 
 **Data de Criação:** 21/10/2025
-**Versão:** 1.0
-**Status:** Pronto para Execução
+**Última Atualização:** 22/10/2025 03:15 AM
+**Versão:** 1.1
+**Status:** Fase 1 Concluída → Fase 2 Próxima
 **Projeto:** Sistema de Controle Financeiro Pessoal
+
+---
+
+## 🚀 CONTINUAÇÃO EM NOVO CHAT - START HERE
+
+> **⚠️ ATENÇÃO:** Este documento foi atualizado para permitir continuação em novo chat devido a limite de contexto.
+
+### 📍 Status Atual da Implementação
+
+**Fase 0:** ✅ Preparação Concluída
+**Fase 1:** ✅ **100% CONCLUÍDA** (22/10/2025 03:15 AM)
+**Fase 2:** ⏳ **PRÓXIMA** - Refatoração Estrutural (4 tarefas)
+**Fase 3:** ⏸️ Aguardando Fase 2
+
+### ✅ O Que JÁ Foi Feito (Fase 1)
+
+1. **SQL da Trigger Aplicado no Banco**
+   - Migration `20251022060125_fix_convite_trigger_busca_especifica` ✅ Aplicada
+   - Trigger `handle_new_user` corrigida para buscar convite por código específico
+   - Validado com 3 testes SQL (todos passaram)
+
+2. **41 Console.logs Limpos**
+   - `convites-simples.ts`: 24 → logger ✅
+   - `register/page.tsx`: 17 → logger ✅
+   - Logger importado em ambos os arquivos
+
+3. **Código Limpo e Validado**
+   - TypeScript: ✅ Sem erros
+   - Build: ✅ Passou (50s)
+   - Gambiarra removida (~35 linhas)
+   - Testes habilitados
+
+4. **Commit Realizado**
+   - `feat(convites): Fase 1 completa - correção trigger + limpeza logs`
+
+### 🎯 Próxima Ação: FASE 2
+
+**Objetivo:** Refatorar `aceitarConvite()` (176 linhas → 4 funções menores)
+
+**4 Tarefas da Fase 2:**
+1. ⏳ **Tarefa 2.1:** Criar tipos centralizados (`src/tipos/convites.ts`)
+2. ⏸️ **Tarefa 2.2:** Extrair 4 funções de `aceitarConvite()`
+3. ⏸️ **Tarefa 2.3:** Criar hook `usar-registro-convite.ts`
+4. ⏸️ **Tarefa 2.4:** Padronizar retornos com `Resultado<T>`
+
+**Duração Estimada:** 4-6 horas
+**Risco:** Médio-Alto (mexe em lógica core)
+
+---
+
+### 📋 SUBDIVISÃO DETALHADA - FASE 2
+
+#### **Tarefa 2.1: Criar Tipos Centralizados** (15-20 min) ⏳ EM ANDAMENTO
+**Complexidade:** ⭐ Baixa
+**Arquivo:** `src/tipos/convites.ts` (CRIAR NOVO)
+
+**Subtarefas:**
+1. Criar tipos base `Resultado<T>`, `ResultadoSucesso<T>`, `ResultadoErro`
+2. Criar tipos de domínio: `ConviteLink`, `DadosConvite`, `ValidacaoConvite`
+3. Criar tipos específicos: `ResultadoCriacaoConvite`, `ResultadoValidacaoConvite`, `ResultadoAceitacaoConvite`
+4. Adicionar tipo `RateLimitInfo`
+5. Validar com `npx tsc --noEmit`
+6. Validar build com `npm run build`
+7. Commit: `feat(convites): adiciona tipos centralizados (Fase 2.1)`
+
+**Impacto:** Nenhum (só cria tipos, não altera código existente)
+
+---
+
+#### **Tarefa 2.2: Refatorar aceitarConvite()** (2-3 horas) ⏸️ AGUARDANDO
+**Complexidade:** ⭐⭐⭐⭐ Alta (CRÍTICA)
+**Arquivo:** `src/servicos/supabase/convites-simples.ts` (REFATORAR)
+
+**Subtarefas:**
+1. **Criar função `buscarUsuarioConvite()`** (~60 linhas)
+   - Trata usuário autenticado
+   - Trata usuário recém-criado (busca por email)
+   - Retorna `Resultado<{ userId, userEmail, userNome }>`
+
+2. **Criar função `verificarWorkspaceUsuario()`** (~48 linhas)
+   - Busca em `fp_usuarios` por userId
+   - Retorna workspace atual ou null
+   - Retorna `Resultado<{ workspaceId, role } | null>`
+
+3. **Criar função `adicionarUsuarioAoWorkspace()`** (~48 linhas)
+   - Sanitiza dados com `SanitizadorConvite`
+   - Insere em `fp_usuarios`
+   - Retorna `Resultado<void>`
+
+4. **Criar função `registrarAuditoriaConvite()`** (~30 linhas)
+   - Grava log em `fp_audit_logs`
+   - Não falha operação se auditoria falhar
+   - Retorna `Promise<void>`
+
+5. **Refatorar `aceitarConvite()` principal** (~95 linhas → ~40 linhas)
+   - Remove código das 176 linhas originais
+   - Orquestra as 4 funções auxiliares
+   - Mantém mesma interface pública
+
+6. Validar com `npx tsc --noEmit`
+7. Validar build com `npm run build`
+8. Validar redução de linhas: `wc -l convites-simples.ts`
+9. Commit: `refactor(convites): divide aceitarConvite em 4 funções (Fase 2.2)`
+
+**Impacto:** Alto (mexe em função crítica, mas mantém mesma interface)
+
+---
+
+#### **Tarefa 2.3: Criar Hook usar-registro-convite.ts** (1-1.5 horas) ⏸️ AGUARDANDO
+**Complexidade:** ⭐⭐⭐ Média-Alta
+**Arquivo:** `src/hooks/usar-registro-convite.ts` (CRIAR NOVO)
+
+**Subtarefas:**
+1. **Criar hook base** com estado `loading`
+2. **Criar função `validarEmail()`**
+   - Chama `verificarSeEmailJaTemConta()`
+   - Retorna `Resultado<void>`
+
+3. **Criar função `registrarUsuario()`**
+   - Chama `supabaseClient.auth.signUp()`
+   - Passa `invite_code` via metadata
+   - Retorna `Resultado<void>`
+
+4. **Criar função `processarConvite()`**
+   - Chama `aceitarConvite()`
+   - Trata sucesso e falha com mensagens
+   - Retorna `Resultado<string>`
+
+5. **Criar função `executarRegistro()`** (orquestrador)
+   - Valida email
+   - Registra usuário
+   - Processa convite (se houver)
+   - Retorna `ResultadoRegistro`
+
+6. **Atualizar `register/page.tsx`**
+   - Importar `usarRegistroConvite()`
+   - Substituir `handleRegister()` para usar hook
+   - Remover código duplicado
+
+7. Validar com `npx tsc --noEmit`
+8. Validar build com `npm run build`
+9. Commit: `refactor(convites): extrai hook usar-registro-convite (Fase 2.3)`
+
+**Impacto:** Médio (simplifica componente, mas mantém funcionalidade)
+
+---
+
+#### **Tarefa 2.4: Padronizar Retornos** (30-45 min) ⏸️ AGUARDANDO
+**Complexidade:** ⭐⭐ Média
+**Arquivo:** `src/servicos/supabase/convites-simples.ts` (ATUALIZAR)
+
+**Subtarefas:**
+1. **Importar tipos** de `@/tipos/convites`
+2. **Atualizar `criarLinkConvite()`**
+   - Tipo de retorno: `ResultadoCriacaoConvite`
+   - Padronizar `return { success: true, data: { link, codigo } }`
+
+3. **Atualizar `usarCodigoConvite()`**
+   - Tipo de retorno: `ResultadoValidacaoConvite`
+   - Padronizar retornos
+
+4. **Atualizar `desativarConvite()`**
+   - Tipo de retorno: `Resultado<void>`
+   - Padronizar retornos
+
+5. **Atualizar `removerUsuarioWorkspace()`** (se existir)
+   - Tipo de retorno: `Resultado<void>`
+
+6. **Atualizar `alterarRoleUsuario()`** (se existir)
+   - Tipo de retorno: `Resultado<void>`
+
+7. TypeScript vai detectar inconsistências automaticamente
+8. Validar com `npx tsc --noEmit`
+9. Validar build com `npm run build`
+10. Commit: `refactor(convites): padroniza retornos com Resultado<T> (Fase 2.4)`
+
+**Impacto:** Baixo (melhora tipos, não muda comportamento)
+
+---
+
+### ✅ VALIDAÇÕES OBRIGATÓRIAS (Após CADA Tarefa)
+
+```bash
+# 1. TypeScript (SEMPRE)
+npx tsc --noEmit
+
+# 2. Build (SEMPRE - Solicitado pelo Ricardo)
+npm run build
+
+# 3. Verificar redução de linhas (Tarefa 2.2)
+wc -l src/servicos/supabase/convites-simples.ts
+
+# 4. Git Commit (Após validações OK)
+git add .
+git commit -m "feat/refactor(convites): [descrição da tarefa]"
+```
+
+---
+
+### 🎯 CRITÉRIOS DE SUCESSO - FASE 2 COMPLETA
+
+**Métricas:**
+- ✅ `aceitarConvite()`: 176 linhas → ~40 linhas (redução 77%)
+- ✅ Complexidade ciclomática: 15 → ~6 (redução 60%)
+- ✅ 4 funções auxiliares criadas e testáveis
+- ✅ Hook customizado criado e reutilizável
+- ✅ Tipos TypeScript padronizados
+- ✅ TypeScript sem erros
+- ✅ Build passando em todas as 4 tarefas
+- ✅ 4 commits incrementais realizados
+
+**Arquivos Modificados:**
+- ✅ `src/tipos/convites.ts` (NOVO)
+- ✅ `src/hooks/usar-registro-convite.ts` (NOVO)
+- ✅ `src/servicos/supabase/convites-simples.ts` (REFATORADO)
+- ✅ `src/app/auth/register/page.tsx` (SIMPLIFICADO)
+
+### 📁 Arquivos Principais
+
+```
+src/servicos/supabase/convites-simples.ts  → 570 linhas (foi 606)
+src/app/auth/register/page.tsx             → 313 linhas (foi 320)
+src/servicos/convites/validador-convites.ts → 321 linhas
+docs/desenvolvimento/PLANO-REFATORACAO-SISTEMA-CONVITES.md → ESTE ARQUIVO
+```
+
+### 🔍 Validações Antes de Começar Fase 2
+
+```bash
+# 1. Verificar que Fase 1 está OK
+git log -1 --oneline  # Deve mostrar commit da Fase 1
+
+# 2. Confirmar que não há console.logs
+grep -r "console\." src/servicos/supabase/convites-simples.ts  # 0 resultados
+grep -r "console\." src/app/auth/register/page.tsx             # 0 resultados
+
+# 3. TypeScript OK
+npx tsc --noEmit  # Sem erros
+
+# 4. Build OK
+npm run build     # Sucesso
+```
+
+### 📋 Contexto Importante
+
+**Sistema de Convites:**
+- Owner cria convite → código único (ex: IU24VY)
+- Link enviado → `https://app.com/auth/register?invite=IU24VY`
+- Usuário registra → Adicionado automaticamente ao workspace
+- Convite deletado → Uso único
+
+**Problema Corrigido na Fase 1:**
+- ❌ Antes: Trigger buscava convite mais recente (errado com 2+ convites)
+- ✅ Agora: Trigger busca por código específico passado via metadata
+
+**Convites Ativos no Banco:**
+- 3 convites válidos até 28/10/2025
+- Cada código mapeia para workspace distinto
 
 ---
 
@@ -412,26 +671,78 @@ npx cloc src/servicos/supabase/convites-simples.ts \
 
 ---
 
-### FASE 1: CORREÇÕES URGENTES ✅ CONCLUÍDA
+### FASE 1: CORREÇÕES URGENTES ✅ 100% CONCLUÍDA
 
-**Status:** ✅ Concluída em 22/10/2025
-**Duração Real:** ~1 hora
+**Status:** ✅ **100% CONCLUÍDA** em 22/10/2025
+**Duração Real:** ~2 horas
 **Objetivo:** Corrigir problemas que bloqueiam deploy e causam bugs
 **Riscos:** Baixo-Médio
 
-**Resultados:**
-- ✅ 24 console.logs substituídos por logger (não 14)
-- ✅ Import do logger adicionado em convites-simples.ts
+**Resultados Finais:**
+- ✅ **41 console.logs substituídos por logger** (24 em convites-simples.ts + 17 em register/page.tsx)
+- ✅ Import do logger adicionado em ambos arquivos
 - ✅ Gambiarra de correção de workspace removida (~35 linhas)
-- ✅ register/page.tsx atualizado para passar invite_code
-- ✅ Arquivo SQL criado para aplicar trigger (aplicar manualmente)
-- ✅ Testes habilitados (2 arquivos)
-- ✅ TypeScript: passou sem erros
-- ✅ Build: passou (43s)
-- 📉 Redução: 605 → 570 linhas no convites-simples.ts
+- ✅ register/page.tsx atualizado para passar invite_code via metadata
+- ✅ **SQL da trigger APLICADO NO BANCO via MCP** (migration `20251022060125`)
+- ✅ Trigger `handle_new_user` corrigida e validada
+- ✅ **Testes SQL executados com sucesso** (busca específica funcionando)
+- ✅ Testes habilitados (2 arquivos: validador-convites.test.ts + convites-simples.test.ts)
+- ✅ TypeScript: **sem erros**
+- ✅ Build: **passou em 50s** (cache limpo)
+- 📉 Redução: 606 → 570 linhas no convites-simples.ts
+- 📉 Redução: 320 → 313 linhas no register/page.tsx
 
-**Ações Pendentes:**
-- ⚠️ Aplicar SQL manualmente: `sql/fix-convite-trigger-correct-APLICAR-MANUALMENTE.sql`
+**Validações Realizadas:**
+```bash
+# TypeScript
+npx tsc --noEmit → ✅ Sem erros
+
+# Build de Produção
+npm run build → ✅ Sucesso (50s, 39 páginas)
+
+# Verificação de Console.logs
+grep -r "console\." src/servicos/supabase/convites-simples.ts → ✅ 0 ocorrências
+grep -r "console\." src/app/auth/register/page.tsx → ✅ 0 ocorrências
+
+# Verificação de Logger
+grep -r "logger\." src/servicos/supabase/convites-simples.ts → ✅ 22 ocorrências
+grep -r "logger\." src/app/auth/register/page.tsx → ✅ 17 ocorrências
+
+# Trigger no Banco
+SELECT * FROM pg_trigger WHERE tgname = 'on_auth_user_created' → ✅ Enabled
+SELECT proname FROM pg_proc WHERE proname = 'handle_new_user' → ✅ Existe
+```
+
+**Testes SQL Executados:**
+```sql
+-- Teste 1: Busca por código específico (IU24VY)
+✅ Resultado: Workspace correto encontrado (6054274e-d2a0-42af-8ded-67240d40f66b)
+
+-- Teste 2: Fallback (sem código)
+✅ Resultado: Mais recente retornado (LBXA9W)
+
+-- Teste 3: Múltiplos convites distintos
+✅ Resultado: 3 códigos → 3 workspaces distintos mapeados corretamente
+```
+
+**Convites Ativos no Sistema:**
+- LBXA9W → workspace 798452c2 (válido até 28/10)
+- IU24VY → workspace 6054274e (válido até 28/10)
+- UF2VOP → workspace b4f7239a (válido até 28/10)
+
+**Arquivos Modificados:**
+1. `src/servicos/supabase/convites-simples.ts` - Logger + remoção gambiarra
+2. `src/app/auth/register/page.tsx` - Logger + invite_code metadata
+3. `sql/fix-convite-trigger-correct-APLICAR-MANUALMENTE.sql` - Trigger corrigida
+4. Migration aplicada: `20251022060125_fix_convite_trigger_busca_especifica`
+
+**Commits Realizados:**
+```bash
+git commit -m "feat(convites): Fase 1 completa - correção trigger + limpeza logs"
+```
+
+**Status:** ✅ **PRONTO PARA FASE 2**
+**Próxima Ação:** Iniciar Fase 2 - Refatoração Estrutural
 
 #### Tarefa 1.1: Remover Imports Não Usados
 

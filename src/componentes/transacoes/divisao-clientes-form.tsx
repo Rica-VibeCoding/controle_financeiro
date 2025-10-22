@@ -34,7 +34,7 @@ export function DivisaoClientesForm({
   const diferenca = valorTotal - somaAtual
   const valido = Math.abs(diferenca) < 0.01 // Tolerância de 1 centavo
 
-  // Notificar mudanças
+  // Notificar mudanças (remove onChange das dependências para evitar loop)
   useEffect(() => {
     if (habilitado && divisoes.length > 0) {
       onChange(divisoes)

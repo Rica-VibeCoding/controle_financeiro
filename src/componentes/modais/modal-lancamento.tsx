@@ -772,7 +772,6 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                   {dadosAuxiliares?.clientes?.map(cliente => (
                     <option key={cliente.id} value={cliente.id}>
                       {cliente.nome}
-                      {cliente.cpf_cnpj ? ` - ${cliente.cpf_cnpj}` : ''}
                     </option>
                   )) || []}
                 </Select>
@@ -805,7 +804,6 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
                 {dadosAuxiliares?.fornecedores?.map(fornecedor => (
                   <option key={fornecedor.id} value={fornecedor.id}>
                     {fornecedor.nome}
-                    {fornecedor.cpf_cnpj ? ` - ${fornecedor.cpf_cnpj}` : ''}
                   </option>
                 )) || []}
               </Select>

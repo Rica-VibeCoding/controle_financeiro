@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react'
-import { buscarDetalhesCliente, buscarEvolucaoCliente } from '@/servicos/supabase/roi-cliente-queries'
-import type { DetalhesCliente, FiltrosROI, EvolucaoMensal } from '@/tipos/roi-cliente'
+import { buscarTransacoesCliente, buscarEvolucaoCliente } from '@/servicos/supabase/roi-cliente-queries'
+import type { DetalhesClienteTransacoes, FiltrosROI, EvolucaoMensal } from '@/tipos/roi-cliente'
 import { useAuth } from '@/contextos/auth-contexto'
 import { GraficoEvolucao } from './grafico-evolucao'
 
@@ -15,7 +15,7 @@ interface LinhaClienteExpandidaProps {
 
 export function LinhaClienteExpandida({ clienteId, clienteNome, filtros }: LinhaClienteExpandidaProps) {
   const { workspace } = useAuth()
-  const [detalhes, setDetalhes] = useState<DetalhesCliente | null>(null)
+  const [transacoes, setTransacoes] = useState<DetalhesClienteTransacoes | null>(null)
   const [evolucao, setEvolucao] = useState<EvolucaoMensal[]>([])
   const [mostrarGrafico, setMostrarGrafico] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -23,23 +23,23 @@ export function LinhaClienteExpandida({ clienteId, clienteNome, filtros }: Linha
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function carregarDetalhes() {
+    async function carregarTransacoes() {
       if (!workspace) return
 
       try {
         setIsLoading(true)
         setError(null)
-        const dados = await buscarDetalhesCliente(workspace.id, clienteId, filtros)
-        setDetalhes(dados)
+        const dados = await buscarTransacoesCliente(workspace.id, clienteId, filtros)
+        setTransacoes(dados)
       } catch (err) {
-        console.error('Erro ao carregar detalhes:', err)
+        console.error('Erro ao carregar transações:', err)
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
       } finally {
         setIsLoading(false)
       }
     }
 
-    carregarDetalhes()
+    carregarTransacoes()
   }, [clienteId, workspace, filtros])
 
   const carregarEvolucao = async () => {
@@ -67,6 +67,11 @@ export function LinhaClienteExpandida({ clienteId, clienteNome, filtros }: Linha
     })
   }
 
+  const formatarData = (dataISO: string): string => {
+    const data = new Date(dataISO + 'T00:00:00')
+    return data.toLocaleDateString('pt-BR')
+  }
+
   if (isLoading) {
     return (
       <div className="px-4 py-6 bg-gray-50">
@@ -86,10 +91,10 @@ export function LinhaClienteExpandida({ clienteId, clienteNome, filtros }: Linha
     )
   }
 
-  if (!detalhes || (detalhes.receitas.length === 0 && detalhes.despesas.length === 0)) {
+  if (!transacoes || (transacoes.receitas.length === 0 && transacoes.despesas.length === 0)) {
     return (
       <div className="px-4 py-6 bg-gray-50">
-        <p className="text-gray-500 text-sm text-center">Nenhum detalhe disponível</p>
+        <p className="text-gray-500 text-sm text-center">Nenhuma transação encontrada</p>
       </div>
     )
   }
@@ -97,79 +102,91 @@ export function LinhaClienteExpandida({ clienteId, clienteNome, filtros }: Linha
   return (
     <div className="px-4 py-6 bg-gray-50 space-y-6">
       {/* Receitas */}
-      {detalhes.receitas.length > 0 && (
+      {transacoes.receitas.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            📈 RECEITAS (R$ {formatarValor(detalhes.totais.receita)})
+            📈 RECEITAS (R$ {formatarValor(transacoes.totais.receita)})
           </h4>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Categoria</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Subcategoria</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Qtd</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Valor</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">%</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {detalhes.receitas.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-900">{item.categoria}</td>
-                    <td className="px-3 py-2 text-gray-600">
-                      {item.subcategoria || '-'}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-600">{item.quantidade}</td>
-                    <td className="px-3 py-2 text-right font-medium text-green-600">
-                      R$ {formatarValor(item.valor)}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-600">
-                      {item.percentual.toFixed(1)}%
-                    </td>
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Data</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Descrição</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Categoria</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Subcategoria</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Valor</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {transacoes.receitas.map((transacao) => (
+                    <tr key={transacao.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                        {formatarData(transacao.data)}
+                      </td>
+                      <td className="px-3 py-2 text-gray-900">
+                        {transacao.descricao}
+                      </td>
+                      <td className="px-3 py-2 text-gray-700">
+                        {transacao.categoria}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        {transacao.subcategoria || '-'}
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium text-green-600 whitespace-nowrap">
+                        R$ {formatarValor(transacao.valor)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {/* Despesas */}
-      {detalhes.despesas.length > 0 && (
+      {transacoes.despesas.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            📉 DESPESAS (R$ {formatarValor(detalhes.totais.despesa)})
+            📉 DESPESAS (R$ {formatarValor(transacoes.totais.despesa)})
           </h4>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Categoria</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Subcategoria</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Qtd</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Valor</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">%</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {detalhes.despesas.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 text-gray-900">{item.categoria}</td>
-                    <td className="px-3 py-2 text-gray-600">
-                      {item.subcategoria || '-'}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-600">{item.quantidade}</td>
-                    <td className="px-3 py-2 text-right font-medium text-red-600">
-                      R$ {formatarValor(item.valor)}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-600">
-                      {item.percentual.toFixed(1)}%
-                    </td>
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Data</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Descrição</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Categoria</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Subcategoria</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Valor</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {transacoes.despesas.map((transacao) => (
+                    <tr key={transacao.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                        {formatarData(transacao.data)}
+                      </td>
+                      <td className="px-3 py-2 text-gray-900">
+                        {transacao.descricao}
+                      </td>
+                      <td className="px-3 py-2 text-gray-700">
+                        {transacao.categoria}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        {transacao.subcategoria || '-'}
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium text-red-600 whitespace-nowrap">
+                        R$ {formatarValor(transacao.valor)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

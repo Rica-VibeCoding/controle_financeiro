@@ -1,5 +1,5 @@
 import { createClient } from './auth-client'
-import type { ClienteROI, CardKPI, FiltrosROI, DetalhesCliente, EvolucaoMensal } from '@/tipos/roi-cliente'
+import type { ClienteROI, CardKPI, FiltrosROI, DetalhesCliente, EvolucaoMensal, DetalhesClienteTransacoes } from '@/tipos/roi-cliente'
 
 /**
  * Busca dados de ROI por Cliente (r_contatos)
@@ -244,6 +244,77 @@ export async function buscarEvolucaoCliente(
     lucro: parseFloat(row.lucro) || 0,
     margem: parseFloat(row.margem) || 0
   }))
+}
+
+/**
+ * Busca lista completa de transações de um cliente (ao invés de agregação)
+ */
+export async function buscarTransacoesCliente(
+  workspaceId: string,
+  clienteId: string,
+  filtros: FiltrosROI
+): Promise<DetalhesClienteTransacoes> {
+  const supabase = createClient()
+
+  // Calcular datas baseadas no filtro (mesma lógica das outras funções)
+  let dataInicio: string | null = null
+  let dataFim: string | null = null
+
+  const hoje = new Date()
+
+  switch (filtros.periodo) {
+    case 'mes_atual':
+      dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
+      dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0]
+      break
+    case '3_meses':
+      dataInicio = new Date(hoje.getFullYear(), hoje.getMonth() - 3, 1).toISOString().split('T')[0]
+      dataFim = hoje.toISOString().split('T')[0]
+      break
+    case '6_meses':
+      dataInicio = new Date(hoje.getFullYear(), hoje.getMonth() - 6, 1).toISOString().split('T')[0]
+      dataFim = hoje.toISOString().split('T')[0]
+      break
+    case '1_ano':
+      dataInicio = new Date(hoje.getFullYear() - 1, hoje.getMonth(), 1).toISOString().split('T')[0]
+      dataFim = hoje.toISOString().split('T')[0]
+      break
+    case 'personalizado':
+      dataInicio = filtros.dataInicio || null
+      dataFim = filtros.dataFim || null
+      break
+    case 'todo':
+    default:
+      dataInicio = null
+      dataFim = null
+      break
+  }
+
+  const { data, error } = await supabase.rpc('buscar_transacoes_roi_cliente_v2', {
+    p_workspace_id: workspaceId,
+    p_cliente_id: clienteId,
+    p_data_inicio: dataInicio,
+    p_data_fim: dataFim
+  })
+
+  if (error) {
+    console.error('Erro ao buscar transações do cliente:', error)
+    throw new Error(`Erro ao buscar transações: ${error.message}`)
+  }
+
+  if (!data) {
+    return {
+      receitas: [],
+      despesas: [],
+      totais: { receita: 0, despesa: 0 }
+    }
+  }
+
+  return {
+    receitas: data.receitas || [],
+    despesas: data.despesas || [],
+    totais: data.totais || { receita: 0, despesa: 0 }
+  }
 }
 
 /**

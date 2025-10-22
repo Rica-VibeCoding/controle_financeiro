@@ -57,3 +57,23 @@ export interface EvolucaoMensal {
   lucro: number
   margem: number
 }
+
+// Transação individual do cliente
+export interface TransacaoCliente {
+  id: string
+  data: string         // ISO format: "2025-10-22"
+  descricao: string
+  categoria: string
+  subcategoria: string
+  valor: number
+}
+
+// Detalhes do cliente com lista de transações
+export interface DetalhesClienteTransacoes {
+  receitas: TransacaoCliente[]
+  despesas: TransacaoCliente[]
+  totais: {
+    receita: number
+    despesa: number
+  }
+}

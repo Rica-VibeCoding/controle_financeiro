@@ -1,7 +1,7 @@
 import { supabase } from './cliente'
 import { prepararTransacaoParaInsercao, validarTransacao, limparCamposUUID, corrigirTransacaoRecorrente, normalizarData } from '@/utilitarios/validacao'
-import type { 
-  Transacao, 
+import type {
+  Transacao,
   NovaTransacao
 } from '@/tipos/database'
 import type {
@@ -9,6 +9,8 @@ import type {
   ParametrosPaginacao,
   RespostaPaginada
 } from '@/tipos/filtros'
+import { DivisaoCliente } from '@/tipos/transacao-divisao'
+import { buscarDivisoesClientes, salvarDivisoesClientes, removerDivisoesClientes } from './transacoes-divisao-clientes'
 
 type TransacaoComRelacoes = Transacao & {
   categoria?: { nome: string; cor: string; icone: string }
@@ -39,7 +41,9 @@ export async function obterTransacoes(
       conta:conta_id(nome, tipo),
       conta_destino:conta_destino_id(nome, tipo),
       forma_pagamento:forma_pagamento_id(nome, tipo),
-      centro_custo:centro_custo_id(nome, cor)
+      centro_custo:centro_custo_id(nome, cor),
+      cliente:cliente_id(id, nome, tipo_pessoa, telefone, email),
+      fornecedor:fornecedor_id(id, nome, tipo_pessoa, telefone, email)
     `, { count: 'exact' })
 
   // Aplicar filtro workspace_id (obrigatório)
@@ -109,7 +113,10 @@ export async function obterTransacoes(
 /**
  * Buscar transação por ID
  */
-export async function obterTransacaoPorId(id: string, workspaceId: string): Promise<TransacaoComRelacoes | null> {
+export async function obterTransacaoPorId(
+  id: string,
+  workspaceId: string
+): Promise<(TransacaoComRelacoes & { divisoes?: DivisaoCliente[] }) | null> {
   let query = supabase
     .from('fp_transacoes')
     .select(`
@@ -119,25 +126,39 @@ export async function obterTransacaoPorId(id: string, workspaceId: string): Prom
       conta:conta_id(nome, tipo),
       conta_destino:conta_destino_id(nome, tipo),
       forma_pagamento:forma_pagamento_id(nome, tipo),
-      centro_custo:centro_custo_id(nome, cor)
+      centro_custo:centro_custo_id(nome, cor),
+      cliente:cliente_id(id, nome, tipo_pessoa, telefone, email),
+      fornecedor:fornecedor_id(id, nome, tipo_pessoa, telefone, email)
     `)
     .eq('id', id)
-  
+
   query = query.eq('workspace_id', workspaceId)
-  
+
   const { data, error } = await query.single()
 
   if (error && error.code !== 'PGRST116') {
     throw new Error(`Erro ao buscar transação: ${error.message}`)
   }
 
-  return data
+  if (!data) return null
+
+  // Buscar divisões se houver
+  const divisoes = await buscarDivisoesClientes(id, workspaceId)
+
+  return {
+    ...data,
+    divisoes: divisoes.length > 0 ? divisoes : undefined
+  }
 }
 
 /**
  * Criar nova transação
  */
-export async function criarTransacao(transacao: NovaTransacao, workspaceId: string): Promise<Transacao> {
+export async function criarTransacao(
+  transacao: NovaTransacao,
+  workspaceId: string,
+  divisoes?: DivisaoCliente[]
+): Promise<Transacao> {
   // Validar dados antes de inserir
   const errosValidacao = validarTransacao(transacao)
   if (errosValidacao.length > 0) {
@@ -146,7 +167,7 @@ export async function criarTransacao(transacao: NovaTransacao, workspaceId: stri
 
   // Preparar transação (limpar campos vazios para null)
   const transacaoPreparada = prepararTransacaoParaInsercao(transacao)
-  
+
   // Adicionar workspace_id manualmente após preparação
   const transacaoComWorkspace = { ...transacaoPreparada, workspace_id: workspaceId }
 
@@ -157,6 +178,20 @@ export async function criarTransacao(transacao: NovaTransacao, workspaceId: stri
     .single()
 
   if (error) throw new Error(`Erro ao criar transação: ${error.message}`)
+
+  // Se houver divisões, salvar
+  if (divisoes && divisoes.length > 0) {
+    // Garantir que cliente_id da transação principal seja NULL
+    await supabase
+      .from('fp_transacoes')
+      .update({ cliente_id: null })
+      .eq('id', data.id)
+      .eq('workspace_id', workspaceId)
+
+    // Salvar divisões
+    await salvarDivisoesClientes(data.id, divisoes, workspaceId)
+  }
+
   return data
 }
 
@@ -166,16 +201,17 @@ export async function criarTransacao(transacao: NovaTransacao, workspaceId: stri
  * Atualizar transação
  */
 export async function atualizarTransacao(
-  id: string, 
+  id: string,
   atualizacoes: AtualizarTransacao,
-  workspaceId: string
+  workspaceId: string,
+  divisoes?: DivisaoCliente[]
 ): Promise<void> {
   // Debug: Log dos dados recebidos
   console.log('🔍 DEBUG atualizarTransacao - dados recebidos:', atualizacoes)
-  
+
   // Limpar campos UUID vazios antes de atualizar
   const atualizacoesLimpas = limparCamposUUID(atualizacoes)
-  
+
   // Normalizar datas para formato ISO se necessário
   const atualizacoesNormalizadas = {
     ...atualizacoesLimpas,
@@ -204,9 +240,9 @@ export async function atualizarTransacao(
       atualizacoesNormalizadas.proxima_recorrencia = proximaDataNormalizada
     }
   }
-  
+
   console.log('🔍 DEBUG atualizarTransacao - dados normalizados:', atualizacoesNormalizadas)
-  
+
   const { error } = await supabase
     .from('fp_transacoes')
     .update(atualizacoesNormalizadas)
@@ -214,6 +250,21 @@ export async function atualizarTransacao(
     .eq('workspace_id', workspaceId)
 
   if (error) throw new Error(`Erro ao atualizar transação: ${error.message}`)
+
+  // Gerenciar divisões de clientes
+  if (divisoes && divisoes.length > 0) {
+    // Se tem divisões, limpar cliente_id principal
+    await supabase
+      .from('fp_transacoes')
+      .update({ cliente_id: null })
+      .eq('id', id)
+      .eq('workspace_id', workspaceId)
+
+    await salvarDivisoesClientes(id, divisoes, workspaceId)
+  } else {
+    // Se não tem divisões, remover qualquer divisão antiga
+    await removerDivisoesClientes(id, workspaceId)
+  }
 }
 
 /**
@@ -398,7 +449,9 @@ export async function buscarParcelasPorGrupo(grupoParcelamento: number, workspac
       subcategoria:subcategoria_id(nome),
       conta:conta_id(nome, tipo),
       forma_pagamento:forma_pagamento_id(nome, tipo),
-      centro_custo:centro_custo_id(nome, cor)
+      centro_custo:centro_custo_id(nome, cor),
+      cliente:cliente_id(id, nome, tipo_pessoa, telefone, email),
+      fornecedor:fornecedor_id(id, nome, tipo_pessoa, telefone, email)
     `)
     .eq('grupo_parcelamento', grupoParcelamento)
     .order('parcela_atual')
@@ -575,7 +628,9 @@ export async function buscarTransacoesRecorrentes(workspaceId: string): Promise<
       subcategoria:subcategoria_id(nome),
       conta:conta_id(nome, tipo, banco),
       forma_pagamento:forma_pagamento_id(nome, tipo),
-      centro_custo:centro_custo_id(nome, cor)
+      centro_custo:centro_custo_id(nome, cor),
+      cliente:cliente_id(id, nome, tipo_pessoa, telefone, email),
+      fornecedor:fornecedor_id(id, nome, tipo_pessoa, telefone, email)
     `)
     .eq('recorrente', true)
     .order('proxima_recorrencia')

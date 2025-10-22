@@ -9,8 +9,10 @@ import { Select } from '@/componentes/ui/select'
 import { Label } from '@/componentes/ui/label'
 import { Skeleton, SkeletonInput, SkeletonLabel, SkeletonButton } from '@/componentes/ui/skeleton'
 import { UploadAnexo } from '@/componentes/transacoes/upload-anexo'
+import { DivisaoClientesForm } from '@/componentes/transacoes/divisao-clientes-form'
 import { validarTransacao } from '@/utilitarios/validacao'
 import { NovaTransacao, Conta, Categoria, Subcategoria, FormaPagamento, CentroCusto } from '@/tipos/database'
+import { DivisaoCliente } from '@/tipos/transacao-divisao'
 import { Icone } from '@/componentes/ui/icone'
 import { obterTransacaoPorId, criarTransacao, atualizarTransacao } from '@/servicos/supabase/transacoes'
 import { useDadosAuxiliares } from '@/contextos/dados-auxiliares-contexto'
@@ -68,7 +70,8 @@ const ESTADO_INICIAL = {
   parcela_atual: 1,
   total_parcelas: 1,
   recorrente: false,
-  contato_id: undefined as string | undefined
+  cliente_id: undefined as string | undefined,
+  fornecedor_id: undefined as string | undefined
 }
 
 /**
@@ -140,7 +143,8 @@ const mapearTransacaoParaEstado = (transacao: NovaTransacao): Partial<NovaTransa
     subcategoria_id: transacao.subcategoria_id || undefined,
     forma_pagamento_id: transacao.forma_pagamento_id || undefined,
     centro_custo_id: transacao.centro_custo_id || undefined,
-    contato_id: transacao.contato_id || undefined,
+    cliente_id: transacao.cliente_id || undefined,
+    fornecedor_id: transacao.fornecedor_id || undefined,
     status: transacao.status,
     data_vencimento: formatarDataParaInput(transacao.data_vencimento ?? undefined) || undefined,
     observacoes: transacao.observacoes || undefined,
@@ -186,6 +190,9 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
   // Estado do formulário
   const [dados, setDados] = useState<Partial<NovaTransacao>>(ESTADO_INICIAL)
 
+  // Estado para divisão de clientes
+  const [divisoesClientes, setDivisoesClientes] = useState<DivisaoCliente[]>([])
+
   // Estados locais
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
   const [loadingTransacao, setLoadingTransacao] = useState(false)
@@ -202,6 +209,11 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
         const transacao = await obterTransacaoPorId(transacaoId, workspace.id)
         if (transacao) {
           setDados(mapearTransacaoParaEstado(transacao))
+
+          // Carregar divisões se houver
+          if (transacao.divisoes && transacao.divisoes.length > 0) {
+            setDivisoesClientes(transacao.divisoes)
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar transação:', error)
@@ -229,6 +241,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       setMensagem(null)
       setAbaAtiva('essencial')
       setDados(ESTADO_INICIAL)
+      setDivisoesClientes([])
       setSalvando(false) // Reset estado de salvamento
     }
   }, [isOpen, transacaoId, workspace])
@@ -362,12 +375,38 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
    */
   const handleSalvarClick = async () => {
     if (salvando) return // Previne duplo clique
-    
+
+    // Validar divisões se estiver habilitado
+    if (divisoesClientes.length > 0) {
+      const somaDivisoes = divisoesClientes.reduce((sum, div) => sum + div.valor_alocado, 0)
+      const diferenca = Math.abs((dados.valor || 0) - somaDivisoes)
+
+      if (diferenca > 0.01) {
+        setMensagem({
+          tipo: 'erro',
+          texto: `Soma das divisões (R$ ${somaDivisoes.toFixed(2)}) deve ser igual ao valor total (R$ ${(dados.valor || 0).toFixed(2)})`
+        })
+        setTimeout(() => setMensagem(null), 5000)
+        return
+      }
+
+      // Verificar se todos os clientes foram selecionados
+      const divisaoSemCliente = divisoesClientes.find(div => !div.cliente_id)
+      if (divisaoSemCliente) {
+        setMensagem({
+          tipo: 'erro',
+          texto: 'Selecione um cliente para cada divisão'
+        })
+        setTimeout(() => setMensagem(null), 5000)
+        return
+      }
+    }
+
     const errosValidacao = validarTransacao(dados)
     if (errosValidacao.length > 0) {
-      setMensagem({ 
-        tipo: 'erro', 
-        texto: `Erro de validação: ${errosValidacao[0]}` 
+      setMensagem({
+        tipo: 'erro',
+        texto: `Erro de validação: ${errosValidacao[0]}`
       })
       setTimeout(() => setMensagem(null), 5000)
       return
@@ -383,9 +422,18 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
 
     try {
       if (isEdicao && transacaoId) {
-        await atualizarTransacao(transacaoId, dados as NovaTransacao, workspace.id)
+        await atualizarTransacao(
+          transacaoId,
+          dados as NovaTransacao,
+          workspace.id,
+          divisoesClientes.length > 0 ? divisoesClientes : undefined
+        )
       } else {
-        await criarTransacao(dados as NovaTransacao, workspace.id)
+        await criarTransacao(
+          dados as NovaTransacao,
+          workspace.id,
+          divisoesClientes.length > 0 ? divisoesClientes : undefined
+        )
       }
 
       // Invalidar cache para atualizar todas as telas
@@ -396,9 +444,9 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       onClose()
     } catch (error) {
       console.error('Erro ao salvar:', error)
-      setMensagem({ 
-        tipo: 'erro', 
-        texto: `Erro ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      setMensagem({
+        tipo: 'erro',
+        texto: `Erro ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       })
       setTimeout(() => setMensagem(null), 5000)
       setSalvando(false) // Reativa apenas em caso de erro
@@ -709,22 +757,40 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
       case 'relacionamento':
         return (
           <div className="space-y-4">
-            {/* Campo Cliente */}
+            {/* Seleção de cliente único OU divisão múltipla */}
             <div className="space-y-2">
               <Label htmlFor="cliente_id">Cliente</Label>
-              <Select
-                id="cliente_id"
-                value={dados.contato_id || ''}
-                onChange={(e) => atualizarCampo('contato_id', e.target.value || undefined)}
-              >
-                <option value="">Selecione um cliente</option>
-                {dadosAuxiliares?.clientes?.map(cliente => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.nome}
-                    {cliente.cpf_cnpj ? ` - ${cliente.cpf_cnpj}` : ''}
-                  </option>
-                )) || []}
-              </Select>
+
+              {/* Se NÃO está dividindo, mostrar select simples */}
+              {divisoesClientes.length === 0 && (
+                <Select
+                  id="cliente_id"
+                  value={dados.cliente_id || ''}
+                  onChange={(e) => atualizarCampo('cliente_id', e.target.value || undefined)}
+                >
+                  <option value="">Selecione um cliente</option>
+                  {dadosAuxiliares?.clientes?.map(cliente => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nome}
+                      {cliente.cpf_cnpj ? ` - ${cliente.cpf_cnpj}` : ''}
+                    </option>
+                  )) || []}
+                </Select>
+              )}
+
+              {/* Componente de divisão */}
+              <DivisaoClientesForm
+                clientes={dadosAuxiliares?.clientes || []}
+                valorTotal={dados.valor || 0}
+                divisoesIniciais={divisoesClientes}
+                onChange={(novasDivisoes) => {
+                  setDivisoesClientes(novasDivisoes)
+                  // Se tem divisões, limpar cliente_id principal
+                  if (novasDivisoes.length > 0) {
+                    atualizarCampo('cliente_id', undefined)
+                  }
+                }}
+              />
             </div>
 
             {/* Campo Fornecedor */}
@@ -732,8 +798,8 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
               <Label htmlFor="fornecedor_id">Fornecedor</Label>
               <Select
                 id="fornecedor_id"
-                value={dados.contato_id || ''}
-                onChange={(e) => atualizarCampo('contato_id', e.target.value || undefined)}
+                value={dados.fornecedor_id || ''}
+                onChange={(e) => atualizarCampo('fornecedor_id', e.target.value || undefined)}
               >
                 <option value="">Selecione um fornecedor</option>
                 {dadosAuxiliares?.fornecedores?.map(fornecedor => (
@@ -745,7 +811,7 @@ export function ModalLancamento({ isOpen, onClose, onSuccess, transacaoId }: Mod
               </Select>
             </div>
 
-            {/* Componente de Upload de Anexo (movido para o final) */}
+            {/* Componente de Upload de Anexo */}
             <div className="space-y-2 pt-4 border-t border-gray-200">
               <UploadAnexo
                 onUploadSuccess={handleUploadSuccess}

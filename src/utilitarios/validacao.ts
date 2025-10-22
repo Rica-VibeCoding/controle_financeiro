@@ -182,7 +182,8 @@ export function prepararTransacaoParaInsercao(transacao: Partial<NovaTransacao>)
     frequencia_recorrencia: transacaoLimpa.frequencia_recorrencia,
     proxima_recorrencia: transacaoLimpa.proxima_recorrencia,
     identificador_externo: transacaoLimpa.identificador_externo,
-    contato_id: transacaoLimpa.contato_id
+    cliente_id: transacaoLimpa.cliente_id,
+    fornecedor_id: transacaoLimpa.fornecedor_id
   }
 
   return transacaoCompleta

@@ -9,6 +9,7 @@ import { useErrorHandler, useNotifications } from '@/utilitarios/error-handler'
 import { getCallbackUrl } from '@/utilitarios/url-helper'
 import { usarCodigoConvite, aceitarConvite, verificarSeEmailJaTemConta } from '@/servicos/supabase/convites-simples'
 import { Icone } from '@/componentes/ui/icone'
+import { logger } from '@/utilitarios/logger'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -30,37 +31,39 @@ export default function RegisterPage() {
   // Validar convite ao carregar a página
   useEffect(() => {
     const codigoConvite = searchParams.get('invite')
-    console.log('🔍 Debug convite - URL params:', { invite: codigoConvite, allParams: Object.fromEntries(searchParams.entries()) })
+    logger.log('Debug convite - URL params:', { invite: codigoConvite, allParams: Object.fromEntries(searchParams.entries()) })
     if (codigoConvite) {
-      console.log('✅ Código de convite encontrado:', codigoConvite)
+      logger.info('Código de convite encontrado:', codigoConvite)
       validarConvite(codigoConvite)
     } else {
-      console.log('❌ Nenhum código de convite na URL')
+      logger.log('Nenhum código de convite na URL')
     }
   }, [searchParams])
 
   const validarConvite = async (codigo: string) => {
-    console.log('🔄 Iniciando validação do convite:', codigo)
+    logger.info('Iniciando validação do convite:', codigo)
     setValidandoConvite(true)
     try {
       const resultado = await usarCodigoConvite(codigo)
-      console.log('📋 Resultado da validação:', resultado)
-      
+      logger.log('Resultado da validação:', resultado)
+
       if (resultado.error) {
-        console.error('❌ Erro na validação:', resultado.error)
+        logger.error('Erro na validação:', resultado.error)
         showError(new Error(resultado.error), 'Convite')
       } else if (resultado.workspace) {
-        console.log('✅ Workspace encontrado:', resultado.workspace.nome)
-        console.log('👤 Criador:', resultado.criadorNome)
+        logger.info('Workspace encontrado:', resultado.workspace.nome)
+        logger.log('Criador:', resultado.criadorNome)
         setDadosConvite({
           codigo,
           workspace: resultado.workspace,
           criadorNome: resultado.criadorNome || 'um membro'
         })
-        setWorkspaceName(resultado.workspace.nome)
+        // 🔒 IMPORTANTE: NÃO setar workspaceName quando é convite
+        // Isso garante que workspace_name seja null no signUp
+        // setWorkspaceName(resultado.workspace.nome) ❌ REMOVIDO - causava bug
       }
     } catch (error) {
-      console.error('💥 Erro na validação de convite:', error)
+      logger.error('Erro na validação de convite:', error)
       showError(error, 'Validação de convite')
     } finally {
       setValidandoConvite(false)
@@ -86,28 +89,33 @@ export default function RegisterPage() {
       }
 
       // Registrar usuário primeiro
-      console.log('🔄 Iniciando signUp...', {
+      // 🔒 IMPORTANTE: workspace_name DEVE ser null quando há convite
+      const workspaceNameParaSignup = dadosConvite ? null : (workspaceName || 'Meu Workspace')
+
+      logger.info('Iniciando signUp...', {
         email: email.substring(0, 3) + '***',
         hasConvite: !!dadosConvite,
-        workspaceName: dadosConvite ? null : (workspaceName || 'Meu Workspace')
+        workspaceName: workspaceNameParaSignup,
+        conviteCodigo: dadosConvite?.codigo
       })
-      
+
       const { error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: nome,
-            // Para convites, não criar workspace - será adicionado via aceitarConvite
-            workspace_name: dadosConvite ? null : (workspaceName || 'Meu Workspace')
+            // ⚠️ CRÍTICO: workspace_name null = convite | workspace_name preenchido = registro normal
+            workspace_name: workspaceNameParaSignup,
+            invite_code: dadosConvite?.codigo || null  // ✨ Passa código para trigger
           },
           emailRedirectTo: getCallbackUrl()
         }
       })
 
       if (error) {
-        console.error('❌ Erro no signUp:', error)
-        console.error('📋 Detalhes do erro:', {
+        logger.error('Erro no signUp:', error)
+        logger.error('Detalhes do erro:', {
           message: error.message,
           status: error.status,
           code: error.code || 'N/A'
@@ -115,26 +123,26 @@ export default function RegisterPage() {
         showError(error, 'Registro')
         return
       }
-      
-      console.log('✅ SignUp realizado com sucesso!')
+
+      logger.info('SignUp realizado com sucesso!')
 
       // Se há convite, aceitar automaticamente após registro
       if (dadosConvite) {
         try {
-          console.log('🚀 Processando convite para usuário recém-criado...')
-          
+          logger.info('Processando convite para usuário recém-criado...')
+
           // NOVA LÓGICA: Aceitar convite imediatamente com os dados do registro
           const resultadoConvite = await aceitarConvite(dadosConvite.codigo, email, nome)
-          
+
           if (resultadoConvite.success) {
-            console.log('✅ Convite processado com sucesso durante registro!')
+            logger.info('Convite processado com sucesso durante registro!')
             showSuccess(`🎉 Conta criada e você foi adicionado ao workspace "${dadosConvite.workspace.nome}"! Verifique seu email para confirmar.`)
           } else {
-            console.warn('⚠️ Falha no convite:', resultadoConvite.error)
+            logger.warn('Falha no convite:', resultadoConvite.error)
             showSuccess('Conta criada! Verifique seu email para confirmar o cadastro. O convite será processado após a confirmação.')
           }
         } catch (conviteError) {
-          console.warn('💥 Erro ao aceitar convite automaticamente:', conviteError)
+          logger.warn('Erro ao aceitar convite automaticamente:', conviteError)
           showSuccess('Conta criada! Verifique seu email para confirmar o cadastro.')
         }
       } else {

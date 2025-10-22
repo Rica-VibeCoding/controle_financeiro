@@ -194,7 +194,8 @@ export interface Database {
           anexo_url: string | null
           observacoes: string | null
           identificador_externo: string | null
-          contato_id: string | null
+          cliente_id: string | null
+          fornecedor_id: string | null
           workspace_id: string
           created_at: string
           updated_at: string
@@ -223,7 +224,8 @@ export interface Database {
           anexo_url?: string | null
           observacoes?: string | null
           identificador_externo?: string | null
-          contato_id?: string | null
+          cliente_id?: string | null
+          fornecedor_id?: string | null
           workspace_id: string
           created_at?: string
           updated_at?: string
@@ -252,7 +254,37 @@ export interface Database {
           anexo_url?: string | null
           observacoes?: string | null
           identificador_externo?: string | null
-          contato_id?: string | null
+          cliente_id?: string | null
+          fornecedor_id?: string | null
+          workspace_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      fp_transacoes_clientes: {
+        Row: {
+          id: string
+          transacao_id: string
+          cliente_id: string
+          valor_alocado: number
+          workspace_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          transacao_id: string
+          cliente_id: string
+          valor_alocado: number
+          workspace_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          transacao_id?: string
+          cliente_id?: string
+          valor_alocado?: number
           workspace_id?: string
           created_at?: string
           updated_at?: string
@@ -310,10 +342,12 @@ export type Conta = Database['public']['Tables']['fp_contas']['Row']
 export type FormaPagamento = Database['public']['Tables']['fp_formas_pagamento']['Row']
 export type CentroCusto = Database['public']['Tables']['fp_centros_custo']['Row']
 export type Transacao = Database['public']['Tables']['fp_transacoes']['Row']
+export type TransacaoCliente = Database['public']['Tables']['fp_transacoes_clientes']['Row']
 export type Meta = Database['public']['Tables']['fp_metas']['Row']
 
 // Tipos para inserção
 export type NovaTransacao = Database['public']['Tables']['fp_transacoes']['Insert']
+export type NovaTransacaoCliente = Database['public']['Tables']['fp_transacoes_clientes']['Insert']
 export type NovaMeta = Database['public']['Tables']['fp_metas']['Insert']
 export type NovaCategoria = Database['public']['Tables']['fp_categorias']['Insert']
 export type NovaSubcategoria = Database['public']['Tables']['fp_subcategorias']['Insert']
@@ -336,4 +370,20 @@ export interface Contato {
   workspace_id: string
   created_at: string
   updated_at: string
+}
+
+/**
+ * Transação com relacionamentos (joins) disponíveis
+ * Use esta interface em componentes que precisam dos dados relacionados
+ */
+export interface TransacaoComRelacionamentos extends Transacao {
+  categoria?: Categoria
+  subcategoria?: Subcategoria
+  conta?: Conta
+  conta_destino?: Conta
+  forma_pagamento?: FormaPagamento
+  centro_custo?: CentroCusto
+  // Relacionamentos separados por semântica
+  cliente?: Contato       // JOIN com r_contatos via cliente_id (para receitas)
+  fornecedor?: Contato    // JOIN com r_contatos via fornecedor_id (para despesas)
 }

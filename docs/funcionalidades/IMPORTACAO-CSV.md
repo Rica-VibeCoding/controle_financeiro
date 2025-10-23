@@ -16,6 +16,13 @@
 - Processa PIX, TED, débitos automáticos
 - Mantém descrições originais
 
+### ✅ Conta Simples (Conta Empresarial)
+- Ignora automaticamente cabeçalho empresarial (7 linhas)
+- Suporta colunas Crédito/Débito separadas
+- **Vinculação automática de clientes via campo "Centro de Custo"**
+- Match inteligente de categorias do banco
+- Precisão temporal com hora/minuto/segundo
+
 ### ✅ Cartões Genéricos
 - Formato padrão: Data, Descrição, Valor
 - Mapeamento flexível de colunas
@@ -113,6 +120,19 @@ const historico = {
 }
 ```
 
+### Importar Conta Simples (Empresarial)
+
+```typescript
+// Vinculação automática de clientes:
+{
+  formato: "conta_simples",
+  transacoes: 47,
+  classificadas: 42,  // 89% classificadas automaticamente
+  clientes_vinculados: 38,  // Campo "Centro de Custo" → cliente_id
+  categorias_match: 40  // Categoria do banco → categoria sistema
+}
+```
+
 ---
 
 ## 🔧 Formatos de Arquivo Suportados
@@ -132,6 +152,18 @@ Data,Tipo,Descrição,Valor
 15/12/2024,Transferência,PIX Recebido,150.00
 16/12/2024,Pagamento,Conta de Luz,-85.50
 ```
+
+### Conta Simples (Empresarial)
+
+```csv
+Data hora;Histórico;Crédito R$;Débito R$;Descrição;Categoria;Centro de Custo
+28/02/2025 16:33;PIX Enviado;;181,8;Cabideiros;COMPONETES;Suelen e Osmar
+27/02/2025 13:48;Recebimento PIX;5000;;Projeto;Vendas;Maurício Ribeiro
+```
+
+**Campo especial:**
+- **Centro de Custo** → vincula automaticamente em `cliente_id` (independente de receita/despesa)
+- Categoria do banco → match automático com categorias do sistema
 
 ### Formato Genérico
 

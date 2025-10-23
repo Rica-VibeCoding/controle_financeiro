@@ -62,11 +62,10 @@ export async function importarTransacoes(
                            transacaoClassificada.classificacao_automatica?.forma_pagamento_id || null,
         centro_custo_id: transacaoClassificada.centro_custo_id ||
                         transacaoClassificada.classificacao_automatica?.centro_custo_id || null,
-        // Separar cliente/fornecedor baseado no tipo da transação
-        cliente_id: transacao.tipo === 'receita' ? (transacaoClassificada.contato_id ||
-                   transacaoClassificada.classificacao_automatica?.contato_id || null) : null,
-        fornecedor_id: transacao.tipo === 'despesa' ? (transacaoClassificada.contato_id ||
-                   transacaoClassificada.classificacao_automatica?.contato_id || null) : null
+        // Campo "Centro de Custo" do CSV vai SEMPRE para cliente_id (independente de receita/despesa)
+        cliente_id: transacaoClassificada.contato_id ||
+                   transacaoClassificada.classificacao_automatica?.contato_id || null,
+        fornecedor_id: null
       }
 
       await criarTransacao(dadosParaSalvar, workspaceId)

@@ -47,20 +47,20 @@ export default function RegisterPage() {
       const resultado = await usarCodigoConvite(codigo)
       logger.log('Resultado da validação:', resultado)
 
-      if (resultado.error) {
+      if (!resultado.success) {
         logger.error('Erro na validação:', resultado.error)
         showError(new Error(resultado.error), 'Convite')
-      } else if (resultado.workspace) {
-        logger.info('Workspace encontrado:', resultado.workspace.nome)
-        logger.log('Criador:', resultado.criadorNome)
+      } else {
+        logger.info('Workspace encontrado:', resultado.data.workspace.nome)
+        logger.log('Criador:', resultado.data.criadorNome)
         setDadosConvite({
           codigo,
-          workspace: resultado.workspace,
-          criadorNome: resultado.criadorNome || 'um membro'
+          workspace: resultado.data.workspace,
+          criadorNome: resultado.data.criadorNome
         })
         // 🔒 IMPORTANTE: NÃO setar workspaceName quando é convite
         // Isso garante que workspace_name seja null no signUp
-        // setWorkspaceName(resultado.workspace.nome) ❌ REMOVIDO - causava bug
+        // setWorkspaceName(resultado.data.workspace.nome) ❌ REMOVIDO - causava bug
       }
     } catch (error) {
       logger.error('Erro na validação de convite:', error)

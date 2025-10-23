@@ -115,45 +115,43 @@ export default function UsuariosPage() {
     try {
       const resultado = await criarLinkConvite(workspace.id)
 
-      if (resultado.error) {
+      if (!resultado.success) {
         erro('Erro ao criar convite', resultado.error)
         return
       }
 
-      if (resultado.link && resultado.codigo) {
-        // Copiar link para clipboard com fallback
-        try {
-          if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(resultado.link)
-            sucesso('Convite criado!', `Link copiado para área de transferência. Código: ${resultado.codigo}`)
-          } else {
-            // Fallback para ambientes não seguros
-            const textArea = document.createElement('textarea')
-            textArea.value = resultado.link
-            document.body.appendChild(textArea)
-            textArea.select()
-            document.execCommand('copy')
-            document.body.removeChild(textArea)
-            sucesso('Convite criado!', `Link copiado: ${resultado.link}`)
-          }
-        } catch (clipboardError) {
-          console.warn('Erro ao copiar para clipboard:', clipboardError)
-          sucesso('Convite criado!', `Copie o link: ${resultado.link}`)
+      // Copiar link para clipboard com fallback
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(resultado.data.link)
+          sucesso('Convite criado!', `Link copiado para área de transferência. Código: ${resultado.data.codigo}`)
+        } else {
+          // Fallback para ambientes não seguros
+          const textArea = document.createElement('textarea')
+          textArea.value = resultado.data.link
+          document.body.appendChild(textArea)
+          textArea.select()
+          document.execCommand('copy')
+          document.body.removeChild(textArea)
+          sucesso('Convite criado!', `Link copiado: ${resultado.data.link}`)
         }
-        
-        // Recarregar lista de convites
-        await carregarConvites() 
-        
-        // Destacar o novo convite por alguns segundos
-        setTimeout(async () => {
-          const convitesAtualizados = await carregarConvites()
-          const novoConvite = convitesAtualizados?.find((c: ConviteLink) => c.codigo === resultado.codigo)
-          if (novoConvite) {
-            setNovoConviteId(novoConvite.id)
-            setTimeout(() => setNovoConviteId(null), 3000)
-          }
-        }, 100)
+      } catch (clipboardError) {
+        console.warn('Erro ao copiar para clipboard:', clipboardError)
+        sucesso('Convite criado!', `Copie o link: ${resultado.data.link}`)
       }
+
+      // Recarregar lista de convites
+      await carregarConvites()
+
+      // Destacar o novo convite por alguns segundos
+      setTimeout(async () => {
+        const convitesAtualizados = await carregarConvites()
+        const novoConvite = convitesAtualizados?.find((c: ConviteLink) => c.codigo === resultado.data.codigo)
+        if (novoConvite) {
+          setNovoConviteId(novoConvite.id)
+          setTimeout(() => setNovoConviteId(null), 3000)
+        }
+      }, 100)
     } catch (error) {
       console.error('Erro ao criar convite:', error)
       erro('Erro ao criar convite', 'Ocorreu um erro inesperado. Tente novamente.')

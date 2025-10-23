@@ -8,8 +8,21 @@ import {
 } from '../convites/validador-convites'
 import { validarOwnerWorkspace } from './middleware-workspace'
 import { logger } from '@/utilitarios/logger'
+import type {
+  Resultado,
+  ResultadoCriacaoConvite,
+  DadosConvite
+} from '@/tipos/convites'
 
-// Atualizar última atividade do usuário
+/**
+ * Atualiza a última atividade do usuário no workspace
+ *
+ * Registra o timestamp da última atividade do usuário na tabela fp_usuarios.
+ * Falhas são silenciadas para não interromper o fluxo principal.
+ *
+ * @param userId - UUID do usuário
+ * @returns Promise que resolve quando a atualização é concluída
+ */
 export async function atualizarUltimaAtividade(userId: string): Promise<void> {
   try {
     await supabase
@@ -25,7 +38,24 @@ export async function atualizarUltimaAtividade(userId: string): Promise<void> {
   }
 }
 
-// Verificar se email já possui conta no sistema
+/**
+ * Verifica se um email já possui conta cadastrada no sistema
+ *
+ * Consulta tanto a tabela auth.users (Supabase Auth) quanto fp_usuarios
+ * para determinar se o email já está em uso. Em caso de erro na verificação,
+ * retorna false para permitir o fluxo de convite.
+ *
+ * @param email - Email a ser verificado
+ * @returns true se o email já possui conta, false caso contrário
+ *
+ * @example
+ * ```typescript
+ * const existe = await verificarSeEmailJaTemConta('usuario@exemplo.com')
+ * if (existe) {
+ *   console.log('Email já cadastrado')
+ * }
+ * ```
+ */
 export async function verificarSeEmailJaTemConta(email: string): Promise<boolean> {
   try {
     // Sanitizar email
@@ -62,32 +92,67 @@ export async function verificarSeEmailJaTemConta(email: string): Promise<boolean
   }
 }
 
-// Criar link de convite
-export async function criarLinkConvite(workspaceId: string): Promise<{
-  link?: string
-  codigo?: string
-  error?: string
-}> {
+/**
+ * Cria um link de convite para o workspace especificado
+ *
+ * Apenas proprietários (owners) podem criar convites. O convite expira em 7 dias
+ * e possui código único de 6 caracteres. Aplica rate limit de 50 convites por dia
+ * em desenvolvimento e 10 em produção.
+ *
+ * @param workspaceId - UUID do workspace
+ * @returns Objeto com sucesso contendo link e código, ou erro
+ *
+ * @example
+ * ```typescript
+ * const resultado = await criarLinkConvite('uuid-workspace')
+ * if (resultado.success) {
+ *   console.log(resultado.data.link)   // https://app.com/auth/register?invite=ABC123
+ *   console.log(resultado.data.codigo) // ABC123
+ * } else {
+ *   console.error(resultado.error)
+ * }
+ * ```
+ *
+ * @see {@link usarCodigoConvite} para validar convite
+ * @see {@link aceitarConvite} para aceitar convite
+ */
+export async function criarLinkConvite(
+  workspaceId: string
+): Promise<ResultadoCriacaoConvite> {
   try {
     // Validar dados de criação
     const validacao = validarConviteCompleto('criar', { workspaceId })
     if (!validacao.valid) {
-      return { error: validacao.error }
+      return {
+        success: false,
+        error: validacao.error || 'Dados inválidos'
+      }
     }
 
     // Verificar se é owner
     const { data: user } = await supabase.auth.getUser()
-    if (!user.user) return { error: 'Usuário não autenticado' }
+    if (!user.user) {
+      return {
+        success: false,
+        error: 'Usuário não autenticado'
+      }
+    }
 
     const isOwner = await validarOwnerWorkspace(supabase, workspaceId, user.user.id)
     if (!isOwner) {
-      return { error: 'Apenas proprietários podem criar convites' }
+      return {
+        success: false,
+        error: 'Apenas proprietários podem criar convites'
+      }
     }
 
     // Verificar rate limit
     const rateLimitCheck = ConviteRateLimiter.podecriarConvite(workspaceId)
     if (!rateLimitCheck.valid) {
-      return { error: rateLimitCheck.error }
+      return {
+        success: false,
+        error: rateLimitCheck.error || 'Limite de convites excedido'
+      }
     }
 
     // Gerar código válido
@@ -106,35 +171,70 @@ export async function criarLinkConvite(workspaceId: string): Promise<{
       .select()
       .single()
 
-    if (error) return { error: error.message }
+    if (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
 
     // Registrar no rate limiter
     ConviteRateLimiter.registrarConvite(workspaceId)
 
     const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/register?invite=${codigo}`
-    
-    return { 
-      link,
-      codigo: ValidadorCodigoConvite.formatarCodigo(codigo)
+
+    return {
+      success: true,
+      data: {
+        link,
+        codigo: ValidadorCodigoConvite.formatarCodigo(codigo)
+      }
     }
-  } catch {
-    return { error: 'Erro ao criar convite' }
+  } catch (error) {
+    logger.error('Erro ao criar convite', { error, workspaceId })
+    return {
+      success: false,
+      error: 'Erro ao criar convite',
+      details: error
+    }
   }
 }
 
-// Validar e usar código de convite
-export async function usarCodigoConvite(codigo: string): Promise<{
-  workspace?: any
-  criadorNome?: string
-  error?: string
-}> {
+/**
+ * Valida e retorna dados de um código de convite
+ *
+ * Verifica se o código é válido, não expirou e pertence a um workspace ativo.
+ * Retorna informações sobre o workspace e quem criou o convite.
+ *
+ * @param codigo - Código do convite (6 caracteres alfanuméricos)
+ * @returns Objeto com dados do convite ou erro
+ *
+ * @example
+ * ```typescript
+ * const resultado = await usarCodigoConvite('ABC123')
+ * if (resultado.success) {
+ *   console.log(resultado.data.workspace.nome)  // Nome do workspace
+ *   console.log(resultado.data.criadorNome)      // Nome de quem convidou
+ * } else {
+ *   console.error(resultado.error) // Código inválido ou expirado
+ * }
+ * ```
+ *
+ * @see {@link criarLinkConvite} para criar convite
+ */
+export async function usarCodigoConvite(
+  codigo: string
+): Promise<Resultado<DadosConvite>> {
   try {
     // Sanitizar e validar código
     const codigoLimpo = SanitizadorConvite.sanitizarCodigo(codigo)
     const validacaoCodigo = ValidadorCodigoConvite.validarFormato(codigoLimpo)
-    
+
     if (!validacaoCodigo.valid) {
-      return { error: validacaoCodigo.error }
+      return {
+        success: false,
+        error: validacaoCodigo.error || 'Código inválido'
+      }
     }
 
     // Primeiro buscar o convite
@@ -146,10 +246,13 @@ export async function usarCodigoConvite(codigo: string): Promise<{
       .gte('expires_at', new Date().toISOString())
       .single()
 
-    logger.info('🔍 Debug convite:', { convite, conviteError, codigo: codigoLimpo })
+    logger.info('Validando convite', { codigo: codigoLimpo, encontrado: !!convite })
 
     if (!convite || conviteError) {
-      return { error: 'Código inválido ou expirado' }
+      return {
+        success: false,
+        error: 'Código inválido ou expirado'
+      }
     }
 
     // Buscar dados do workspace
@@ -159,6 +262,13 @@ export async function usarCodigoConvite(codigo: string): Promise<{
       .eq('id', convite.workspace_id)
       .single()
 
+    if (!workspace) {
+      return {
+        success: false,
+        error: 'Workspace não encontrado'
+      }
+    }
+
     // Buscar dados do criador
     const { data: criador } = await supabase
       .from('fp_usuarios')
@@ -166,125 +276,181 @@ export async function usarCodigoConvite(codigo: string): Promise<{
       .eq('id', convite.criado_por)
       .single()
 
-    logger.info('🔍 Debug dados:', { workspace, criador })
+    logger.info('Dados do convite carregados', { workspace: workspace.nome })
 
     // Validar expiração
     const validacaoExpiracao = ValidadorDadosConvite.validarExpiracao(convite.expires_at)
     if (!validacaoExpiracao.valid) {
-      return { error: validacaoExpiracao.error }
+      return {
+        success: false,
+        error: validacaoExpiracao.error || 'Convite expirado'
+      }
     }
 
-    return { 
-      workspace: workspace,
-      criadorNome: criador?.nome || 'um membro'
+    return {
+      success: true,
+      data: {
+        codigo: codigoLimpo,
+        workspace: {
+          id: workspace.id,
+          nome: workspace.nome
+        },
+        criadorNome: criador?.nome || 'um membro'
+      }
     }
-  } catch {
-    return { error: 'Erro ao validar código' }
+  } catch (error) {
+    logger.error('Erro ao validar código', { error, codigo })
+    return {
+      success: false,
+      error: 'Erro ao validar código',
+      details: error
+    }
   }
 }
 
-// Aceitar convite e adicionar usuário ao workspace
-// NOVA VERSÃO: Funciona tanto para usuários autenticados quanto recém-criados
-export async function aceitarConvite(codigo: string, email?: string, nome?: string): Promise<{
-  success: boolean
-  error?: string
-}> {
+// ============================================================================
+// FUNÇÕES AUXILIARES PARA ACEITAR CONVITE
+// ============================================================================
+
+/**
+ * Busca dados do usuário para aceitar convite
+ * Trata tanto usuário autenticado quanto recém-criado
+ */
+async function buscarUsuarioConvite(
+  email?: string,
+  nome?: string
+): Promise<Resultado<{
+  userId: string
+  userEmail: string
+  userNome: string
+}>> {
   try {
-    logger.info('🔄 Iniciando aceitarConvite:', { codigo: codigo.substring(0, 3) + '***', email: email?.substring(0, 3) + '***' })
-    
-    // Sanitizar código
-    const codigoLimpo = SanitizadorConvite.sanitizarCodigo(codigo)
-    
-    // Validar convite completo
-    const validacao = validarConviteCompleto('aceitar', { codigo: codigoLimpo })
-    if (!validacao.valid) {
-      return { success: false, error: validacao.error }
-    }
-
-    // Validar código e obter workspace
-    const { workspace, error: validateError } = await usarCodigoConvite(codigoLimpo)
-    if (validateError || !workspace) {
-      return { success: false, error: validateError || 'Workspace não encontrado' }
-    }
-
-    logger.info('✅ Workspace do convite:', workspace.nome)
-
-    // Tentar obter usuário atual (pode falhar se ainda não estiver autenticado)
+    // Tentar obter usuário atual
     const { data: userData } = await supabase.auth.getUser()
-    
-    // Determinar dados do usuário
-    let userId: string
-    let userEmail: string
-    let userNome: string
 
     if (userData.user) {
-      // Usuário já autenticado - usar dados da sessão
-      userId = userData.user.id
-      userEmail = userData.user.email || email || ''
-      userNome = userData.user.user_metadata?.full_name || nome || userData.user.email?.split('@')[0] || 'Usuário'
-      logger.info('👤 Usuário autenticado encontrado:', userEmail)
-    } else if (email) {
-      // Usuário recém-criado - usar dados fornecidos
-      // Buscar o ID do usuário pelo email (quando ainda não está autenticado)
-      logger.info('🔍 Buscando usuário recém-criado por email:', email)
-      
-      const { data: userList } = await supabase.auth.admin.listUsers()
-      const foundUser = userList?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
-      
-      if (!foundUser) {
-        logger.warn('❌ Usuário não encontrado para email:', email)
-        return { success: false, error: 'Usuário não encontrado. Tente novamente após confirmar o email.' }
+      // Usuário já autenticado
+      return {
+        success: true,
+        data: {
+          userId: userData.user.id,
+          userEmail: userData.user.email || email || '',
+          userNome: userData.user.user_metadata?.full_name || nome || userData.user.email?.split('@')[0] || 'Usuário'
+        }
       }
-      
-      userId = foundUser.id
-      userEmail = email
-      userNome = nome || email.split('@')[0] || 'Usuário'
-      logger.info('👤 Usuário recém-criado encontrado:', userEmail)
-    } else {
-      return { success: false, error: 'Usuário não autenticado e dados não fornecidos' }
     }
 
-    // Verificar se usuário já possui workspace
-    const { data: existingWorkspace } = await supabase
+    if (!email) {
+      return {
+        success: false,
+        error: 'Usuário não autenticado e email não fornecido'
+      }
+    }
+
+    // Buscar usuário recém-criado por email
+    logger.info('Buscando usuário recém-criado por email', { email })
+
+    const { data: userList } = await supabase.auth.admin.listUsers()
+    const foundUser = userList?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+
+    if (!foundUser) {
+      logger.warn('Usuário não encontrado para email', { email })
+      return {
+        success: false,
+        error: 'Usuário não encontrado. Tente novamente após confirmar o email.'
+      }
+    }
+
+    logger.info('Usuário recém-criado encontrado', { email })
+
+    return {
+      success: true,
+      data: {
+        userId: foundUser.id,
+        userEmail: email,
+        userNome: nome || email.split('@')[0] || 'Usuário'
+      }
+    }
+  } catch (error) {
+    logger.error('Erro ao buscar usuário para convite', { error, email })
+    return {
+      success: false,
+      error: 'Erro ao buscar usuário',
+      details: error
+    }
+  }
+}
+
+/**
+ * Verifica se usuário já possui workspace
+ * Retorna workspace atual ou null se não existe
+ */
+async function verificarWorkspaceUsuario(
+  userId: string
+): Promise<Resultado<{
+  workspaceId: string
+  role: string
+} | null>> {
+  try {
+    const { data: existingWorkspace, error } = await supabase
       .from('fp_usuarios')
       .select('id, workspace_id, role')
       .eq('id', userId)
       .single()
 
-    // Verificar se usuário já está no workspace do convite
-    if (existingWorkspace) {
-      if (existingWorkspace.workspace_id === workspace.id) {
-        logger.info('Usuário já está no workspace do convite', { userId, workspaceId: workspace.id })
-        return { success: true }
-      }
-
-      // Se está em workspace diferente, trigger falhou - retornar erro
-      logger.error('Usuário criado em workspace incorreto - trigger SQL falhou', {
-        userId,
-        workspaceEsperado: workspace.id,
-        workspaceAtual: existingWorkspace.workspace_id,
-        codigoConvite: codigoLimpo
-      })
-
-      return {
-        success: false,
-        error: 'Erro ao processar convite. Entre em contato com o suporte.'
-      }
+    if (error) {
+      // Usuário não existe em fp_usuarios ainda (primeira vez)
+      logger.info('Usuário não encontrado em fp_usuarios', { userId })
+      return { success: true, data: null }
     }
 
-    // Sanitizar dados do usuário para primeira inserção
+    logger.info('Workspace atual do usuário', {
+      userId,
+      workspaceId: existingWorkspace.workspace_id
+    })
+
+    return {
+      success: true,
+      data: {
+        workspaceId: existingWorkspace.workspace_id,
+        role: existingWorkspace.role
+      }
+    }
+  } catch (error) {
+    logger.error('Erro ao verificar workspace do usuário', { error, userId })
+    return {
+      success: false,
+      error: 'Erro ao verificar workspace do usuário',
+      details: error
+    }
+  }
+}
+
+/**
+ * Adiciona usuário ao workspace do convite
+ */
+async function adicionarUsuarioAoWorkspace(
+  userId: string,
+  workspaceId: string,
+  email: string,
+  nome: string
+): Promise<Resultado<void>> {
+  try {
+    // Sanitizar dados
     const dadosUsuario = SanitizadorConvite.sanitizarDadosUsuario({
       id: userId,
-      workspace_id: workspace.id,
-      email: userEmail,
-      nome: userNome,
+      workspace_id: workspaceId,
+      email,
+      nome,
       role: 'member',
       ativo: true
     })
 
-    logger.info('💾 Inserindo usuário no workspace:', { workspace_id: workspace.id, email: userEmail })
+    logger.info('Inserindo usuário no workspace', {
+      workspaceId,
+      email: email.substring(0, 3) + '***'
+    })
 
-    // Inserir usuário no workspace (primeira vez apenas)
     const { error: insertError } = await supabase
       .from('fp_usuarios')
       .insert({
@@ -294,51 +460,244 @@ export async function aceitarConvite(codigo: string, email?: string, nome?: stri
       })
 
     if (insertError) {
-      logger.error('❌ Erro no insert:', insertError)
-      return { success: false, error: 'Erro ao adicionar usuário ao workspace: ' + insertError.message }
+      logger.error('Erro ao inserir usuário no workspace', {
+        error: insertError,
+        workspaceId
+      })
+      return {
+        success: false,
+        error: 'Erro ao adicionar usuário ao workspace: ' + insertError.message,
+        details: insertError
+      }
     }
 
-    // Registrar log de auditoria
+    logger.info('Usuário adicionado ao workspace com sucesso', { workspaceId })
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    logger.error('Erro ao adicionar usuário ao workspace', { error })
+    return {
+      success: false,
+      error: 'Erro ao adicionar usuário ao workspace',
+      details: error
+    }
+  }
+}
+
+/**
+ * Registra log de auditoria para convite aceito
+ */
+async function registrarAuditoriaConvite(
+  workspaceId: string,
+  userId: string,
+  codigo: string,
+  email: string,
+  processoTipo: 'usuario_autenticado' | 'usuario_recem_criado'
+): Promise<void> {
+  try {
     await supabase
       .from('fp_audit_logs')
       .insert({
-        workspace_id: workspace.id,
+        workspace_id: workspaceId,
         user_id: userId,
         action: 'convite_usado',
         entity_type: 'convite',
         entity_id: null,
         metadata: {
-          codigo: codigoLimpo,
-          email: userEmail,
-          processamento: userData.user ? 'usuario_autenticado' : 'usuario_recem_criado',
+          codigo,
+          email,
+          processamento: processoTipo,
           timestamp: new Date().toISOString()
         }
       })
 
-    // Deletar convite após uso bem-sucedido (não pode ser reutilizado)
-    await desativarConvite(codigoLimpo)
-
-    logger.info('✅ Convite aceito com sucesso! Usuário adicionado ao workspace:', workspace.nome)
-    return { success: true }
-  } catch (err) {
-    logger.error('💥 Erro ao aceitar convite:', err)
-    return { success: false, error: 'Erro ao processar convite' }
+    logger.info('Auditoria de convite registrada', { workspaceId, userId })
+  } catch (error) {
+    // Apenas logar erro, não falhar operação por causa de auditoria
+    logger.error('Erro ao registrar auditoria de convite', { error, workspaceId })
   }
 }
 
-// Deletar convite permanentemente
-export async function desativarConvite(codigo: string): Promise<{
-  success: boolean
-  error?: string
-}> {
+// ============================================================================
+// FUNÇÃO PRINCIPAL
+// ============================================================================
+
+/**
+ * Aceita convite e adiciona usuário ao workspace
+ *
+ * Processa a aceitação de um convite, funcionando tanto para usuários já
+ * autenticados quanto para usuários recém-criados. Realiza validações de
+ * segurança, verifica se o usuário já pertence ao workspace e adiciona
+ * o usuário com role 'member'. Após aceitar, o convite é deletado.
+ *
+ * @param codigo - Código do convite (6 caracteres, será sanitizado)
+ * @param email - Email do usuário (obrigatório para usuários recém-criados)
+ * @param nome - Nome do usuário (obrigatório para usuários recém-criados)
+ * @returns Resultado da operação com sucesso ou erro detalhado
+ *
+ * @example
+ * ```typescript
+ * // Usuário autenticado
+ * const resultado = await aceitarConvite('ABC123')
+ *
+ * // Usuário recém-criado
+ * const resultado = await aceitarConvite('ABC123', 'user@email.com', 'João Silva')
+ *
+ * if (resultado.success) {
+ *   console.log('Convite aceito com sucesso')
+ * } else {
+ *   console.error(resultado.error)
+ * }
+ * ```
+ *
+ * @see {@link usarCodigoConvite} para validar convite antes de aceitar
+ * @see {@link criarLinkConvite} para criar convite
+ */
+export async function aceitarConvite(
+  codigo: string,
+  email?: string,
+  nome?: string
+): Promise<Resultado<void>> {
+  try {
+    logger.info('Iniciando aceitação de convite', {
+      codigo: codigo.substring(0, 3) + '***',
+      email: email?.substring(0, 3) + '***'
+    })
+
+    // 1. Sanitizar e validar código
+    const codigoLimpo = SanitizadorConvite.sanitizarCodigo(codigo)
+    const validacao = validarConviteCompleto('aceitar', { codigo: codigoLimpo })
+
+    if (!validacao.valid) {
+      return { success: false, error: validacao.error || 'Código inválido' }
+    }
+
+    // 2. Validar convite e obter workspace
+    const resultadoValidacao = await usarCodigoConvite(codigoLimpo)
+
+    if (!resultadoValidacao.success) {
+      return {
+        success: false,
+        error: resultadoValidacao.error
+      }
+    }
+
+    const { workspace } = resultadoValidacao.data
+    logger.info('Workspace do convite encontrado', { workspaceName: workspace.nome })
+
+    // 3. Buscar dados do usuário
+    const resultadoUsuario = await buscarUsuarioConvite(email, nome)
+
+    if (!resultadoUsuario.success) {
+      return resultadoUsuario
+    }
+
+    const { userId, userEmail, userNome } = resultadoUsuario.data
+    const processoTipo = email ? 'usuario_recem_criado' : 'usuario_autenticado'
+
+    // 4. Verificar se usuário já tem workspace
+    const resultadoWorkspace = await verificarWorkspaceUsuario(userId)
+
+    if (!resultadoWorkspace.success) {
+      return resultadoWorkspace
+    }
+
+    if (resultadoWorkspace.data) {
+      // Usuário já existe em fp_usuarios
+      if (resultadoWorkspace.data.workspaceId === workspace.id) {
+        logger.info('Usuário já está no workspace do convite', { userId, workspaceId: workspace.id })
+        return { success: true, data: undefined }
+      }
+
+      // Usuário está em workspace diferente - trigger SQL falhou
+      logger.error('Usuário criado em workspace incorreto - trigger SQL falhou', {
+        userId,
+        workspaceEsperado: workspace.id,
+        workspaceAtual: resultadoWorkspace.data.workspaceId,
+        codigoConvite: codigoLimpo
+      })
+
+      return {
+        success: false,
+        error: 'Erro ao processar convite. Entre em contato com o suporte.'
+      }
+    }
+
+    // 5. Adicionar usuário ao workspace
+    const resultadoAdicao = await adicionarUsuarioAoWorkspace(
+      userId,
+      workspace.id,
+      userEmail,
+      userNome
+    )
+
+    if (!resultadoAdicao.success) {
+      return resultadoAdicao
+    }
+
+    // 6. Registrar auditoria
+    await registrarAuditoriaConvite(
+      workspace.id,
+      userId,
+      codigoLimpo,
+      userEmail,
+      processoTipo
+    )
+
+    // 7. Deletar convite (não pode ser reutilizado)
+    await desativarConvite(codigoLimpo)
+
+    logger.info('Convite aceito com sucesso', {
+      workspaceName: workspace.nome,
+      userEmail: userEmail.substring(0, 3) + '***'
+    })
+
+    return { success: true, data: undefined }
+
+  } catch (error) {
+    logger.error('Erro ao aceitar convite', { error })
+    return {
+      success: false,
+      error: 'Erro ao processar convite',
+      details: error
+    }
+  }
+}
+
+/**
+ * Deleta convite permanentemente do sistema
+ *
+ * Remove permanentemente um convite da base de dados (hard delete).
+ * Apenas proprietários (owners) do workspace podem deletar convites.
+ * Esta ação é irreversível.
+ *
+ * @param codigo - Código do convite a ser deletado
+ * @returns Resultado da operação
+ *
+ * @example
+ * ```typescript
+ * const resultado = await desativarConvite('ABC123')
+ * if (resultado.success) {
+ *   console.log('Convite deletado permanentemente')
+ * } else {
+ *   console.error(resultado.error)
+ * }
+ * ```
+ */
+export async function desativarConvite(
+  codigo: string
+): Promise<Resultado<void>> {
   try {
     // Sanitizar código
     const codigoLimpo = SanitizadorConvite.sanitizarCodigo(codigo)
-    
+
     // Verificar se é owner antes de deletar
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) {
-      return { success: false, error: 'Usuário não autenticado' }
+      return {
+        success: false,
+        error: 'Usuário não autenticado'
+      }
     }
 
     // Verificar se o convite pertence a um workspace que o usuário é owner
@@ -349,14 +708,20 @@ export async function desativarConvite(codigo: string): Promise<{
       .single()
 
     if (!convite) {
-      return { success: false, error: 'Convite não encontrado' }
+      return {
+        success: false,
+        error: 'Convite não encontrado'
+      }
     }
 
     const isOwner = await validarOwnerWorkspace(supabase, convite.workspace_id, user.user.id)
     if (!isOwner) {
-      return { success: false, error: 'Apenas proprietários podem deletar convites' }
+      return {
+        success: false,
+        error: 'Apenas proprietários podem deletar convites'
+      }
     }
-    
+
     // Hard delete - remover permanentemente
     const { error, count } = await supabase
       .from('fp_convites_links')
@@ -364,35 +729,68 @@ export async function desativarConvite(codigo: string): Promise<{
       .eq('codigo', codigoLimpo)
 
     if (error) {
-      logger.error('Erro ao deletar convite:', error)
-      return { success: false, error: error.message }
+      logger.error('Erro ao deletar convite', { error })
+      return {
+        success: false,
+        error: error.message
+      }
     }
 
     // Log para debug
-    logger.info(`Convite ${codigoLimpo} deletado. Registros afetados:`, count)
+    logger.info('Convite deletado', { codigo: codigoLimpo, registrosAfetados: count })
 
-    return { success: true }
-  } catch (error: any) {
-    logger.error('Erro ao desativar convite:', error)
-    return { success: false, error: 'Erro ao desativar convite' }
+    return { success: true, data: undefined }
+  } catch (error) {
+    logger.error('Erro ao desativar convite', { error })
+    return {
+      success: false,
+      error: 'Erro ao desativar convite',
+      details: error
+    }
   }
 }
 
-// Remover usuário do workspace
-export async function removerUsuarioWorkspace(usuarioId: string, workspaceId: string): Promise<{
-  success: boolean
-  error?: string
-}> {
+/**
+ * Remove usuário de um workspace
+ *
+ * Apenas proprietários (owners) podem remover usuários do workspace.
+ * Não é possível remover o próprio proprietário do workspace.
+ * O usuário é marcado como inativo ao invés de ser deletado.
+ *
+ * @param usuarioId - UUID do usuário a ser removido
+ * @param workspaceId - UUID do workspace
+ * @returns Resultado da operação
+ *
+ * @example
+ * ```typescript
+ * const resultado = await removerUsuarioWorkspace('user-uuid', 'workspace-uuid')
+ * if (resultado.success) {
+ *   console.log('Usuário removido do workspace')
+ * } else {
+ *   console.error(resultado.error)
+ * }
+ * ```
+ */
+export async function removerUsuarioWorkspace(
+  usuarioId: string,
+  workspaceId: string
+): Promise<Resultado<void>> {
   try {
     // Verificar se quem remove é owner do workspace
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) {
-      return { success: false, error: 'Usuário não autenticado' }
+      return {
+        success: false,
+        error: 'Usuário não autenticado'
+      }
     }
 
     const isOwner = await validarOwnerWorkspace(supabase, workspaceId, user.user.id)
     if (!isOwner) {
-      return { success: false, error: 'Apenas proprietários podem remover usuários' }
+      return {
+        success: false,
+        error: 'Apenas proprietários podem remover usuários'
+      }
     }
 
     // Verificar se o usuário pertence ao workspace
@@ -404,7 +802,10 @@ export async function removerUsuarioWorkspace(usuarioId: string, workspaceId: st
       .single()
 
     if (userError || !targetUser) {
-      return { success: false, error: 'Usuário não encontrado no workspace' }
+      return {
+        success: false,
+        error: 'Usuário não encontrado no workspace'
+      }
     }
 
     // Não permitir auto-remoção se único owner
@@ -418,7 +819,10 @@ export async function removerUsuarioWorkspace(usuarioId: string, workspaceId: st
         .eq('ativo', true)
 
       if (owners && owners.length <= 1) {
-        return { success: false, error: 'Não é possível remover o último proprietário do workspace' }
+        return {
+          success: false,
+          error: 'Não é possível remover o último proprietário do workspace'
+        }
       }
     }
 
@@ -429,7 +833,12 @@ export async function removerUsuarioWorkspace(usuarioId: string, workspaceId: st
       .eq('id', usuarioId)
       .eq('workspace_id', workspaceId)
 
-    if (error) throw error
+    if (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
 
     // Registrar em fp_audit_logs
     await supabase
@@ -446,29 +855,63 @@ export async function removerUsuarioWorkspace(usuarioId: string, workspaceId: st
           timestamp: new Date().toISOString()
         }
       })
-    
-    return { success: true }
-  } catch (error: any) {
-    logger.error('Erro ao remover usuário:', error)
-    return { success: false, error: error.message || 'Erro ao remover usuário' }
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    logger.error('Erro ao remover usuário', { error })
+    return {
+      success: false,
+      error: 'Erro ao remover usuário',
+      details: error
+    }
   }
 }
 
-// Alterar role do usuário
-export async function alterarRoleUsuario(usuarioId: string, workspaceId: string, novaRole: 'owner' | 'member'): Promise<{
-  success: boolean
-  error?: string
-}> {
+/**
+ * Altera a role (permissão) de um usuário no workspace
+ *
+ * Apenas proprietários (owners) podem alterar roles. Permite promover
+ * um membro a proprietário ou rebaixar um proprietário a membro.
+ *
+ * @param usuarioId - UUID do usuário a ter a role alterada
+ * @param workspaceId - UUID do workspace
+ * @param novaRole - Nova role: 'owner' ou 'member'
+ * @returns Resultado da operação
+ *
+ * @example
+ * ```typescript
+ * // Promover usuário a owner
+ * const resultado = await alterarRoleUsuario('user-uuid', 'workspace-uuid', 'owner')
+ *
+ * // Rebaixar para member
+ * const resultado = await alterarRoleUsuario('user-uuid', 'workspace-uuid', 'member')
+ *
+ * if (resultado.success) {
+ *   console.log('Role alterada com sucesso')
+ * }
+ * ```
+ */
+export async function alterarRoleUsuario(
+  usuarioId: string,
+  workspaceId: string,
+  novaRole: 'owner' | 'member'
+): Promise<Resultado<void>> {
   try {
     // Verificar se quem altera é owner do workspace
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) {
-      return { success: false, error: 'Usuário não autenticado' }
+      return {
+        success: false,
+        error: 'Usuário não autenticado'
+      }
     }
 
     const isOwner = await validarOwnerWorkspace(supabase, workspaceId, user.user.id)
     if (!isOwner) {
-      return { success: false, error: 'Apenas proprietários podem alterar roles' }
+      return {
+        success: false,
+        error: 'Apenas proprietários podem alterar roles'
+      }
     }
 
     // Verificar se o usuário pertence ao workspace
@@ -480,11 +923,17 @@ export async function alterarRoleUsuario(usuarioId: string, workspaceId: string,
       .single()
 
     if (userError || !targetUser) {
-      return { success: false, error: 'Usuário não encontrado no workspace' }
+      return {
+        success: false,
+        error: 'Usuário não encontrado no workspace'
+      }
     }
 
     if (!targetUser.ativo) {
-      return { success: false, error: 'Usuário não está ativo no workspace' }
+      return {
+        success: false,
+        error: 'Usuário não está ativo no workspace'
+      }
     }
 
     // Se está rebaixando de owner para member, verificar se não é o único owner
@@ -497,7 +946,10 @@ export async function alterarRoleUsuario(usuarioId: string, workspaceId: string,
         .eq('ativo', true)
 
       if (owners && owners.length <= 1) {
-        return { success: false, error: 'Não é possível rebaixar o último proprietário do workspace' }
+        return {
+          success: false,
+          error: 'Não é possível rebaixar o último proprietário do workspace'
+        }
       }
     }
 
@@ -511,21 +963,29 @@ export async function alterarRoleUsuario(usuarioId: string, workspaceId: string,
         .eq('ativo', true)
 
       if (owners && owners.length <= 1) {
-        return { success: false, error: 'Você não pode se rebaixar sendo o único proprietário do workspace' }
+        return {
+          success: false,
+          error: 'Você não pode se rebaixar sendo o único proprietário do workspace'
+        }
       }
     }
 
     // Atualizar role do usuário
     const { error } = await supabase
       .from('fp_usuarios')
-      .update({ 
+      .update({
         role: novaRole,
         updated_at: new Date().toISOString()
       })
       .eq('id', usuarioId)
       .eq('workspace_id', workspaceId)
 
-    if (error) throw error
+    if (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
 
     // Registrar em fp_audit_logs
     await supabase
@@ -544,11 +1004,15 @@ export async function alterarRoleUsuario(usuarioId: string, workspaceId: string,
           timestamp: new Date().toISOString()
         }
       })
-    
-    return { success: true }
-  } catch (error: any) {
-    logger.error('Erro ao alterar role do usuário:', error)
-    return { success: false, error: error.message || 'Erro ao alterar role do usuário' }
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    logger.error('Erro ao alterar role do usuário', { error })
+    return {
+      success: false,
+      error: 'Erro ao alterar role do usuário',
+      details: error
+    }
   }
 }
 

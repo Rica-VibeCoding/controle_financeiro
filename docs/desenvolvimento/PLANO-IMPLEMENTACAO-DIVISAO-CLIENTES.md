@@ -1019,86 +1019,44 @@ export function DivisaoClientesForm({
 
 ### ✅ FASE 6: Testes Manuais
 **Objetivo:** Validar que tudo funciona antes de finalizar
+**STATUS:** ✅ CONCLUÍDA
 
-#### Tarefa 6.1: Teste - Criar transação SEM divisão
-- [ ] Abrir modal de lançamento
-- [ ] Preencher: Tipo=Despesa, Valor=1000, Conta, Data
-- [ ] Ir na aba Relacionamento
-- [ ] Selecionar 1 cliente normal (não usar divisão)
-- [ ] Salvar
-- [ ] Verificar no banco:
-  ```sql
-  SELECT id, valor, contato_id FROM fp_transacoes
-  WHERE descricao LIKE '%teste%'
-  ORDER BY created_at DESC LIMIT 1;
-  ```
-- [ ] Confirmar: `contato_id` preenchido
+#### Tarefa 6.1: Teste - Criar transação SEM divisão ✅
+- [x] Testado manualmente no navegador
+- [x] Transação criada com cliente único
+- [x] Campo `cliente_id` preenchido corretamente
 
-#### Tarefa 6.2: Teste - Criar transação COM divisão
-- [ ] Abrir modal de lançamento
-- [ ] Preencher: Tipo=Despesa, Valor=10000, Conta, Data, Descrição="Teste Divisão"
-- [ ] Ir na aba Relacionamento
-- [ ] Clicar em "Dividir entre múltiplos clientes"
-- [ ] Adicionar:
-  - Cliente A: R$ 5000
-  - Cliente B: R$ 3000
-  - Cliente C: R$ 2000
-- [ ] Verificar que status mostra "✓" (diferença = 0)
-- [ ] Salvar
-- [ ] Verificar no banco:
-  ```sql
-  -- Buscar transação
-  SELECT id, valor, contato_id FROM fp_transacoes
-  WHERE descricao = 'Teste Divisão';
+#### Tarefa 6.2: Teste - Criar transação COM divisão ✅
+- [x] Transação criada: R$ 3.000,00 dividida entre 3 clientes
+- [x] Divisões validadas no banco:
+  - Suelen e Osmar: R$ 1.000,00
+  - Luiz Carlos: R$ 1.000,00
+  - Maurício: R$ 1.000,00
+- [x] Confirmado: `cliente_id` = NULL na transação principal
+- [x] Confirmado: 3 registros em `fp_transacoes_clientes`
+- [x] Soma correta: R$ 3.000,00
 
-  -- Buscar divisões (usar ID da query acima)
-  SELECT contato_id, valor_alocado
-  FROM fp_transacoes_clientes
-  WHERE transacao_id = 'ID_AQUI';
-  ```
-- [ ] Confirmar:
-  - `contato_id` = NULL na transação
-  - 3 registros em fp_transacoes_clientes
-  - Soma = 10000
+#### Tarefa 6.3: Teste - Editar transação com divisão ✅
+- [x] Divisões carregadas corretamente ao editar
+- [x] Alterações de valores funcionando
+- [x] Dados atualizados no banco
 
-#### Tarefa 6.3: Teste - Editar transação com divisão
-- [ ] Abrir transação "Teste Divisão" para editar
-- [ ] Verificar que carregou as 3 divisões
-- [ ] Alterar valor de Cliente A para R$ 6000
-- [ ] Alterar valor de Cliente C para R$ 1000
-- [ ] Salvar
-- [ ] Verificar no banco se valores foram atualizados
+#### Tarefa 6.4: Teste - Remover divisão (voltar para cliente único) ✅
+- [x] Botão "Cancelar divisão" funcionando
+- [x] Transação voltou para modo cliente único
+- [x] Divisões removidas do banco
 
-#### Tarefa 6.4: Teste - Remover divisão (voltar para cliente único)
-- [ ] Abrir transação "Teste Divisão"
-- [ ] Clicar em "Cancelar divisão"
-- [ ] Selecionar apenas 1 cliente
-- [ ] Salvar
-- [ ] Verificar no banco:
-  ```sql
-  SELECT contato_id FROM fp_transacoes WHERE descricao = 'Teste Divisão';
-  SELECT COUNT(*) FROM fp_transacoes_clientes WHERE transacao_id = 'ID_AQUI';
-  ```
-- [ ] Confirmar:
-  - `contato_id` preenchido
-  - 0 registros em fp_transacoes_clientes
+#### Tarefa 6.5: Teste - Validação de valores ✅
+- [x] Validação de soma incorreta funcionando
+- [x] Mensagem de erro exibida corretamente
+- [x] Impediu salvar com valores divergentes
 
-#### Tarefa 6.5: Teste - Validação de valores
-- [ ] Abrir modal de lançamento
-- [ ] Valor total: R$ 1000
-- [ ] Ativar divisão
-- [ ] Adicionar:
-  - Cliente A: R$ 600
-  - Cliente B: R$ 300
-- [ ] Tentar salvar
-- [ ] Verificar que mostra erro "Soma deve ser igual ao valor total"
+#### Tarefa 6.6: Teste - Validação de cliente vazio ✅
+- [x] Validação de campo vazio funcionando
+- [x] Mensagem de erro exibida
+- [x] Impediu salvar sem selecionar cliente
 
-#### Tarefa 6.6: Teste - Validação de cliente vazio
-- [ ] Ativar divisão
-- [ ] Adicionar linha sem selecionar cliente
-- [ ] Valor: R$ 1000
-- [ ] Tentar salvar
-- [ ] Verificar erro "Selecione um cliente para cada divisão"
+**RESULTADO:** Todos os testes manuais passaram sem erros ✅
 
 ---
 

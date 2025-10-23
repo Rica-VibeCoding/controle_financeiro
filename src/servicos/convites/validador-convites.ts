@@ -16,6 +16,20 @@ interface ValidationResult {
 
 /**
  * Classe para gerenciar rate limiting de convites
+ *
+ * Controla o número de convites que podem ser criados por workspace em um
+ * período de 24 horas. Limite: 50 convites/dia (desenvolvimento) ou 10 (produção).
+ * Usa localStorage para persistir dados entre sessões.
+ *
+ * @example
+ * ```typescript
+ * // Verificar se pode criar convite
+ * const resultado = ConviteRateLimiter.podecriarConvite('workspace-uuid')
+ * if (resultado.valid) {
+ *   // Criar convite
+ *   ConviteRateLimiter.registrarConvite('workspace-uuid')
+ * }
+ * ```
  */
 export class ConviteRateLimiter {
   private static STORAGE_KEY = 'fp_convites_rate_limit'
@@ -121,6 +135,24 @@ export class ConviteRateLimiter {
 
 /**
  * Validador de código de convite
+ *
+ * Gerencia validação, geração e formatação de códigos de convite.
+ * Códigos são compostos por 6 caracteres alfanuméricos maiúsculos (A-Z, 0-9).
+ *
+ * @example
+ * ```typescript
+ * // Gerar código
+ * const codigo = ValidadorCodigoConvite.gerarCodigo() // "ABC123"
+ *
+ * // Validar formato
+ * const validacao = ValidadorCodigoConvite.validarFormato(codigo)
+ * if (validacao.valid) {
+ *   console.log('Código válido')
+ * }
+ *
+ * // Formatar para exibição
+ * const formatado = ValidadorCodigoConvite.formatarCodigo('ABC123') // "ABC-123"
+ * ```
  */
 export class ValidadorCodigoConvite {
   // Formato: 6 caracteres alfanuméricos maiúsculos
@@ -182,6 +214,24 @@ export class ValidadorCodigoConvite {
 
 /**
  * Validador de dados de convite
+ *
+ * Valida dados relacionados a convites, incluindo workspace ID,
+ * expiração de convites e dados de aceitação.
+ *
+ * @example
+ * ```typescript
+ * // Validar criação de convite
+ * const validacao = ValidadorDadosConvite.validarCriacao('workspace-uuid')
+ * if (!validacao.valid) {
+ *   console.error(validacao.error)
+ * }
+ *
+ * // Validar expiração
+ * const expiracao = ValidadorDadosConvite.validarExpiracao('2025-12-31')
+ * if (!expiracao.valid) {
+ *   console.log('Convite expirado')
+ * }
+ * ```
  */
 export class ValidadorDadosConvite {
   /**
@@ -249,7 +299,24 @@ export class ValidadorDadosConvite {
 }
 
 /**
- * Sanitizador de dados
+ * Sanitizador de dados de convites
+ *
+ * Remove caracteres perigosos e normaliza dados de entrada para
+ * prevenir injeção de código e garantir segurança dos dados.
+ *
+ * @example
+ * ```typescript
+ * // Sanitizar código
+ * const codigoLimpo = SanitizadorConvite.sanitizarCodigo(' abc-123 ') // "ABC123"
+ *
+ * // Sanitizar dados de usuário
+ * const dadosLimpos = SanitizadorConvite.sanitizarDadosUsuario({
+ *   id: 'uuid',
+ *   nome: '<script>alert("xss")</script>João',
+ *   role: 'admin'
+ * })
+ * // { id: 'uuid', nome: 'João', role: 'member' }
+ * ```
  */
 export class SanitizadorConvite {
   /**

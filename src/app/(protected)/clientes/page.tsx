@@ -136,13 +136,13 @@ export default function ClientesPage() {
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="border-b bg-gray-50/50">
-                <TableHead className="w-[300px] font-semibold sticky left-0 bg-gray-50/50 z-20">
+                <TableHead className="min-w-[200px] font-semibold sticky left-0 bg-gray-50/50 z-20">
                   Nome
                 </TableHead>
-                <TableHead className="w-[100px] font-semibold text-center">
+                <TableHead className="w-[120px] font-semibold text-center hidden sm:table-cell">
                   Status
                 </TableHead>
-                <TableHead className="w-[150px] font-semibold text-center">
+                <TableHead className="w-[130px] font-semibold text-center">
                   Ações
                 </TableHead>
               </TableRow>
@@ -162,55 +162,58 @@ export default function ClientesPage() {
                 </TableRow>
               ) : (
                 clientes.map((clienteItem) => (
-                  <TableRow key={clienteItem.id} className="border-b hover:bg-gray-50/50">
+                  <TableRow key={clienteItem.id} className="hover:bg-gray-50/50">
                     <TableCell className="font-medium sticky left-0 bg-white z-10">
                       {clienteItem.nome}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center hidden sm:table-cell">
                       <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex px-2 py-1 text-xs rounded-full ${
                           clienteItem.ativo
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {clienteItem.ativo ? '✓ Ativo' : '✗ Inativo'}
+                        {clienteItem.ativo ? 'Ativo' : 'Inativo'}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <TableCell>
+                      <div className="flex gap-1 justify-center">
                         {/* Botão Editar */}
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => cliente.abrir(clienteItem.id)}
-                          title="Editar"
+                          title="Editar cliente"
+                          className="h-8 w-8 p-0"
                         >
-                          <Icone name="pencil" className="w-4 h-4" />
+                          <Icone name="pencil" className="w-4 h-4" aria-hidden="true" />
                         </Button>
 
                         {/* Botão Ativar/Desativar */}
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleAlternarStatus(clienteItem.id, clienteItem.ativo)}
-                          title={clienteItem.ativo ? 'Desativar' : 'Ativar'}
+                          title={clienteItem.ativo ? 'Desativar cliente' : 'Ativar cliente'}
+                          className="h-8 w-8 p-0"
                         >
                           <Icone
-                            name={clienteItem.ativo ? 'check' : 'user-x'}
+                            name={clienteItem.ativo ? 'user-x' : 'user-plus'}
                             className="w-4 h-4"
+                            aria-hidden="true"
                           />
                         </Button>
 
                         {/* Botão Excluir */}
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleExcluir(clienteItem.id, clienteItem.nome)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Excluir"
+                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                          title="Excluir cliente"
                         >
-                          <Icone name="trash-2" className="w-4 h-4" />
+                          <Icone name="trash-2" className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>

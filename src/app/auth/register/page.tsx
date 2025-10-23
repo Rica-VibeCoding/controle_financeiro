@@ -60,7 +60,6 @@ export default function RegisterPage() {
         })
         // 🔒 IMPORTANTE: NÃO setar workspaceName quando é convite
         // Isso garante que workspace_name seja null no signUp
-        // setWorkspaceName(resultado.data.workspace.nome) ❌ REMOVIDO - causava bug
       }
     } catch (error) {
       logger.error('Erro na validação de convite:', error)

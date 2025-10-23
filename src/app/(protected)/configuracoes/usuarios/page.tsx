@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contextos/auth-contexto'
 import { supabaseClient } from '@/servicos/supabase/auth-client'
-import { criarLinkConvite, desativarConvite, removerUsuarioWorkspace, alterarRoleUsuario } from '@/servicos/supabase/convites-simples'
+import { criarLinkConvite, deletarConvitePermanentemente, removerUsuarioWorkspace, alterarRoleUsuario } from '@/servicos/supabase/convites-simples'
+import { MENSAGENS_SUCESSO } from '@/constantes/mensagens-convites'
 import { atualizarPermissoesUsuario } from '@/servicos/supabase/permissoes-service'
 import { ModalPermissoes } from '@/componentes/usuarios/modal-permissoes'
 import type { PermissoesUsuario, ResultadoPermissoes } from '@/tipos/permissoes'
@@ -124,7 +125,7 @@ export default function UsuariosPage() {
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(resultado.data.link)
-          sucesso('Convite criado!', `Link copiado para área de transferência. Código: ${resultado.data.codigo}`)
+          sucesso(MENSAGENS_SUCESSO.CONVITE_CRIADO, `${MENSAGENS_SUCESSO.CONVITE_CRIADO_LINK_COPIADO}. Código: ${resultado.data.codigo}`)
         } else {
           // Fallback para ambientes não seguros
           const textArea = document.createElement('textarea')
@@ -133,11 +134,11 @@ export default function UsuariosPage() {
           textArea.select()
           document.execCommand('copy')
           document.body.removeChild(textArea)
-          sucesso('Convite criado!', `Link copiado: ${resultado.data.link}`)
+          sucesso(MENSAGENS_SUCESSO.CONVITE_CRIADO, `Link copiado: ${resultado.data.link}`)
         }
       } catch (clipboardError) {
         console.warn('Erro ao copiar para clipboard:', clipboardError)
-        sucesso('Convite criado!', `Copie o link: ${resultado.data.link}`)
+        sucesso(MENSAGENS_SUCESSO.CONVITE_CRIADO, `Copie o link: ${resultado.data.link}`)
       }
 
       // Recarregar lista de convites
@@ -169,8 +170,8 @@ export default function UsuariosPage() {
       cancelText: 'Cancelar',
       onConfirm: async () => {
         try {
-          const resultado = await desativarConvite(codigo)
-          
+          const resultado = await deletarConvitePermanentemente(codigo)
+
           if (resultado.success) {
             // Remover imediatamente da lista local (otimista)
             setConvites(convitesAtuais => convitesAtuais.filter(c => c.codigo !== codigo))

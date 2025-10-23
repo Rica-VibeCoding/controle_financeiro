@@ -169,10 +169,28 @@ export function ModalImportacaoCSV({
         if (templateSelecionado?.id === 'conta_simples' && workspace) {
           const linhaOriginal = dadosProcessados[i] as any
 
+          logger.info(`📄 [MODAL CSV] Processando linha ${i + 1}`, {
+            linhaIndex: i,
+            descricao: transacao.descricao,
+            colunasDisponiveis: Object.keys(linhaOriginal),
+            centroCustoRaw: linhaOriginal['Centro de Custo'],
+            centroCustoAlternativa1: linhaOriginal['Centro de custo'],
+            centroCustoAlternativa2: linhaOriginal['centro de custo'],
+            categoriaRaw: linhaOriginal['Categoria']
+          })
+
           // Buscar centro de custo direto do CSV (já vem preenchido!)
           const centroCustoBanco = linhaOriginal['Centro de Custo'] ||
                                    linhaOriginal['Centro de custo'] ||
                                    linhaOriginal['centro de custo'] || ''
+
+          logger.info('📊 [MODAL CSV] Centro de Custo extraído', {
+            linhaIndex: i,
+            centroCustoBanco,
+            centroCustoBancoLength: centroCustoBanco.length,
+            centroCustoBancoVazio: centroCustoBanco === '',
+            centroCustoBancoChars: centroCustoBanco ? String(centroCustoBanco).split('').map(c => `${c}(${c.charCodeAt(0)})`) : []
+          })
 
           const classificacaoContaSimples = await classificarTransacaoContaSimples(
             {
@@ -188,16 +206,27 @@ export function ModalImportacaoCSV({
           if (classificacaoContaSimples.categoria_id || classificacaoContaSimples.centro_custo_id || classificacaoContaSimples.contato_id) {
             const categoriaFinal = classificacaoContaSimples.categoria_id || classificacao?.categoria_id || ''
             const formaPagamentoFinal = classificacao?.forma_pagamento_id || ''
+            const contatoFinal = classificacaoContaSimples.contato_id ?? null
 
-            // Só criar classificação se tiver ao menos categoria OU forma de pagamento
-            if (categoriaFinal || formaPagamentoFinal) {
+            // Criar classificação se tiver ao menos categoria, forma de pagamento OU contato (cliente)
+            if (categoriaFinal || formaPagamentoFinal || contatoFinal) {
               classificacao = {
                 categoria_id: categoriaFinal,
                 subcategoria_id: classificacao?.subcategoria_id ?? null,
                 forma_pagamento_id: formaPagamentoFinal,
                 centro_custo_id: classificacaoContaSimples.centro_custo_id ?? null,
-                contato_id: classificacaoContaSimples.contato_id ?? null // NOVO: Cliente vinculado
+                contato_id: contatoFinal // SEMPRE incluir se existir
               }
+
+              logger.info('✅ [MODAL CSV] Classificação criada', {
+                linhaIndex: i,
+                descricao: transacao.descricao,
+                categoria_id: categoriaFinal || null,
+                contato_id: contatoFinal,
+                temCategoria: !!categoriaFinal,
+                temFormaPagamento: !!formaPagamentoFinal,
+                temContato: !!contatoFinal
+              })
             }
           }
         }

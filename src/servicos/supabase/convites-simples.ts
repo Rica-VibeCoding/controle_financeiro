@@ -8,6 +8,14 @@ import {
 } from '../convites/validador-convites'
 import { validarOwnerWorkspace } from './middleware-workspace'
 import { logger } from '@/utilitarios/logger'
+import { CONVITES_CONFIG } from '@/constantes/convites'
+import {
+  ERROS_AUTENTICACAO,
+  ERROS_PERMISSOES,
+  ERROS_CONVITE,
+  ERROS_WORKSPACE,
+  ERROS_USUARIO,
+} from '@/constantes/mensagens-convites'
 import type {
   Resultado,
   ResultadoCriacaoConvite,
@@ -125,7 +133,7 @@ export async function criarLinkConvite(
     if (!validacao.valid) {
       return {
         success: false,
-        error: validacao.error || 'Dados inválidos'
+        error: validacao.error || ERROS_CONVITE.DADOS_INVALIDOS
       }
     }
 
@@ -134,7 +142,7 @@ export async function criarLinkConvite(
     if (!user.user) {
       return {
         success: false,
-        error: 'Usuário não autenticado'
+        error: ERROS_AUTENTICACAO.USUARIO_NAO_AUTENTICADO
       }
     }
 
@@ -142,7 +150,7 @@ export async function criarLinkConvite(
     if (!isOwner) {
       return {
         success: false,
-        error: 'Apenas proprietários podem criar convites'
+        error: ERROS_PERMISSOES.APENAS_OWNER_CRIAR
       }
     }
 
@@ -151,14 +159,14 @@ export async function criarLinkConvite(
     if (!rateLimitCheck.valid) {
       return {
         success: false,
-        error: rateLimitCheck.error || 'Limite de convites excedido'
+        error: rateLimitCheck.error || ERROS_CONVITE.LIMITE_EXCEDIDO
       }
     }
 
     // Gerar código válido
     const codigo = ValidadorCodigoConvite.gerarCodigo()
     const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7) // 7 dias
+    expiresAt.setDate(expiresAt.getDate() + CONVITES_CONFIG.EXPIRACAO_DIAS)
 
     const { error } = await supabase
       .from('fp_convites_links')
@@ -194,7 +202,7 @@ export async function criarLinkConvite(
     logger.error('Erro ao criar convite', { error, workspaceId })
     return {
       success: false,
-      error: 'Erro ao criar convite',
+      error: ERROS_CONVITE.ERRO_CRIAR,
       details: error
     }
   }
@@ -233,7 +241,7 @@ export async function usarCodigoConvite(
     if (!validacaoCodigo.valid) {
       return {
         success: false,
-        error: validacaoCodigo.error || 'Código inválido'
+        error: validacaoCodigo.error || ERROS_CONVITE.CODIGO_INVALIDO
       }
     }
 
@@ -251,7 +259,7 @@ export async function usarCodigoConvite(
     if (!convite || conviteError) {
       return {
         success: false,
-        error: 'Código inválido ou expirado'
+        error: ERROS_CONVITE.CODIGO_INVALIDO_OU_EXPIRADO
       }
     }
 
@@ -265,7 +273,7 @@ export async function usarCodigoConvite(
     if (!workspace) {
       return {
         success: false,
-        error: 'Workspace não encontrado'
+        error: ERROS_WORKSPACE.NAO_ENCONTRADO
       }
     }
 
@@ -283,7 +291,7 @@ export async function usarCodigoConvite(
     if (!validacaoExpiracao.valid) {
       return {
         success: false,
-        error: validacaoExpiracao.error || 'Convite expirado'
+        error: validacaoExpiracao.error || ERROS_CONVITE.CONVITE_EXPIRADO
       }
     }
 
@@ -302,7 +310,7 @@ export async function usarCodigoConvite(
     logger.error('Erro ao validar código', { error, codigo })
     return {
       success: false,
-      error: 'Erro ao validar código',
+      error: ERROS_CONVITE.ERRO_VALIDAR,
       details: error
     }
   }
@@ -343,7 +351,7 @@ async function buscarUsuarioConvite(
     if (!email) {
       return {
         success: false,
-        error: 'Usuário não autenticado e email não fornecido'
+        error: ERROS_AUTENTICACAO.EMAIL_NAO_FORNECIDO
       }
     }
 
@@ -357,7 +365,7 @@ async function buscarUsuarioConvite(
       logger.warn('Usuário não encontrado para email', { email })
       return {
         success: false,
-        error: 'Usuário não encontrado. Tente novamente após confirmar o email.'
+        error: ERROS_AUTENTICACAO.USUARIO_NAO_ENCONTRADO
       }
     }
 
@@ -375,7 +383,7 @@ async function buscarUsuarioConvite(
     logger.error('Erro ao buscar usuário para convite', { error, email })
     return {
       success: false,
-      error: 'Erro ao buscar usuário',
+      error: ERROS_USUARIO.ERRO_BUSCAR,
       details: error
     }
   }
@@ -420,7 +428,7 @@ async function verificarWorkspaceUsuario(
     logger.error('Erro ao verificar workspace do usuário', { error, userId })
     return {
       success: false,
-      error: 'Erro ao verificar workspace do usuário',
+      error: ERROS_WORKSPACE.ERRO_VERIFICAR,
       details: error
     }
   }
@@ -466,7 +474,7 @@ async function adicionarUsuarioAoWorkspace(
       })
       return {
         success: false,
-        error: 'Erro ao adicionar usuário ao workspace: ' + insertError.message,
+        error: ERROS_USUARIO.ERRO_ADICIONAR + ': ' + insertError.message,
         details: insertError
       }
     }
@@ -478,7 +486,7 @@ async function adicionarUsuarioAoWorkspace(
     logger.error('Erro ao adicionar usuário ao workspace', { error })
     return {
       success: false,
-      error: 'Erro ao adicionar usuário ao workspace',
+      error: ERROS_USUARIO.ERRO_ADICIONAR,
       details: error
     }
   }
@@ -569,7 +577,7 @@ export async function aceitarConvite(
     const validacao = validarConviteCompleto('aceitar', { codigo: codigoLimpo })
 
     if (!validacao.valid) {
-      return { success: false, error: validacao.error || 'Código inválido' }
+      return { success: false, error: validacao.error || ERROS_CONVITE.CODIGO_INVALIDO }
     }
 
     // 2. Validar convite e obter workspace
@@ -619,7 +627,7 @@ export async function aceitarConvite(
 
       return {
         success: false,
-        error: 'Erro ao processar convite. Entre em contato com o suporte.'
+        error: ERROS_CONVITE.ERRO_PROCESSAR_SUPORTE
       }
     }
 
@@ -645,7 +653,7 @@ export async function aceitarConvite(
     )
 
     // 7. Deletar convite (não pode ser reutilizado)
-    await desativarConvite(codigoLimpo)
+    await deletarConvitePermanentemente(codigoLimpo)
 
     logger.info('Convite aceito com sucesso', {
       workspaceName: workspace.nome,
@@ -658,7 +666,7 @@ export async function aceitarConvite(
     logger.error('Erro ao aceitar convite', { error })
     return {
       success: false,
-      error: 'Erro ao processar convite',
+      error: ERROS_CONVITE.ERRO_PROCESSAR,
       details: error
     }
   }
@@ -676,7 +684,7 @@ export async function aceitarConvite(
  *
  * @example
  * ```typescript
- * const resultado = await desativarConvite('ABC123')
+ * const resultado = await deletarConvitePermanentemente('ABC123')
  * if (resultado.success) {
  *   console.log('Convite deletado permanentemente')
  * } else {
@@ -684,7 +692,7 @@ export async function aceitarConvite(
  * }
  * ```
  */
-export async function desativarConvite(
+export async function deletarConvitePermanentemente(
   codigo: string
 ): Promise<Resultado<void>> {
   try {
@@ -696,7 +704,7 @@ export async function desativarConvite(
     if (!user.user) {
       return {
         success: false,
-        error: 'Usuário não autenticado'
+        error: ERROS_AUTENTICACAO.USUARIO_NAO_AUTENTICADO
       }
     }
 
@@ -710,7 +718,7 @@ export async function desativarConvite(
     if (!convite) {
       return {
         success: false,
-        error: 'Convite não encontrado'
+        error: ERROS_CONVITE.CONVITE_NAO_ENCONTRADO
       }
     }
 
@@ -718,7 +726,7 @@ export async function desativarConvite(
     if (!isOwner) {
       return {
         success: false,
-        error: 'Apenas proprietários podem deletar convites'
+        error: ERROS_PERMISSOES.APENAS_OWNER_DELETAR
       }
     }
 
@@ -744,11 +752,16 @@ export async function desativarConvite(
     logger.error('Erro ao desativar convite', { error })
     return {
       success: false,
-      error: 'Erro ao desativar convite',
+      error: ERROS_CONVITE.ERRO_DESATIVAR,
       details: error
     }
   }
 }
+
+/**
+ * @deprecated Use deletarConvitePermanentemente() - Nome mais descritivo da ação irreversível
+ */
+export const desativarConvite = deletarConvitePermanentemente
 
 /**
  * Remove usuário de um workspace
@@ -781,7 +794,7 @@ export async function removerUsuarioWorkspace(
     if (!user.user) {
       return {
         success: false,
-        error: 'Usuário não autenticado'
+        error: ERROS_AUTENTICACAO.USUARIO_NAO_AUTENTICADO
       }
     }
 
@@ -789,7 +802,7 @@ export async function removerUsuarioWorkspace(
     if (!isOwner) {
       return {
         success: false,
-        error: 'Apenas proprietários podem remover usuários'
+        error: ERROS_PERMISSOES.APENAS_OWNER_REMOVER
       }
     }
 
@@ -804,7 +817,7 @@ export async function removerUsuarioWorkspace(
     if (userError || !targetUser) {
       return {
         success: false,
-        error: 'Usuário não encontrado no workspace'
+        error: ERROS_USUARIO.NAO_ENCONTRADO_WORKSPACE
       }
     }
 
@@ -821,7 +834,7 @@ export async function removerUsuarioWorkspace(
       if (owners && owners.length <= 1) {
         return {
           success: false,
-          error: 'Não é possível remover o último proprietário do workspace'
+          error: ERROS_WORKSPACE.ULTIMO_PROPRIETARIO
         }
       }
     }
@@ -861,7 +874,7 @@ export async function removerUsuarioWorkspace(
     logger.error('Erro ao remover usuário', { error })
     return {
       success: false,
-      error: 'Erro ao remover usuário',
+      error: ERROS_USUARIO.ERRO_REMOVER,
       details: error
     }
   }
@@ -902,7 +915,7 @@ export async function alterarRoleUsuario(
     if (!user.user) {
       return {
         success: false,
-        error: 'Usuário não autenticado'
+        error: ERROS_AUTENTICACAO.USUARIO_NAO_AUTENTICADO
       }
     }
 
@@ -910,7 +923,7 @@ export async function alterarRoleUsuario(
     if (!isOwner) {
       return {
         success: false,
-        error: 'Apenas proprietários podem alterar roles'
+        error: ERROS_PERMISSOES.APENAS_OWNER_ALTERAR_ROLE
       }
     }
 
@@ -925,14 +938,14 @@ export async function alterarRoleUsuario(
     if (userError || !targetUser) {
       return {
         success: false,
-        error: 'Usuário não encontrado no workspace'
+        error: ERROS_USUARIO.NAO_ENCONTRADO_WORKSPACE
       }
     }
 
     if (!targetUser.ativo) {
       return {
         success: false,
-        error: 'Usuário não está ativo no workspace'
+        error: ERROS_USUARIO.NAO_ATIVO
       }
     }
 
@@ -948,7 +961,7 @@ export async function alterarRoleUsuario(
       if (owners && owners.length <= 1) {
         return {
           success: false,
-          error: 'Não é possível rebaixar o último proprietário do workspace'
+          error: ERROS_WORKSPACE.ULTIMO_PROPRIETARIO_REBAIXAR
         }
       }
     }
@@ -965,7 +978,7 @@ export async function alterarRoleUsuario(
       if (owners && owners.length <= 1) {
         return {
           success: false,
-          error: 'Você não pode se rebaixar sendo o único proprietário do workspace'
+          error: ERROS_WORKSPACE.AUTO_REBAIXAMENTO
         }
       }
     }
@@ -1010,7 +1023,7 @@ export async function alterarRoleUsuario(
     logger.error('Erro ao alterar role do usuário', { error })
     return {
       success: false,
-      error: 'Erro ao alterar role do usuário',
+      error: ERROS_USUARIO.ERRO_ALTERAR_ROLE,
       details: error
     }
   }

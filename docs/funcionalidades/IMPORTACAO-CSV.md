@@ -19,9 +19,10 @@
 ### ✅ Conta Simples (Conta Empresarial)
 - Ignora automaticamente cabeçalho empresarial (7 linhas)
 - Suporta colunas Crédito/Débito separadas
-- **Vinculação automática de clientes via campo "Centro de Custo"**
-- Match inteligente de categorias do banco
+- **Vinculação automática de clientes via campo "Centro de Custo"** (independente de categoria)
+- Match inteligente de categorias do banco (opcional)
 - Precisão temporal com hora/minuto/segundo
+- Cliente vinculado mesmo sem categoria classificada
 
 ### ✅ Cartões Genéricos
 - Formato padrão: Data, Descrição, Valor

@@ -24,6 +24,29 @@ export function validarValor(valor: number): boolean {
 }
 
 /**
+ * Validar formato UUID v4 (padrão Supabase/PostgreSQL)
+ * Formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12 caracteres hexadecimais)
+ *
+ * @param uuid - String UUID a ser validada
+ * @returns true se UUID válido, false caso contrário
+ *
+ * @example
+ * ```typescript
+ * validarUUID('550e8400-e29b-41d4-a716-446655440000') // true
+ * validarUUID('invalid-uuid') // false
+ * validarUUID('') // false
+ * ```
+ */
+export function validarUUID(uuid: string): boolean {
+  if (!uuid || typeof uuid !== 'string') {
+    return false
+  }
+
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(uuid)
+}
+
+/**
  * Validar formato de data ISO (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss)
  * IMPORTANTE: Aceita formato com hora para compatibilidade com importação CSV
  */

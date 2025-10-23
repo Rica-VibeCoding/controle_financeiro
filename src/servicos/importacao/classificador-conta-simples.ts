@@ -4,6 +4,7 @@
  */
 
 import { getSupabaseClient } from '@/servicos/supabase/cliente'
+import { logger } from '@/utilitarios/logger'
 
 /**
  * Buscar categoria por nome aproximado
@@ -96,21 +97,46 @@ export async function buscarClientePorNome(
 ): Promise<string | null> {
   const supabase = getSupabaseClient()
 
+  logger.info('🔍 [BUSCA CLIENTE] Iniciando busca', {
+    nomeCentroCusto,
+    nomeCentroCustoLength: nomeCentroCusto.length,
+    nomeCentroCustoChars: Array.from(nomeCentroCusto).map(c => c.charCodeAt(0)),
+    workspaceId
+  })
+
   // Buscar todos os clientes ativos
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('r_contatos')
     .select('id, nome')
     .eq('workspace_id', workspaceId)
     .eq('tipo_pessoa', 'cliente')
     .eq('ativo', true)
 
-  if (!data) return null
+  if (error) {
+    logger.error('❌ [BUSCA CLIENTE] Erro no Supabase', error)
+    return null
+  }
+
+  if (!data) {
+    logger.warn('⚠️ [BUSCA CLIENTE] Nenhum cliente encontrado no workspace')
+    return null
+  }
+
+  logger.info(`📋 [BUSCA CLIENTE] ${data.length} clientes no workspace`, {
+    clientes: data.map(c => c.nome)
+  })
 
   // Normalizar nome do centro de custo
   const nomeNormalizado = nomeCentroCusto
+    .trim() // Remover espaços extras
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+
+  logger.info('🔤 [BUSCA CLIENTE] Nome normalizado', {
+    original: nomeCentroCusto,
+    normalizado: nomeNormalizado
+  })
 
   // Buscar match por nome (ordenar por tamanho DESC para pegar o mais específico)
   const matches = data
@@ -120,14 +146,37 @@ export async function buscarClientePorNome(
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
 
-      return (
-        nomeClienteNormalizado.includes(nomeNormalizado) ||
-        nomeNormalizado.includes(nomeClienteNormalizado)
-      )
+      const matchIncludes = nomeClienteNormalizado.includes(nomeNormalizado)
+      const matchReverso = nomeNormalizado.includes(nomeClienteNormalizado)
+
+      logger.info('🔎 [BUSCA CLIENTE] Testando match', {
+        cliente: cliente.nome,
+        clienteNormalizado: nomeClienteNormalizado,
+        centroCustoNormalizado: nomeNormalizado,
+        matchIncludes,
+        matchReverso,
+        resultado: matchIncludes || matchReverso
+      })
+
+      return matchIncludes || matchReverso
     })
     .sort((a, b) => b.nome.length - a.nome.length) // Mais específico primeiro
 
-  return matches[0]?.id || null
+  if (matches.length > 0) {
+    logger.info('✅ [BUSCA CLIENTE] Match encontrado', {
+      total: matches.length,
+      selecionado: matches[0].nome,
+      id: matches[0].id
+    })
+    return matches[0].id
+  } else {
+    logger.warn('⚠️ [BUSCA CLIENTE] Nenhum match encontrado', {
+      centroCusto: nomeCentroCusto,
+      normalizado: nomeNormalizado,
+      clientesDisponiveis: data.map(c => c.nome)
+    })
+    return null
+  }
 }
 
 /**
@@ -148,6 +197,15 @@ export async function classificarTransacaoContaSimples(
   contato_id: string | null // NOVO: Cliente vinculado
   confianca: number // 0-100
 }> {
+  logger.info('🏦 [CLASSIFICADOR CONTA SIMPLES] Iniciando classificação', {
+    descricao: transacao.descricao,
+    categoriaBanco: transacao.categoriaBanco,
+    historico: transacao.historico,
+    centroCustoBanco: transacao.centroCustoBanco,
+    centroCustoBancoLength: transacao.centroCustoBanco?.length,
+    workspaceId
+  })
+
   let categoria_id: string | null = null
   let centro_custo_id: string | null = null
   let contato_id: string | null = null // NOVO
@@ -155,20 +213,38 @@ export async function classificarTransacaoContaSimples(
 
   // 1. Tentar match de categoria pelo campo do banco
   if (transacao.categoriaBanco) {
+    logger.info('📂 [CLASSIFICADOR] Buscando categoria', { categoriaBanco: transacao.categoriaBanco })
     categoria_id = await buscarCategoriaPorNome(
       transacao.categoriaBanco,
       workspaceId
     )
-    if (categoria_id) confianca += 30
+    if (categoria_id) {
+      logger.info('✅ [CLASSIFICADOR] Categoria encontrada', { categoria_id })
+      confianca += 30
+    } else {
+      logger.warn('⚠️ [CLASSIFICADOR] Categoria não encontrada')
+    }
   }
 
   // 2. NOVO: Tentar match de cliente pelo campo "Centro de Custo" do CSV
   if (transacao.centroCustoBanco) {
+    logger.info('👤 [CLASSIFICADOR] Buscando cliente por Centro de Custo', {
+      centroCustoBanco: transacao.centroCustoBanco,
+      centroCustoBancoTrim: transacao.centroCustoBanco.trim(),
+      centroCustoBancoLength: transacao.centroCustoBanco.length
+    })
     contato_id = await buscarClientePorNome(
       transacao.centroCustoBanco,
       workspaceId
     )
-    if (contato_id) confianca += 40
+    if (contato_id) {
+      logger.info('✅ [CLASSIFICADOR] Cliente encontrado', { contato_id })
+      confianca += 40
+    } else {
+      logger.warn('⚠️ [CLASSIFICADOR] Cliente não encontrado', {
+        centroCustoBanco: transacao.centroCustoBanco
+      })
+    }
   }
 
   // 3. Tentar match de centro de custo pela descrição (mantido para retrocompatibilidade)
@@ -183,10 +259,14 @@ export async function classificarTransacaoContaSimples(
   )
   if (centro_custo_id) confianca += 30
 
-  return {
+  const resultado = {
     categoria_id,
     centro_custo_id,
     contato_id, // NOVO
     confianca: Math.min(confianca, 100)
   }
+
+  logger.info('🎯 [CLASSIFICADOR] Resultado final', resultado)
+
+  return resultado
 }

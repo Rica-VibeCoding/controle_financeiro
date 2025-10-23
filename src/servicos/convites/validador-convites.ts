@@ -3,6 +3,9 @@
  * Implementa validações de segurança e controle de taxa
  */
 
+import { CONVITES_CONFIG } from '@/constantes/convites'
+import { validarUUID } from '@/utilitarios/validacao'
+
 interface RateLimitData {
   count: number
   firstAttempt: number
@@ -33,8 +36,8 @@ interface ValidationResult {
  */
 export class ConviteRateLimiter {
   private static STORAGE_KEY = 'fp_convites_rate_limit'
-  private static MAX_CONVITES_POR_DIA = 50 // Aumentado para desenvolvimento
-  private static RESET_PERIOD_MS = 24 * 60 * 60 * 1000 // 24 horas
+  private static MAX_CONVITES_POR_DIA = CONVITES_CONFIG.MAX_CONVITES_POR_DIA
+  private static RESET_PERIOD_MS = CONVITES_CONFIG.PERIODO_RESET_MS
 
   /**
    * Verifica se pode criar novo convite
@@ -156,7 +159,7 @@ export class ConviteRateLimiter {
  */
 export class ValidadorCodigoConvite {
   // Formato: 6 caracteres alfanuméricos maiúsculos
-  private static REGEX_CODIGO = /^[A-Z0-9]{6}$/
+  private static REGEX_CODIGO = CONVITES_CONFIG.REGEX_CODIGO
 
   /**
    * Valida formato do código
@@ -182,13 +185,13 @@ export class ValidadorCodigoConvite {
    * Gera código válido
    */
   static gerarCodigo(): string {
-    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    const caracteres = CONVITES_CONFIG.CARACTERES_CODIGO
     let codigo = ''
-    
-    for (let i = 0; i < 6; i++) {
+
+    for (let i = 0; i < CONVITES_CONFIG.TAMANHO_CODIGO; i++) {
       codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length))
     }
-    
+
     return codigo
   }
 
@@ -198,8 +201,9 @@ export class ValidadorCodigoConvite {
   static formatarCodigo(codigo: string): string {
     const codigoUpper = codigo.toUpperCase().trim()
     // Adiciona hífen no meio para facilitar leitura: ABC-123
-    if (codigoUpper.length === 6) {
-      return `${codigoUpper.slice(0, 3)}-${codigoUpper.slice(3)}`
+    if (codigoUpper.length === CONVITES_CONFIG.TAMANHO_CODIGO) {
+      const meio = Math.floor(CONVITES_CONFIG.TAMANHO_CODIGO / 2)
+      return `${codigoUpper.slice(0, meio)}-${codigoUpper.slice(meio)}`
     }
     return codigoUpper
   }
@@ -242,9 +246,8 @@ export class ValidadorDadosConvite {
       return { valid: false, error: 'Workspace ID é obrigatório' }
     }
 
-    // Validar formato UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    if (!uuidRegex.test(workspaceId)) {
+    // Validar formato UUID usando função centralizada
+    if (!validarUUID(workspaceId)) {
       return { valid: false, error: 'Workspace ID inválido' }
     }
 
@@ -274,28 +277,6 @@ export class ValidadorDadosConvite {
     return { valid: true }
   }
 
-  /**
-   * Valida se usuário pode aceitar convite
-   */
-  static validarAceitacao(
-    userId: string,
-    workspaceId: string,
-    usuarioJaNoWorkspace: boolean
-  ): ValidationResult {
-    if (!userId) {
-      return { valid: false, error: 'Usuário não autenticado' }
-    }
-
-    if (!workspaceId) {
-      return { valid: false, error: 'Workspace inválido' }
-    }
-
-    if (usuarioJaNoWorkspace) {
-      return { valid: false, error: 'Você já é membro deste workspace' }
-    }
-
-    return { valid: true }
-  }
 }
 
 /**

@@ -2,7 +2,7 @@ import { supabase } from './cliente'
 import type { Contato } from '@/tipos/database'
 
 /**
- * Busca clientes ativos do workspace
+ * Busca TODOS os clientes do workspace (ativos e inativos)
  * @param workspaceId - ID do workspace
  * @returns Lista de clientes ordenada por nome
  */
@@ -12,7 +12,6 @@ export async function obterClientes(workspaceId: string): Promise<Contato[]> {
     .select('id, nome, cpf_cnpj, tipo_pessoa, telefone, email, ativo, workspace_id, created_at, updated_at')
     .eq('workspace_id', workspaceId)
     .eq('tipo_pessoa', 'cliente')
-    .eq('ativo', true)
     .order('nome', { ascending: true })
 
   if (error) {
@@ -24,7 +23,7 @@ export async function obterClientes(workspaceId: string): Promise<Contato[]> {
 }
 
 /**
- * Busca fornecedores ativos do workspace
+ * Busca TODOS os fornecedores do workspace (ativos e inativos)
  * @param workspaceId - ID do workspace
  * @returns Lista de fornecedores ordenada por nome
  */
@@ -34,7 +33,6 @@ export async function obterFornecedores(workspaceId: string): Promise<Contato[]>
     .select('id, nome, cpf_cnpj, tipo_pessoa, telefone, email, ativo, workspace_id, created_at, updated_at')
     .eq('workspace_id', workspaceId)
     .eq('tipo_pessoa', 'fornecedor')
-    .eq('ativo', true)
     .order('nome', { ascending: true })
 
   if (error) {
@@ -59,6 +57,15 @@ export async function criarCliente(
   telefone?: string,
   email?: string
 ): Promise<Contato> {
+  // Validações básicas
+  if (!nome || nome.trim().length === 0) {
+    throw new Error('Nome do cliente é obrigatório')
+  }
+
+  if (!workspaceId) {
+    throw new Error('ID do workspace é obrigatório')
+  }
+
   const { data, error } = await supabase
     .from('r_contatos')
     .insert({
@@ -96,6 +103,15 @@ export async function criarFornecedor(
   telefone?: string,
   email?: string
 ): Promise<Contato> {
+  // Validações básicas
+  if (!nome || nome.trim().length === 0) {
+    throw new Error('Nome do fornecedor é obrigatório')
+  }
+
+  if (!workspaceId) {
+    throw new Error('ID do workspace é obrigatório')
+  }
+
   const { data, error } = await supabase
     .from('r_contatos')
     .insert({
@@ -135,6 +151,19 @@ export async function atualizarContato(
   telefone?: string,
   email?: string
 ): Promise<Contato> {
+  // Validações básicas
+  if (!id) {
+    throw new Error('ID do contato é obrigatório')
+  }
+
+  if (!nome || nome.trim().length === 0) {
+    throw new Error('Nome do contato é obrigatório')
+  }
+
+  if (!workspaceId) {
+    throw new Error('ID do workspace é obrigatório')
+  }
+
   const { data, error } = await supabase
     .from('r_contatos')
     .update({
@@ -151,6 +180,10 @@ export async function atualizarContato(
   if (error) {
     console.error('Erro ao atualizar contato:', error)
     throw new Error(`Erro ao atualizar contato: ${error.message}`)
+  }
+
+  if (!data) {
+    throw new Error('Contato não encontrado ou você não tem permissão para editá-lo')
   }
 
   return data
@@ -187,7 +220,16 @@ export async function alternarStatusContato(
   ativo: boolean,
   workspaceId: string
 ): Promise<void> {
-  const { error } = await supabase
+  // Validações básicas
+  if (!id) {
+    throw new Error('ID do contato é obrigatório')
+  }
+
+  if (!workspaceId) {
+    throw new Error('ID do workspace é obrigatório')
+  }
+
+  const { data, error } = await supabase
     .from('r_contatos')
     .update({
       ativo,
@@ -195,16 +237,22 @@ export async function alternarStatusContato(
     })
     .eq('id', id)
     .eq('workspace_id', workspaceId)
+    .select('id')
+    .single()
 
   if (error) {
     console.error('Erro ao alternar status do contato:', error)
     throw new Error(`Erro ao alternar status: ${error.message}`)
   }
+
+  if (!data) {
+    throw new Error('Contato não encontrado ou você não tem permissão para alterá-lo')
+  }
 }
 
 /**
- * Exclui contato permanentemente (soft delete via campo ativo)
- * Apenas desativa ao invés de deletar fisicamente
+ * Exclui contato permanentemente (hard delete - exclusão física)
+ * Verifica vínculos com transações antes de deletar
  * @param id - ID do contato
  * @param workspaceId - ID do workspace
  */
@@ -212,22 +260,47 @@ export async function excluirContato(
   id: string,
   workspaceId: string
 ): Promise<void> {
-  // Verificar se contato está vinculado a transações
-  const { data: transacoes, error: errorCheck } = await supabase
+  // Verificar se contato está vinculado como CLIENTE em transações
+  const { data: transacoesCliente, error: errorCliente } = await supabase
     .from('fp_transacoes')
     .select('id')
-    .eq('contato_id', id)
+    .eq('cliente_id', id)
+    .eq('workspace_id', workspaceId)
     .limit(1)
 
-  if (errorCheck) {
-    console.error('Erro ao verificar transações:', errorCheck)
-    throw new Error('Erro ao verificar vínculos do contato')
+  if (errorCliente) {
+    console.error('Erro ao verificar transações (cliente):', errorCliente)
+    throw new Error('Erro ao verificar vínculos do cliente')
   }
 
-  if (transacoes && transacoes.length > 0) {
+  // Verificar se contato está vinculado como FORNECEDOR em transações
+  const { data: transacoesFornecedor, error: errorFornecedor } = await supabase
+    .from('fp_transacoes')
+    .select('id')
+    .eq('fornecedor_id', id)
+    .eq('workspace_id', workspaceId)
+    .limit(1)
+
+  if (errorFornecedor) {
+    console.error('Erro ao verificar transações (fornecedor):', errorFornecedor)
+    throw new Error('Erro ao verificar vínculos do fornecedor')
+  }
+
+  // Se tem transações vinculadas, bloquear exclusão
+  if ((transacoesCliente && transacoesCliente.length > 0) ||
+      (transacoesFornecedor && transacoesFornecedor.length > 0)) {
     throw new Error('Não é possível excluir contato vinculado a transações. Desative-o ao invés disso.')
   }
 
-  // Se não tem transações, pode desativar
-  await alternarStatusContato(id, false, workspaceId)
+  // Se não tem transações vinculadas, fazer hard delete (exclusão física)
+  const { error: deleteError } = await supabase
+    .from('r_contatos')
+    .delete()
+    .eq('id', id)
+    .eq('workspace_id', workspaceId)
+
+  if (deleteError) {
+    console.error('Erro ao excluir contato:', deleteError)
+    throw new Error(`Erro ao excluir contato: ${deleteError.message}`)
+  }
 }

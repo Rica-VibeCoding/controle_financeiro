@@ -109,6 +109,18 @@
 
 ## 📋 **ÚLTIMAS ATUALIZAÇÕES (Janeiro 2025)**
 
+### **✅ CORREÇÃO CRÍTICA - SISTEMA DE CONVITES (24/10/2025)**
+- **Status**: ✅ Sistema 100% funcional em produção
+- **Problema**: Erro 500 ao registrar com convite - "Database error saving new user"
+- **Causa Raiz**: Trigger `handle_new_user` sem permissões + search_path incorreto
+- **Solução Aplicada**:
+  1. Concedidas permissões SELECT para `supabase_auth_admin` nas tabelas
+  2. Adicionado `SET search_path = public, pg_temp` na função trigger
+- **Migrations**: `fix_convites_links_permissions_auth_admin`, `fix_trigger_handle_new_user_schema_path`
+- **Resultado**: Convites funcionando perfeitamente - usuários sendo adicionados automaticamente
+- **Documentação**: `docs/funcionalidades/SISTEMA-CONVITES.md` (nova documentação de consulta)
+- **Histórico**: `docs/desenvolvimento/HISTORICO-REFATORACAO-SISTEMA-CONVITES.md`
+
 ### **✅ CORREÇÃO ROI POR CLIENTE (17/10/2025 23:30)**
 - **Status**: ✅ Funções SQL corrigidas - ROI exibindo dados reais
 - **Problema**: Funções buscavam em `r_contatos.contato_id` (campo errado)

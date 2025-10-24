@@ -16,6 +16,7 @@ import {
 } from '@/servicos/supabase/contatos-queries'
 import { useAuth } from '@/contextos/auth-contexto'
 import { useModais } from '@/contextos/modais-contexto'
+import { usePermissoes } from '@/hooks/usar-permissoes'
 import type { Contato } from '@/tipos/database'
 
 // Lazy load do modal - só carrega quando necessário
@@ -30,9 +31,13 @@ const ModalCliente = NextDynamic(
 export default function ClientesPage() {
   const { workspace } = useAuth()
   const { modalCliente, cliente } = useModais()
+  const { verificarPermissao, loading: loadingPermissoes } = usePermissoes()
   const [clientes, setClientes] = useState<Contato[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+
+  // Verificar permissão de acesso
+  const temPermissao = verificarPermissao('cadastramentos')
 
   // Função para recarregar clientes
   const recarregarClientes = async () => {
@@ -88,6 +93,40 @@ export default function ClientesPage() {
   useEffect(() => {
     recarregarClientes()
   }, [workspace])
+
+  // Loading permissões
+  if (loadingPermissoes) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Verificando permissões...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Bloqueio por falta de permissão
+  if (!temPermissao) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Icone name="shield-x" className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+            <p className="text-muted-foreground mb-4">
+              Você não tem permissão para acessar a página de Clientes.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Entre em contato com o proprietário do workspace para solicitar acesso.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

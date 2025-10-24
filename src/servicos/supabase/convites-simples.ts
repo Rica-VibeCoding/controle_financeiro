@@ -69,32 +69,21 @@ export async function verificarSeEmailJaTemConta(email: string): Promise<boolean
   try {
     // Sanitizar email
     const emailLimpo = email.toLowerCase().trim()
-    
-    // Verificar na tabela auth.users através do Supabase Auth Admin
-    const { data: userData, error: authError } = await supabase.auth.admin.listUsers()
-    
-    if (authError) {
-      // Se falhar na consulta admin, verificar na nossa tabela fp_usuarios
-      const { data: usuarios, error: usuariosError } = await supabase
-        .from('fp_usuarios')
-        .select('email')
-        .eq('email', emailLimpo)
-        .limit(1)
-      
-      if (usuariosError) {
-        logger.warn('Erro ao verificar email:', usuariosError)
-        return false // Em caso de erro, permitir convite
-      }
-      
-      return (usuarios && usuarios.length > 0)
+
+    // Verificar diretamente na tabela fp_usuarios
+    // Não podemos usar auth.admin no cliente por questões de segurança
+    const { data: usuarios, error: usuariosError } = await supabase
+      .from('fp_usuarios')
+      .select('email')
+      .eq('email', emailLimpo)
+      .limit(1)
+
+    if (usuariosError) {
+      logger.warn('Erro ao verificar email:', usuariosError)
+      return false // Em caso de erro, permitir convite
     }
-    
-    // Verificar se email existe na lista de usuários auth
-    const emailExists = userData.users.some(user => 
-      user.email?.toLowerCase() === emailLimpo
-    )
-    
-    return emailExists
+
+    return (usuarios && usuarios.length > 0)
   } catch (error) {
     logger.warn('Erro ao verificar se email já tem conta:', error)
     return false // Em caso de erro, permitir convite

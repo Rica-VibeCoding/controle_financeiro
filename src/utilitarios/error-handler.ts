@@ -50,11 +50,9 @@ export function useErrorHandler() {
   const showError = (error: any, context: string = 'Aplicação') => {
     const appError = ErrorHandler.formatError(error)
     ErrorHandler.logError(appError, context)
-    
-    const userMessage = ErrorHandler.getUserFriendlyMessage(appError)
-    
-    // Mostrar toast/notificação para o usuário
-    alert(userMessage) // Temporário - depois implementar toast
+
+    // Mensagem já está sendo logada no console via logError()
+    // Alert removido para melhor UX - erro aparece apenas no console
   }
 
   const handleAsync = async <T>(
@@ -78,20 +76,17 @@ export function useErrorHandler() {
 export function useNotifications() {
   const showSuccess = (message: string) => {
     // TODO: Implementar toast success
-    // Por enquanto usar alert (temporário)
-    alert(`✅ ${message}`)
+    console.log(`✅ ${message}`)
   }
 
   const showError = (message: string) => {
-    // TODO: Implementar toast error  
-    // Por enquanto usar alert (temporário)
-    alert(`❌ ${message}`)
+    // TODO: Implementar toast error
+    console.error(`❌ ${message}`)
   }
 
   const showWarning = (message: string) => {
     // TODO: Implementar toast warning
-    // Por enquanto usar alert (temporário) 
-    alert(`⚠️ ${message}`)
+    console.warn(`⚠️ ${message}`)
   }
 
   return { showSuccess, showError, showWarning }

@@ -1,6 +1,6 @@
 import { supabase } from './cliente'
 import type { PermissoesUsuario, ResultadoPermissoes, TipoPermissao } from '@/tipos/permissoes'
-import { validarEstruturalPermissoes, PERMISSOES_PADRAO_MEMBER } from '@/tipos/permissoes'
+import { validarEstruturalPermissoes, PERMISSOES_PADRAO_MEMBER, normalizarPermissoes } from '@/tipos/permissoes'
 import { validarOwnerWorkspace } from './middleware-workspace'
 
 /**
@@ -174,14 +174,8 @@ export async function buscarPermissoesUsuario(
       }
     }
 
-    // Se é MEMBER, retorna permissões do JSON ou padrão restritivo
-    const permissoes = data.permissoes as PermissoesUsuario
-    
-    if (!permissoes || !validarEstruturalPermissoes(permissoes)) {
-      return PERMISSOES_PADRAO_MEMBER
-    }
-
-    return permissoes
+    // Se é MEMBER, normalizar permissões (pode ter estrutura antiga)
+    return normalizarPermissoes(data.permissoes)
 
   } catch (error) {
     console.error('Erro ao buscar permissões:', error)
@@ -246,11 +240,7 @@ export async function listarUsuariosComPermissoes(workspaceId: string) {
         configuracoes: true,
         cadastramentos: true,
         backup: true
-      } : (
-        validarEstruturalPermissoes(usuario.permissoes) 
-          ? usuario.permissoes 
-          : PERMISSOES_PADRAO_MEMBER
-      )
+      } : normalizarPermissoes(usuario.permissoes)
     }))
 
     return { 

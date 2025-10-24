@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabaseClient } from '@/servicos/supabase/auth-client'
-import { aceitarConvite, verificarSeEmailJaTemConta } from '@/servicos/supabase/convites-simples'
+import { verificarSeEmailJaTemConta } from '@/servicos/supabase/convites-simples'
 import { getCallbackUrl } from '@/utilitarios/url-helper'
 import { logger } from '@/utilitarios/logger'
 import type { Resultado, DadosConvite } from '@/tipos/convites'
@@ -157,7 +157,10 @@ export function usarRegistroConvite() {
 
   /**
    * Processa convite após registro bem-sucedido
-   * Aceita o convite automaticamente para o usuário recém-criado
+   *
+   * IMPORTANTE: O convite é processado AUTOMATICAMENTE pelo trigger SQL handle_new_user
+   * quando detecta invite_code no metadata do usuário. Esta função apenas retorna
+   * mensagem de sucesso para o usuário.
    */
   async function processarConvite(
     dadosConvite: DadosConvite,
@@ -165,25 +168,23 @@ export function usarRegistroConvite() {
     nome: string
   ): Promise<Resultado<string>> {
     try {
-      logger.info('Processando convite para usuário recém-criado')
+      logger.info('Convite será processado automaticamente pelo trigger SQL', {
+        workspace: dadosConvite.workspace.nome,
+        codigo: dadosConvite.codigo
+      })
 
-      const resultado = await aceitarConvite(dadosConvite.codigo, email, nome)
+      // O trigger handle_new_user já fez todo o trabalho:
+      // 1. Buscou o workspace pelo código do convite
+      // 2. Adicionou o usuário como 'member'
+      // 3. Registrou em auditoria
+      // Não precisamos chamar aceitarConvite() manualmente
 
-      if (resultado.success) {
-        logger.info('Convite processado com sucesso durante registro')
-        return {
-          success: true,
-          data: `Conta criada e você foi adicionado ao workspace "${dadosConvite.workspace.nome}"! Verifique seu email para confirmar.`
-        }
-      } else {
-        logger.warn('Falha no convite', { error: resultado.error })
-        return {
-          success: true,
-          data: 'Conta criada! Verifique seu email para confirmar o cadastro. O convite será processado após a confirmação.'
-        }
+      return {
+        success: true,
+        data: `Conta criada e você foi adicionado ao workspace "${dadosConvite.workspace.nome}"! Verifique seu email para confirmar.`
       }
     } catch (error) {
-      logger.error('Erro ao aceitar convite automaticamente', { error })
+      logger.error('Erro ao processar mensagem de convite', { error })
       return {
         success: true,
         data: 'Conta criada! Verifique seu email para confirmar o cadastro.'

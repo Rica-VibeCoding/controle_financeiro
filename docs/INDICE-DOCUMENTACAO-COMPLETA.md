@@ -130,7 +130,8 @@ node --version  # Deve ser 20.19.4
 
 ### **✅ Funcionalidades**
 - Sistema multiusuário: ✅ 100%
-- Dashboard admin: ✅ 100% 
+- Sistema de convites: ✅ 100% → [Documentação](./funcionalidades/SISTEMA-CONVITES.md)
+- Dashboard admin: ✅ 100%
 - Importação CSV: ✅ 100%
 - Backup/Restore: ✅ 100%
 - PWA mobile: ✅ 100%

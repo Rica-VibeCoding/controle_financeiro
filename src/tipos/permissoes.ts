@@ -57,17 +57,17 @@ export const TODAS_PERMISSOES: TipoPermissao[] = [
 ]
 
 /**
- * Permissões padrão para novos usuários MEMBER (todas bloqueadas)
+ * Permissões padrão para novos usuários MEMBER (acesso mínimo funcional)
  */
 export const PERMISSOES_PADRAO_MEMBER: PermissoesUsuario = {
   dashboard: false,
   receitas: false,
-  despesas: false,
-  recorrentes: false,
-  previstas: false,
+  despesas: true,
+  recorrentes: true,
+  previstas: true,
   relatorios: false,
   configuracoes: false,
-  cadastramentos: false,
+  cadastramentos: true,
   backup: false
 }
 
@@ -205,4 +205,30 @@ export function obterPermissoesAtivas(permissoes: PermissoesUsuario): TipoPermis
  */
 export function obterPermissoesInativas(permissoes: PermissoesUsuario): TipoPermissao[] {
   return TODAS_PERMISSOES.filter(permissao => !permissoes[permissao])
+}
+
+/**
+ * Normaliza permissões vindas do banco (pode ter estrutura antiga)
+ * Remove campos antigos, adiciona novos, aplica padrão correto
+ */
+export function normalizarPermissoes(permissoes: any): PermissoesUsuario {
+  // Se não vier nada ou não for objeto, retorna padrão
+  if (!permissoes || typeof permissoes !== 'object') {
+    return PERMISSOES_PADRAO_MEMBER
+  }
+
+  // Criar objeto normalizado com todas as 9 chaves
+  const normalizado: PermissoesUsuario = {
+    dashboard: permissoes.dashboard ?? PERMISSOES_PADRAO_MEMBER.dashboard,
+    receitas: permissoes.receitas ?? PERMISSOES_PADRAO_MEMBER.receitas,
+    despesas: permissoes.despesas ?? PERMISSOES_PADRAO_MEMBER.despesas,
+    recorrentes: permissoes.recorrentes ?? PERMISSOES_PADRAO_MEMBER.recorrentes,
+    previstas: permissoes.previstas ?? PERMISSOES_PADRAO_MEMBER.previstas,
+    relatorios: permissoes.relatorios ?? PERMISSOES_PADRAO_MEMBER.relatorios,
+    configuracoes: permissoes.configuracoes ?? PERMISSOES_PADRAO_MEMBER.configuracoes,
+    cadastramentos: permissoes.cadastramentos ?? PERMISSOES_PADRAO_MEMBER.cadastramentos,
+    backup: permissoes.backup ?? PERMISSOES_PADRAO_MEMBER.backup
+  }
+
+  return normalizado
 }

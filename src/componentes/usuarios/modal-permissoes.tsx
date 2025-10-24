@@ -7,12 +7,13 @@ import { Icone } from '@/componentes/ui/icone'
 import type { Usuario } from '@/tipos/auth'
 import type { PermissoesUsuario, TipoPermissao, ResultadoPermissoes } from '@/tipos/permissoes'
 import type { IconName } from '@/componentes/ui/icone'
-import { 
-  TODAS_PERMISSOES, 
-  ROTULOS_PERMISSOES, 
+import {
+  TODAS_PERMISSOES,
+  ROTULOS_PERMISSOES,
   ICONES_PERMISSOES,
   CORES_PERMISSOES,
-  PERMISSOES_PADRAO_MEMBER 
+  PERMISSOES_PADRAO_MEMBER,
+  normalizarPermissoes
 } from '@/tipos/permissoes'
 import { useToast } from '@/contextos/toast-contexto'
 
@@ -36,8 +37,8 @@ export function ModalPermissoes({
   // Carregar permissões do usuário quando modal abrir
   useEffect(() => {
     if (isOpen && usuario) {
-      // Se usuário tem permissões definidas, usar elas, senão usar padrão restritivo
-      const permissoesUsuario = usuario.permissoes || PERMISSOES_PADRAO_MEMBER
+      // Normalizar permissões (remove campos antigos, adiciona novos)
+      const permissoesUsuario = normalizarPermissoes(usuario.permissoes)
       setPermissoes(permissoesUsuario)
     }
   }, [isOpen, usuario])

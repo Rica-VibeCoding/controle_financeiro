@@ -3,16 +3,7 @@ import { supabaseClient } from '@/servicos/supabase/auth-client'
 import { aceitarConvite, verificarSeEmailJaTemConta } from '@/servicos/supabase/convites-simples'
 import { getCallbackUrl } from '@/utilitarios/url-helper'
 import { logger } from '@/utilitarios/logger'
-import type { Resultado } from '@/tipos/convites'
-
-/**
- * Dados de convite validados
- */
-type DadosConvite = {
-  codigo: string
-  workspace: { id: string; nome: string }
-  criadorNome?: string
-}
+import type { Resultado, DadosConvite } from '@/tipos/convites'
 
 /**
  * Dados para registro de novo usuário

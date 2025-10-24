@@ -129,3 +129,15 @@ export type RateLimitInfo = {
   limite: number
   resetEm: Date
 }
+
+/**
+ * Resposta da função SQL pode_criar_convite()
+ * Validação de rate limit no servidor (banco de dados)
+ */
+export type RateLimitValidacao = {
+  permitido: boolean
+  motivo?: string
+  convites_criados: number
+  convites_restantes?: number
+  limite_maximo: number
+}

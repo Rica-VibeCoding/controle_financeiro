@@ -1704,6 +1704,29 @@ Transferência    → cliente_id=NULL, fornecedor_id=NULL
 
 ---
 
+## 📦 CORREÇÃO ADICIONAL: CONTAS-QUERIES.TS (23/10/2025)
+
+**Objetivo:** Atualizar queries de Contas a Pagar/Receber que não foram incluídas na FASE 3
+**Status:** ✅ CONCLUÍDA
+
+**Problema Encontrado:**
+- Arquivo `contas-queries.ts` ainda usava `r_contatos(nome)` e `contato_id` (campos removidos)
+- Erro Supabase PGRST201: relacionamento ambíguo entre `fp_transacoes` e `r_contatos`
+- Página `/relatorios/contas` não carregava (erro 500)
+
+**Solução Aplicada:**
+1. ✅ `buscarContasAPagar()`: Atualizado para usar `fornecedor:r_contatos!fp_transacoes_fornecedor_id_fkey(nome)`
+2. ✅ `buscarContasAReceber()`: Atualizado para usar `cliente:r_contatos!fk_fp_transacoes_cliente(nome)`
+3. ✅ `buscarContasVencidas()`: Atualizado para usar AMBOS relacionamentos (cliente + fornecedor)
+4. ✅ Mapeamentos corrigidos para usar `fornecedor_id` e `cliente_id` conforme tipo
+
+**Resultado:**
+- 3 funções SELECT atualizadas com relacionamentos específicos
+- Página `/relatorios/contas` funcional
+- Padrão consistente com FASE 3 do plano original
+
+---
+
 ## 📞 SUPORTE
 
 **Se encontrar problemas:**

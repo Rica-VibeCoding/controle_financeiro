@@ -56,11 +56,11 @@ export async function buscarContasAPagar(
       recorrente,
       categoria_id,
       conta_id,
-      contato_id,
+      fornecedor_id,
       fp_categorias!inner(nome),
       fp_subcategorias(nome),
       fp_contas!fp_transacoes_conta_id_fkey!inner(nome),
-      r_contatos(nome)
+      fornecedor:r_contatos!fp_transacoes_fornecedor_id_fkey(nome)
     `)
     .eq('workspace_id', workspaceId)
     .eq('tipo', 'despesa')
@@ -104,12 +104,12 @@ export async function buscarContasAPagar(
     categoria: row.fp_categorias?.nome || 'Sem categoria',
     subcategoria: row.fp_subcategorias?.nome,
     conta: row.fp_contas?.nome || 'Sem conta',
-    contato: row.r_contatos?.nome,
+    contato: row.fornecedor?.nome,
     observacoes: row.observacoes || undefined,
     recorrente: row.recorrente || false,
     categoria_id: row.categoria_id,
     conta_id: row.conta_id,
-    contato_id: row.contato_id || undefined
+    contato_id: row.fornecedor_id || undefined
   }))
 }
 
@@ -137,11 +137,11 @@ export async function buscarContasAReceber(
       recorrente,
       categoria_id,
       conta_id,
-      contato_id,
+      cliente_id,
       fp_categorias!inner(nome),
       fp_subcategorias(nome),
       fp_contas!fp_transacoes_conta_id_fkey!inner(nome),
-      r_contatos(nome)
+      cliente:r_contatos!fk_fp_transacoes_cliente(nome)
     `)
     .eq('workspace_id', workspaceId)
     .eq('tipo', 'receita')
@@ -179,12 +179,12 @@ export async function buscarContasAReceber(
     categoria: row.fp_categorias?.nome || 'Sem categoria',
     subcategoria: row.fp_subcategorias?.nome,
     conta: row.fp_contas?.nome || 'Sem conta',
-    contato: row.r_contatos?.nome,
+    contato: row.cliente?.nome,
     observacoes: row.observacoes || undefined,
     recorrente: row.recorrente || false,
     categoria_id: row.categoria_id,
     conta_id: row.conta_id,
-    contato_id: row.contato_id || undefined
+    contato_id: row.cliente_id || undefined
   }))
 }
 
@@ -211,11 +211,13 @@ export async function buscarContasVencidas(
       recorrente,
       categoria_id,
       conta_id,
-      contato_id,
+      cliente_id,
+      fornecedor_id,
       fp_categorias!inner(nome),
       fp_subcategorias(nome),
       fp_contas!fp_transacoes_conta_id_fkey!inner(nome),
-      r_contatos(nome)
+      cliente:r_contatos!fk_fp_transacoes_cliente(nome),
+      fornecedor:r_contatos!fp_transacoes_fornecedor_id_fkey(nome)
     `)
     .eq('workspace_id', workspaceId)
     .eq('status', 'previsto')
@@ -251,12 +253,12 @@ export async function buscarContasVencidas(
     categoria: row.fp_categorias?.nome || 'Sem categoria',
     subcategoria: row.fp_subcategorias?.nome,
     conta: row.fp_contas?.nome || 'Sem conta',
-    contato: row.r_contatos?.nome,
+    contato: row.tipo === 'receita' ? row.cliente?.nome : row.fornecedor?.nome,
     observacoes: row.observacoes || undefined,
     recorrente: row.recorrente || false,
     categoria_id: row.categoria_id,
     conta_id: row.conta_id,
-    contato_id: row.contato_id || undefined
+    contato_id: row.tipo === 'receita' ? row.cliente_id : row.fornecedor_id
   }))
 }
 

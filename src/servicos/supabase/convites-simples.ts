@@ -19,7 +19,8 @@ import {
 import type {
   Resultado,
   ResultadoCriacaoConvite,
-  DadosConvite
+  DadosConvite,
+  RateLimitValidacao
 } from '@/tipos/convites'
 
 /**
@@ -101,6 +102,59 @@ export async function verificarSeEmailJaTemConta(email: string): Promise<boolean
 }
 
 /**
+ * Valida rate limit no servidor (banco de dados)
+ * Chama função SQL pode_criar_convite() que conta convites das últimas 24h
+ *
+ * @param workspaceId - UUID do workspace
+ * @returns Validação com informações de rate limit
+ *
+ * @example
+ * ```typescript
+ * const validacao = await validarRateLimitServidor(workspaceId)
+ * if (!validacao.permitido) {
+ *   logger.warn('Rate limit atingido', { convites_criados: validacao.convites_criados })
+ *   return { success: false, error: validacao.motivo }
+ * }
+ * ```
+ */
+async function validarRateLimitServidor(
+  workspaceId: string
+): Promise<RateLimitValidacao> {
+  try {
+    // Chamar função SQL
+    const { data, error } = await supabase
+      .rpc('pode_criar_convite', {
+        p_workspace_id: workspaceId
+      })
+
+    if (error) {
+      logger.error('Erro ao validar rate limit no servidor', { error, workspaceId })
+
+      // Em caso de erro, permitir (fail-open para não bloquear operação)
+      // Mas logar para investigação
+      return {
+        permitido: true,
+        convites_criados: 0,
+        limite_maximo: 50
+      }
+    }
+
+    // Retornar validação do servidor
+    return data as RateLimitValidacao
+
+  } catch (error) {
+    logger.error('Exceção ao validar rate limit', { error, workspaceId })
+
+    // Fail-open: permitir em caso de exceção
+    return {
+      permitido: true,
+      convites_criados: 0,
+      limite_maximo: 50
+    }
+  }
+}
+
+/**
  * Cria um link de convite para o workspace especificado
  *
  * Apenas proprietários (owners) podem criar convites. O convite expira em 7 dias
@@ -154,13 +208,35 @@ export async function criarLinkConvite(
       }
     }
 
-    // Verificar rate limit
-    const rateLimitCheck = ConviteRateLimiter.podecriarConvite(workspaceId)
-    if (!rateLimitCheck.valid) {
+    // Validar rate limit no SERVIDOR (principal validação)
+    logger.info('Validando rate limit no servidor', { workspaceId })
+
+    const rateLimitServidor = await validarRateLimitServidor(workspaceId)
+
+    if (!rateLimitServidor.permitido) {
+      logger.warn('Rate limit atingido', {
+        workspaceId,
+        convites_criados: rateLimitServidor.convites_criados,
+        limite: rateLimitServidor.limite_maximo
+      })
+
       return {
         success: false,
-        error: rateLimitCheck.error || ERROS_CONVITE.LIMITE_EXCEDIDO
+        error: ERROS_CONVITE.LIMITE_EXCEDIDO,
+        details: rateLimitServidor.motivo || `Limite de ${rateLimitServidor.limite_maximo} convites por dia atingido. Criados: ${rateLimitServidor.convites_criados}.`
       }
+    }
+
+    logger.info('Rate limit OK', {
+      convites_criados: rateLimitServidor.convites_criados,
+      convites_restantes: rateLimitServidor.convites_restantes
+    })
+
+    // Verificar rate limit no cliente (camada adicional de proteção)
+    const rateLimitCheck = ConviteRateLimiter.podecriarConvite(workspaceId)
+    if (!rateLimitCheck.valid) {
+      logger.info('Rate limit do cliente também bloqueou', { workspaceId })
+      // Não retorna erro pois servidor já validou e permitiu
     }
 
     // Gerar código válido

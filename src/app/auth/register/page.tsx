@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabaseClient } from '@/servicos/supabase/auth-client'
 import { useErrorHandler, useNotifications } from '@/utilitarios/error-handler'
-import { getCallbackUrl } from '@/utilitarios/url-helper'
-import { usarCodigoConvite, aceitarConvite, verificarSeEmailJaTemConta } from '@/servicos/supabase/convites-simples'
+import { usarCodigoConvite } from '@/servicos/supabase/convites-simples'
+import { usarRegistroConvite } from '@/hooks/usar-registro-convite'
+import type { DadosConvite } from '@/tipos/convites'
 import { Icone } from '@/componentes/ui/icone'
 import { logger } from '@/utilitarios/logger'
 
@@ -16,17 +16,14 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [nome, setNome] = useState('')
   const [workspaceName, setWorkspaceName] = useState('')
-  const [loading, setLoading] = useState(false)
   const [validandoConvite, setValidandoConvite] = useState(false)
-  const [dadosConvite, setDadosConvite] = useState<{
-    codigo: string
-    workspace: { id: string; nome: string }
-    criadorNome?: string
-  } | null>(null)
+  const [dadosConvite, setDadosConvite] = useState<DadosConvite | null>(null)
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const { showError } = useErrorHandler()
   const { showSuccess } = useNotifications()
+  const { loading, executarRegistro } = usarRegistroConvite()
 
   // Validar convite ao carregar a página
   useEffect(() => {
@@ -71,88 +68,36 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
-    try {
-      // Se há convite, verificar se email já existe no sistema
-      if (dadosConvite) {
-        const emailJaExiste = await verificarSeEmailJaTemConta(email)
-        if (emailJaExiste) {
-          showError(
-            new Error('Este email já possui conta no sistema. Use outro email ou acesse sua conta própria.'), 
-            'Email já em uso'
-          )
-          setLoading(false)
-          return
-        }
-      }
+    // Validações básicas
+    if (!nome.trim() || !email.trim() || !password.trim()) {
+      showError(new Error('Preencha todos os campos obrigatórios'), 'Validação')
+      return
+    }
 
-      // Registrar usuário primeiro
-      // 🔒 IMPORTANTE: workspace_name DEVE ser null quando há convite
-      const workspaceNameParaSignup = dadosConvite ? null : (workspaceName || 'Meu Workspace')
+    if (!dadosConvite && !workspaceName.trim()) {
+      showError(new Error('Nome do workspace é obrigatório'), 'Validação')
+      return
+    }
 
-      logger.info('Iniciando signUp...', {
-        email: email.substring(0, 3) + '***',
-        hasConvite: !!dadosConvite,
-        workspaceName: workspaceNameParaSignup,
-        conviteCodigo: dadosConvite?.codigo
-      })
-
-      const { error } = await supabaseClient.auth.signUp({
-        email,
+    // Executar registro usando o hook
+    const resultado = await executarRegistro(
+      {
+        nome: nome.trim(),
+        email: email.trim(),
         password,
-        options: {
-          data: {
-            full_name: nome,
-            // ⚠️ CRÍTICO: workspace_name null = convite | workspace_name preenchido = registro normal
-            workspace_name: workspaceNameParaSignup,
-            invite_code: dadosConvite?.codigo || null  // ✨ Passa código para trigger
-          },
-          emailRedirectTo: getCallbackUrl()
-        }
-      })
+        workspaceName: dadosConvite ? undefined : workspaceName.trim()
+      },
+      dadosConvite
+    )
 
-      if (error) {
-        logger.error('Erro no signUp:', error)
-        logger.error('Detalhes do erro:', {
-          message: error.message,
-          status: error.status,
-          code: error.code || 'N/A'
-        })
-        showError(error, 'Registro')
-        return
-      }
-
-      logger.info('SignUp realizado com sucesso!')
-
-      // Se há convite, aceitar automaticamente após registro
-      if (dadosConvite) {
-        try {
-          logger.info('Processando convite para usuário recém-criado...')
-
-          // NOVA LÓGICA: Aceitar convite imediatamente com os dados do registro
-          const resultadoConvite = await aceitarConvite(dadosConvite.codigo, email, nome)
-
-          if (resultadoConvite.success) {
-            logger.info('Convite processado com sucesso durante registro!')
-            showSuccess(`🎉 Conta criada e você foi adicionado ao workspace "${dadosConvite.workspace.nome}"! Verifique seu email para confirmar.`)
-          } else {
-            logger.warn('Falha no convite:', resultadoConvite.error)
-            showSuccess('Conta criada! Verifique seu email para confirmar o cadastro. O convite será processado após a confirmação.')
-          }
-        } catch (conviteError) {
-          logger.warn('Erro ao aceitar convite automaticamente:', conviteError)
-          showSuccess('Conta criada! Verifique seu email para confirmar o cadastro.')
-        }
-      } else {
-        showSuccess('Verifique seu email para confirmar o cadastro!')
-      }
-      
-      router.push('/auth/login')
-    } catch (error) {
-      showError(error, 'Registro')
-    } finally {
-      setLoading(false)
+    // Tratar resultado
+    if (resultado.sucesso) {
+      showSuccess(resultado.mensagem)
+      const destino = resultado.redirecionarPara || '/auth/login'
+      router.push(destino)
+    } else {
+      showError(new Error(resultado.mensagem), 'Registro')
     }
   }
 

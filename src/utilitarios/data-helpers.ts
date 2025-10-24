@@ -4,19 +4,20 @@
  */
 
 /**
- * Normaliza data para formato ISO com timestamp completo (YYYY-MM-DDTHH:mm:ss)
+ * Normaliza data para formato ISO com timestamp completo (YYYY-MM-DDTHH:mm:ssZ)
  * Converte formato brasileiro (DD/MM/YYYY) e outros formatos para ISO
  *
  * IMPORTANTE: Desde 09/01/2025, o banco usa TIMESTAMP WITH TIME ZONE
- * Portanto, SEMPRE preservamos hora/minuto/segundo quando disponível
+ * Para datas sem hora, usa meio-dia UTC (12:00:00Z) para evitar problemas de timezone
+ * (Solução recomendada pela comunidade Supabase - Discussion #7549 e #22144)
  *
  * @param data - Data em string (vários formatos aceitos)
  * @returns Data normalizada no formato ISO com timestamp completo ou null
  *
  * @example
  * normalizarData("08/10/2025 16:20:00") → "2025-10-08T16:20:00"
- * normalizarData("08/10/2025") → "2025-10-08T00:00:00"
- * normalizarData("2025-10-08") → "2025-10-08T00:00:00"
+ * normalizarData("08/10/2025") → "2025-10-08T12:00:00Z"
+ * normalizarData("2025-10-08") → "2025-10-08T12:00:00Z"
  */
 export function normalizarData(data: string | null | undefined): string | null {
   if (!data || typeof data !== 'string' || data.trim() === '') {
@@ -31,9 +32,10 @@ export function normalizarData(data: string | null | undefined): string | null {
     return dataLimpa.length === 16 ? `${dataLimpa}:00` : dataLimpa
   }
 
-  // Se está no formato ISO sem hora (YYYY-MM-DD), adiciona hora 00:00:00
+  // Se está no formato ISO sem hora (YYYY-MM-DD), adiciona meio-dia UTC
+  // Usando 12:00:00Z para evitar problemas de timezone (discussão Supabase #7549)
   if (/^\d{4}-\d{2}-\d{2}$/.test(dataLimpa)) {
-    return `${dataLimpa}T00:00:00`
+    return `${dataLimpa}T12:00:00Z`
   }
 
   // Se tem hora (DD/MM/YYYY HH:mm:ss ou DD/MM/YYYY HH:mm), PRESERVA a hora no formato ISO
@@ -48,16 +50,16 @@ export function normalizarData(data: string | null | undefined): string | null {
     return `${dataFormatada}T${horaCompleta}`
   }
 
-  // Se está no formato DD/MM/YYYY (sem hora), converte e adiciona 00:00:00
+  // Se está no formato DD/MM/YYYY (sem hora), converte e adiciona meio-dia UTC
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dataLimpa)) {
     const [dia, mes, ano] = dataLimpa.split('/')
-    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}T00:00:00`
+    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}T12:00:00Z`
   }
 
-  // Se está no formato DD-MM-YYYY (sem hora), converte e adiciona 00:00:00
+  // Se está no formato DD-MM-YYYY (sem hora), converte e adiciona meio-dia UTC
   if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(dataLimpa)) {
     const [dia, mes, ano] = dataLimpa.split('-')
-    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}T00:00:00`
+    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}T12:00:00Z`
   }
 
   // Para outros formatos, tenta converter usando Date

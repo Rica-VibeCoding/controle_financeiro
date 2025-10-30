@@ -133,16 +133,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Executar carregamento inicial
     loadInitialSession()
 
-    // Escutar mudanças de auth
+    // Escutar mudanças de auth com timeout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: any, session: Session | null) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          await loadWorkspace(session.user.id)
-          await trackUserActivity(session.user.id)
-        } else {
-          setWorkspace(null)
+        try {
+          setSession(session)
+          setUser(session?.user ?? null)
+
+          if (session?.user) {
+            // Timeout de 10s para operações no onAuthStateChange
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout em onAuthStateChange')), 10000)
+            )
+
+            const workspacePromise = loadWorkspace(session.user.id)
+            const activityPromise = trackUserActivity(session.user.id)
+
+            await Promise.race([
+              Promise.all([workspacePromise, activityPromise]),
+              timeoutPromise
+            ])
+          } else {
+            setWorkspace(null)
+          }
+        } catch (error: any) {
+          logger.warn('⚠️ Erro crítico em `onAuthStateChange`:', error?.message || 'Erro desconhecido')
+          // Não travar a aplicação por erro no listener
         }
       }
     )

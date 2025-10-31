@@ -70,20 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isClient) return
 
     const supabase = createClient()
+    let isInitialLoad = true // ✅ Flag para evitar duplicação de workspace load
+
     // Timeout aumentado para 30 segundos - sistema demora ~10s para carregar chunks
     const timeoutId = setTimeout(() => {
       logger.warn('AuthProvider timeout após 30s - forçando loading = false')
       setLoading(false)
     }, 30000) // Aumentado de 10s para 30s
-    
+
     // Função assíncrona para carregar sessão com tratamento robusto
     const loadInitialSession = async () => {
       try {
         // Tentar obter sessão
         const { data: { session }, error } = await supabase.auth.getSession()
-        
+
         clearTimeout(timeoutId)
-        
+
         // Se houver erro específico, tratar
         if (error) {
           // Erros de token são agora tratados silenciosamente no auth-client
@@ -99,11 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Para outros erros, apenas logar e continuar
           logger.warn('Erro não crítico ao carregar sessão:', error.message)
         }
-        
+
         // Processar sessão (pode ser null se não houver)
         setSession(session)
         setUser(session?.user ?? null)
-        
+
         if (session?.user) {
           await loadWorkspace(session.user.id)
           await trackUserActivity(session.user.id)
@@ -115,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logger.warn('Erro ao inicializar auth:', error?.message || 'Erro desconhecido')
 
         // Se for erro de autenticação, limpar e redirecionar
-        if (error?.message?.includes('auth') || 
+        if (error?.message?.includes('auth') ||
             error?.message?.includes('token') ||
             error?.message?.includes('session')) {
           clearAuthData()
@@ -127,20 +129,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         // Sempre desabilitar loading ao final
         setLoading(false)
+        isInitialLoad = false // ✅ Marca que carregamento inicial terminou
       }
     }
-    
+
     // Executar carregamento inicial
     loadInitialSession()
 
-    // Escutar mudanças de auth com timeout
+    // Escutar mudanças de auth (✅ NÃO duplicar workspace se for carga inicial)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: any, session: Session | null) => {
         try {
           setSession(session)
           setUser(session?.user ?? null)
 
-          if (session?.user) {
+          // ✅ CORREÇÃO #1: Só carregar workspace se NÃO for carregamento inicial
+          if (session?.user && !isInitialLoad) {
             // Timeout de 10s para operações no onAuthStateChange
             const timeoutPromise = new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Timeout em onAuthStateChange')), 10000)
@@ -153,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               Promise.all([workspacePromise, activityPromise]),
               timeoutPromise
             ])
-          } else {
+          } else if (!session?.user) {
             setWorkspace(null)
           }
         } catch (error: any) {
@@ -176,34 +180,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Iniciar timer para detectar slow loading (cold start)
-    slowLoadingTimer.current = setTimeout(() => {
-      setSlowLoading(true)
-      logger.info('⏳ Carregamento lento detectado - possível cold start do Supabase')
-    }, 5000) // 5 segundos
+    // ✅ CORREÇÃO #3: Verificar cache ANTES mas não retornar - mostrar otimisticamente
+    const now = Date.now()
+    const CACHE_DURATION = 30 * 60 * 1000 // 30 minutos
+    const hasValidCache = workspaceCache.current?.userId === userId &&
+                          now - workspaceCache.current.timestamp < CACHE_DURATION
+
+    // Se tem cache válido, mostrar imediatamente (UX otimista)
+    if (hasValidCache && workspaceCache.current?.data) {
+      logger.info('✅ Workspace carregado do cache (otimista)')
+      setWorkspace(workspaceCache.current.data)
+      // ✅ Continuar carregando do banco em background para revalidar
+
+      // Limpar timer de slow loading já que mostramos algo
+      if (slowLoadingTimer.current) {
+        clearTimeout(slowLoadingTimer.current)
+        slowLoadingTimer.current = null
+      }
+      setSlowLoading(false)
+      // ✅ NÃO retornar - continuar validando com banco
+    } else {
+      // Sem cache - iniciar timer para detectar slow loading
+      slowLoadingTimer.current = setTimeout(() => {
+        setSlowLoading(true)
+        logger.info('⏳ Carregamento lento detectado - possível cold start do Supabase')
+      }, 5000) // 5 segundos
+    }
 
     // Loop de tentativas com retry
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-
-      // Verificar cache (30 minutos)
-      const now = Date.now()
-      const CACHE_DURATION = 30 * 60 * 1000 // 30 minutos
-
-      if (workspaceCache.current?.userId === userId &&
-          now - workspaceCache.current.timestamp < CACHE_DURATION) {
-        // Workspace carregado do cache
-        setWorkspace(workspaceCache.current.data)
-
-        // Limpar timer de slow loading
-        if (slowLoadingTimer.current) {
-          clearTimeout(slowLoadingTimer.current)
-          slowLoadingTimer.current = null
-        }
-        setSlowLoading(false)
-        return
-      }
-
       const supabase = createClient()
       
       // Carregando workspace para usuário

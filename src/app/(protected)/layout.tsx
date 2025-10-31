@@ -39,17 +39,21 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
     }
   }, [user, loading, router])
 
-  // Timeout de 45 segundos para carregamento do workspace
+  // ✅ CORREÇÃO #2: Timeout independente do estado loading
+  // Inicia assim que temos user mas não temos workspace
   useEffect(() => {
-    if (user && !workspace && !loading) {
+    if (user && !workspace) {
       const timeoutId = setTimeout(() => {
         console.error('⏱️ Timeout: Workspace não carregou em 45s')
         setTimeoutReached(true)
       }, 45000)
 
       return () => clearTimeout(timeoutId)
+    } else {
+      // Reset timeout se workspace carregar
+      setTimeoutReached(false)
     }
-  }, [user, workspace, loading])
+  }, [user, workspace])
 
   // Mostrar loading enquanto verifica autenticação
   if (loading) {
